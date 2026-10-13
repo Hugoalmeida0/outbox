@@ -35,6 +35,7 @@ Sem `npm link`, use `npm run outbox -- <comando>` no lugar de `outbox <comando>`
    ```
 
    Revise o `curriculo/master.yaml` gerado. Cada bullet ajustado precisa ter lastro aqui.
+
 2. **Preencha o `curriculo/perfil.yaml`**, criado a partir de `curriculo.exemplo/`: preferências
    (modelos, cidades, senioridades, regimes), tabela salarial, documentos, disponibilidade e,
    se quiser, dados de diversidade. Esses dados são preenchidos **por código** e nunca vão ao LLM.
@@ -97,17 +98,17 @@ só as chaves que quiser mudar. Variáveis de ambiente: `OUTBOX_LOG` (`depurar`,
 
 ## Comandos e códigos de saída
 
-| Comando                                                | O que faz                                                                           |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Comando                                              | O que faz                                                                         |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `importar <arquivo> [--sobrescrever]`                | Gera`curriculo/master.yaml` (com backup ao sobrescrever) e os arquivos auxiliares |
 | `adicionar [urls...] [-a <arquivo>]`                 | Canoniza e enfileira URLs, com deduplicação                                       |
-| `preparar [--forcar] [--paralelo <n>] [--reavaliar]` | Prepara as vagas NOVA                                                               |
-| `aplicar [--simular] [--id <id>]`                    | Preenche e revisa as vagas PRONTA                                                   |
-| `status [--status <STATUS>]`                         | Contagens, tabela e o que aguarda você                                             |
-| `retorno <id> <status> [--etapa] [--nota]`           | Registra o retorno de uma candidatura                                               |
-| `falhas`                                             | Falhas de conector e motores sem conector                                           |
-| `navegador`                                          | Abre o navegador do Outbox para logins                                              |
-| `renderizar-master`                                  | Gera o PDF genérico do master                                                      |
+| `preparar [--forcar] [--paralelo <n>] [--reavaliar]` | Prepara as vagas NOVA                                                             |
+| `aplicar [--simular] [--id <id>]`                    | Preenche e revisa as vagas PRONTA                                                 |
+| `status [--status <STATUS>]`                         | Contagens, tabela e o que aguarda você                                            |
+| `retorno <id> <status> [--etapa] [--nota]`           | Registra o retorno de uma candidatura                                             |
+| `falhas`                                             | Falhas de conector e motores sem conector                                         |
+| `navegador`                                          | Abre o navegador do Outbox para logins                                            |
+| `renderizar-master`                                  | Gera o PDF genérico do master                                                     |
 
 Códigos de saída: `0` sucesso, `1` erro de execução, `2` uso inválido, `130` interrompido (Ctrl+C).
 O primeiro Ctrl+C encerra de forma ordenada; o segundo força a saída. Dois `preparar` (ou `aplicar`)
