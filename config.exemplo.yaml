@@ -1,0 +1,31 @@
+# Configuração do Outbox. Todas as chaves são opcionais: os valores abaixo são os padrões.
+# Para ajustar, copie este arquivo para config.yaml (fora do git) e mantenha só o que quiser mudar.
+
+navegador:
+  executavel: auto # auto (Chrome instalado, senão Chromium do Playwright), chrome ou chromium
+  portaCdp: 9333 # porta de depuração do navegador dedicado do Outbox
+
+llm:
+  modeloTexto: sonnet # alias aceito por `claude --model` (tailoring, análise, respostas)
+  modeloAgente: sonnet # modelo do fallback agêntico
+  timeoutTextoSeg: 180 # tempo máximo de cada chamada de texto
+
+agente:
+  maxTurnos: 40 # teto de turnos do agente por vaga em cada `aplicar`
+  timeoutMin: 10 # teto de minutos de execução do agente por vaga (pausas não contam)
+
+preparar:
+  paralelo: 2 # vagas processadas ao mesmo tempo no `preparar`
+  maxTentativas: 3 # tentativas antes de desistir de uma vaga com ERRO_PREPARO
+
+aderencia:
+  scoreMinimo: 60 # abaixo disso a vaga vira DESCARTADA (use --forcar para ignorar)
+
+carta:
+  maxPalavras: 200
+
+gupy:
+  anexoPorCandidatura: true # false: na Gupy, anexa o PDF genérico do master (ver docs/spikes/gupy.md)
+
+notificacao:
+  toast: true # toast do Windows ao terminar ou parar o `preparar`

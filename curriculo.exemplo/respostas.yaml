@@ -1,0 +1,17 @@
+# Banco de respostas reaproveitáveis (FICTÍCIO). O seu fica em curriculo/respostas.yaml.
+# Cresce sozinho: respostas novas ou editadas na revisão do `aplicar` entram aqui.
+# tipo: texto, sim_nao, opcao ou numero
+- id: r-0001
+  pergunta: Você tem disponibilidade para trabalhar no modelo híbrido?
+  variantes: []
+  idioma: pt
+  tipo: sim_nao
+  resposta: Sim
+  atualizadaEm: "2026-10-01"
+- id: r-0002
+  pergunta: How many years of experience do you have with TypeScript?
+  variantes: []
+  idioma: en
+  tipo: numero
+  resposta: "5"
+  atualizadaEm: "2026-10-01"

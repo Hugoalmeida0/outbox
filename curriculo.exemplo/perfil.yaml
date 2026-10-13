@@ -1,0 +1,52 @@
+# Perfil FICTÍCIO de exemplo. O seu fica em curriculo/perfil.yaml (fora do git).
+# Documentos, salário, diversidade e endereço completo são SENSÍVEIS: nunca vão ao LLM, ao log nem ao git.
+# São preenchidos nos formulários apenas por código.
+
+documentos:
+  cpf: "000.000.000-00"
+  dataNascimento: "1995-06-15" # AAAA-MM-DD
+  # rg: "00.000.000-0"
+
+endereco:
+  logradouro: Rua Exemplo
+  numero: "100"
+  bairro: Centro
+  cidade: São Paulo
+  uf: SP
+  cep: "00000-000"
+  pais: Brasil
+
+# Pretensão salarial por regime e moeda. O Outbox escolhe pela vaga (CLT anual = 13 salários).
+salario:
+  clt_brl_mensal: 15000
+  pj_brl_mensal: 20000
+  usd_anual: 60000
+
+disponibilidade:
+  avisoPrevioDias: 30
+  inicioImediato: false
+  viagens: true
+  mudanca: false
+
+autorizacaoTrabalho:
+  brasil: true
+  precisaSponsorship: true # para vagas fora do Brasil
+  paisesAutorizados: [BR]
+
+# Opcional. Sem dado, o Outbox marca "prefiro não informar".
+# genero: mulher_cis, mulher_trans, homem_cis, homem_trans, nao_binario ou outro
+# raca: branca, preta, parda, amarela ou indigena
+diversidade:
+  genero: mulher_cis
+  # raca: parda
+  # pcd: false
+  # lgbtqia: false
+
+# Usadas no score de aderência.
+preferencias:
+  modelos: [remoto, hibrido] # remoto, hibrido, presencial
+  cidades: [São Paulo]
+  senioridades: [pleno, senior] # estagio, junior, pleno, senior, especialista, lideranca
+  regimes: [clt, pj, contractor]
+
+comoSoube: LinkedIn

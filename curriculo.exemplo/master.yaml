@@ -1,0 +1,107 @@
+# Currículo master FICTÍCIO de exemplo. O seu fica em curriculo/master.yaml (fora do git).
+# Gere o seu com `outbox importar <arquivo>` e revise. Tudo aqui deve ser verdade: o Outbox nunca
+# afirma nada que não tenha lastro neste arquivo.
+idioma: pt # pt ou en: idioma em que este arquivo está escrito
+
+pessoal:
+  nome: Ana Exemplo da Silva
+  titulo: Desenvolvedora Full Stack
+  email: ana.exemplo@example.com
+  telefone: "+55 11 90000-0000"
+  cidade: São Paulo
+  uf: SP
+  pais: Brasil
+  linkedin: https://www.linkedin.com/in/ana-exemplo
+  github: https://github.com/ana-exemplo
+
+resumo: >-
+  Desenvolvedora full stack com 6 anos de experiência em TypeScript, Node.js e React, construindo
+  APIs e produtos digitais em fintechs e e-commerce.
+
+# Ids em kebab-case. Os bullets são citados pelo currículo gerado (campo `origem`).
+experiencias:
+  - id: exp-fintech-aurora
+    empresa: Fintech Aurora
+    cargo: Desenvolvedora Sênior
+    inicio: 2022-03 # AAAA-MM
+    fim: null # null = emprego atual
+    local: Remoto
+    bullets:
+      - id: exp-fintech-aurora-b1
+        texto: Liderei a migração de 12 serviços Node.js para TypeScript, reduzindo incidentes em 40%.
+        skills: [typescript, nodejs]
+      - id: exp-fintech-aurora-b2
+        texto: Construí APIs REST e filas com PostgreSQL e AWS SQS para conciliação de pagamentos.
+        skills: [postgresql, aws]
+  - id: exp-loja-horizonte
+    empresa: Loja Horizonte
+    cargo: Desenvolvedora Pleno
+    inicio: 2019-01
+    fim: 2022-02
+    local: São Paulo/SP
+    bullets:
+      - id: exp-loja-horizonte-b1
+        texto: Desenvolvi o checkout em React e Next.js usado por 2 milhões de clientes por mês.
+        skills: [react]
+      - id: exp-loja-horizonte-b2
+        texto: Implementei testes automatizados com Jest, elevando a cobertura de 30% para 75%.
+        skills: [jest]
+
+projetos:
+  - id: proj-gestor-financas
+    nome: Gestor de Finanças
+    descricao: Aplicativo pessoal de controle de gastos.
+    url: https://github.com/ana-exemplo/gestor-financas
+    skills: [react, nodejs]
+    bullets:
+      - id: proj-gestor-financas-b1
+        texto: Backend em Node.js com autenticação JWT e frontend em React.
+
+formacao:
+  - id: form-usp
+    instituicao: Universidade de São Paulo
+    curso: Ciência da Computação
+    grau: Bacharelado
+    inicio: "2014"
+    fim: "2018"
+
+certificacoes:
+  - id: cert-aws-cloud-practitioner
+    nome: AWS Certified Cloud Practitioner
+    emissor: Amazon Web Services
+    ano: 2023
+
+# categoria: linguagem, framework, ferramenta, cloud, banco, pratica ou soft
+# origem: master (declarada por você) ou aprendido (confirmada numa rodada de gaps do `aplicar`)
+skills:
+  - {
+      id: typescript,
+      nome: TypeScript,
+      aliases: [TS],
+      categoria: linguagem,
+      anos: 5,
+      nivel: avancado,
+    }
+  - {
+      id: nodejs,
+      nome: Node.js,
+      aliases: [Node, NodeJS],
+      categoria: framework,
+      anos: 6,
+      nivel: avancado,
+    }
+  - {
+      id: react,
+      nome: React,
+      aliases: [React.js, ReactJS],
+      categoria: framework,
+      anos: 5,
+      nivel: avancado,
+    }
+  - { id: postgresql, nome: PostgreSQL, aliases: [Postgres], categoria: banco, anos: 4 }
+  - { id: aws, nome: AWS, aliases: [Amazon Web Services], categoria: cloud, anos: 3 }
+  - { id: jest, nome: Jest, aliases: [], categoria: ferramenta, anos: 4 }
+
+idiomas:
+  - { idioma: Português, nivel: nativo }
+  - { idioma: Inglês, nivel: avancado } # basico, intermediario, avancado, fluente ou nativo

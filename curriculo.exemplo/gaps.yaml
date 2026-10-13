@@ -1,0 +1,3 @@
+# Termos que você declarou NÃO possuir numa rodada de gaps do `aplicar`.
+# O Outbox nunca volta a perguntar por eles. Remova um termo daqui para voltar a ser perguntado.
+negados: []
