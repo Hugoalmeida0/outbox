@@ -1,0 +1,58 @@
+{
+  "name": "outbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CLI pessoal de candidatura assistida com currículo camaleão",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "outbox": "bin/outbox.js"
+  },
+  "imports": {
+    "#dominio/*": "./src/dominio/*",
+    "#aplicacao/*": "./src/aplicacao/*",
+    "#infra/*": "./src/infra/*",
+    "#interfaces/*": "./src/interfaces/*",
+    "#composicao": "./src/composicao.ts",
+    "#testes/*": "./tests/*",
+    "#scripts/*": "./scripts/*"
+  },
+  "scripts": {
+    "outbox": "node bin/outbox.js",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "formatar": "prettier --write .",
+    "tipos": "tsc --noEmit",
+    "verificar": "npm run tipos && npm run lint && prettier --check . && vitest run --coverage && npm audit --omit=dev --audit-level=high",
+    "capturar-fixture": "node scripts/capturar-fixture.ts"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "8.7.3",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@playwright/mcp": "0.0.83",
+    "commander": "15.0.0",
+    "cross-spawn": "7.0.6",
+    "mammoth": "1.13.0",
+    "node-notifier": "10.0.1",
+    "open": "11.0.4",
+    "playwright": "1.64.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/cross-spawn": "6.0.6",
+    "@types/node": "26.6.5",
+    "@types/node-notifier": "8.0.5",
+    "@vitest/coverage-v8": "5.0.3",
+    "eslint": "10.12.0",
+    "eslint-config-prettier": "10.1.8",
+    "pdfjs-dist": "6.4.299",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vitest": "5.0.3"
+  }
+}
