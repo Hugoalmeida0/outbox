@@ -1,0 +1,16 @@
+<!-- Fixture SINTÉTICA: modela o formulário oneclick-ui do SmartRecruiters (estrutura real não verificada: DataDome bloqueia leitura automatizada). -->
+<html lang="en"><body>
+<form onsubmit="return false">
+  <label for="first-name-input">First name *</label><input id="first-name-input" name="firstName" required>
+  <label for="last-name-input">Last name *</label><input id="last-name-input" name="lastName" required>
+  <label for="email-input">Email *</label><input id="email-input" name="email" type="email" required>
+  <label for="phone-input">Phone number</label><input id="phone-input" name="phoneNumber" type="tel">
+  <label for="resume">Resume *</label><input id="resume" name="resume" type="file" required>
+  <label for="linkedin-input">LinkedIn profile</label><input id="linkedin-input" name="linkedin">
+  <label for="q1">Are you legally authorized to work in Brazil? *</label>
+  <select id="q1" name="q1" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+  <label><input type="checkbox" name="consent" required> I agree to the privacy policy *</label>
+  <button type="submit" id="enviar">Submit</button>
+</form>
+<script>document.getElementById("enviar").onclick = () => { document.body.innerHTML = "<h1>Thank you for applying!</h1>"; };</script>
+</body></html>

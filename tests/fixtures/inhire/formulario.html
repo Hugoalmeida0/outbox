@@ -1,0 +1,17 @@
+<!-- Fixture SINTÉTICA: modela a página de vaga do InHire (estrutura real não verificada; ver docs/spikes/inhire.md). -->
+<html lang="pt-BR"><body>
+<main id="vaga"><h1>Analista de Dados Pleno</h1><button id="candidatar">Candidatar-se</button></main>
+<form id="form" style="display:none" onsubmit="return false">
+  <label for="nome">Nome completo *</label><input id="nome" name="nome" required>
+  <label for="email">E-mail *</label><input id="email" name="email" type="email" required>
+  <label for="telefone">Telefone *</label><input id="telefone" name="telefone" type="tel" required>
+  <label for="linkedin">LinkedIn</label><input id="linkedin" name="linkedin">
+  <label for="curriculo">Anexe seu currículo *</label><input id="curriculo" name="curriculo" type="file" required>
+  <label for="experiencia">Conte sobre sua experiência com SQL *</label><textarea id="experiencia" name="experiencia" required></textarea>
+  <button type="submit" id="enviar">Enviar candidatura</button>
+</form>
+<script>
+  document.getElementById("candidatar").onclick = () => { document.getElementById("vaga").style.display = "none"; document.getElementById("form").style.display = "block"; };
+  document.getElementById("enviar").onclick = () => { document.body.innerHTML = "<h1>Candidatura enviada com sucesso!</h1>"; };
+</script>
+</body></html>
