@@ -1,6 +1,9 @@
+import { stripVTControlCharacters } from "node:util";
 import { describe, expect, it } from "vitest";
 import type { CasosDeUso, Container } from "#composicao";
 import { ErroUsuario } from "#dominio/compartilhado/erros.ts";
+import type { IdVaga } from "#dominio/vagas/vaga.ts";
+import { umaVaga } from "#testes/apoio/builders.ts";
 import { InteracaoRoteirizada } from "#testes/apoio/fakes/basicos.ts";
 import type { ContextoComando } from "../contexto.ts";
 import { InteracaoTerminal } from "../interacao-terminal.ts";
@@ -75,6 +78,33 @@ describe("comandos", () => {
     expect(await comandoPreparar(ctx, { forcar: true, paralelo: "3" })).toBe(130);
     expect(entradas).toEqual([{ forcar: true, reavaliar: false, paralelo: 3 }]);
     expect(travas).toEqual(["+preparar", "-preparar"]);
+  });
+
+  it("preparar mostra o andamento de cada vaga antes do resumo", async () => {
+    const { container } = containerDuble({
+      prepararVagas: (_entrada, progresso) => {
+        progresso.emitir({ tipo: "inicio", total: 1, paralelo: 1 });
+        progresso.emitir({
+          tipo: "concluida",
+          vaga: umaVaga({ id: 1 as IdVaga, empresa: "Acme", status: "PRONTA" }),
+          erro: null,
+        });
+        return Promise.resolve({
+          processadas: 1,
+          contagens: { PRONTA: 1 },
+          erros: [],
+          reavaliadas: 0,
+          interrompido: null,
+        });
+      },
+    });
+    const { ctx, saida } = contexto(container);
+    expect(await comandoPreparar(ctx, {})).toBe(0);
+    expect(saida.map((l) => stripVTControlCharacters(l))).toEqual([
+      expect.stringMatching(/^Preparando 1 vaga\(s\)\./),
+      "✓ #1 Acme: PRONTA",
+      expect.stringMatching(/^Preparo: 1 vaga\(s\) processada\(s\)/),
+    ]);
   });
 
   it("preparar libera a trava mesmo com erro", async () => {

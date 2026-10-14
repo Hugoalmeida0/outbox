@@ -5,6 +5,13 @@ import { TODOS_STATUS, type Status } from "#dominio/vagas/status.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
 import { formatarAdicao } from "./adicao.ts";
 import { formatarFalhas } from "./falhas.ts";
+import {
+  cortarNaLargura,
+  formatarCabecalhoPreparo,
+  formatarConclusao,
+  formatarDuracao,
+  rotuloVaga,
+} from "./progresso.ts";
 import { formatarResumoPreparo } from "./resumo-preparo.ts";
 import { formatarResumoAplicacao, formatarResumoRevisao } from "./resumo-revisao.ts";
 import { formatarStatus } from "./status.ts";
@@ -228,6 +235,7 @@ describe("resumos de preparo e aplicação", () => {
           respostas: [
             { rotulo: "Nome", valor: "Ana", nova: false },
             { rotulo: "Por que nós?", valor: "Pelo\nproduto.", nova: true },
+            { rotulo: "Empresa atual", valor: "Acme", nova: true, vaziaNaPagina: true },
           ],
           cartaInicio: "Prezados,\n\nQuero a vaga.",
           caminhoPdf: "C:/dados/vagas/00012/Ana_Silva_CV.pdf",
@@ -242,6 +250,8 @@ describe("resumos de preparo e aplicação", () => {
         "Gaps restantes: Kafka",
         "Alertas:",
         "  ! PDF com mais de 2 páginas",
+        "Vazias na página (preencha no navegador):",
+        "  ⚠ Empresa atual: Acme",
         "Respostas novas (confira no navegador):",
         "  • Por que nós?: Pelo produto.",
         "1 resposta(s) já conhecida(s) preenchida(s).",
@@ -280,5 +290,64 @@ describe("formatarAdicao", () => {
         "adicionada 1 · já na fila 1 · inválida 1",
       ].join("\n"),
     );
+  });
+});
+
+describe("formatarProgresso", () => {
+  const vaga = {
+    id: 7 as IdVaga,
+    empresa: null,
+    cargo: null,
+    urlOriginal: "https://www.linkedin.com/jobs/view/1",
+  };
+
+  it("formata durações em segundos, minutos e horas", () => {
+    expect([0, 59_999, 60_000, 125_000, 3_725_000].map(formatarDuracao)).toEqual([
+      "0s",
+      "59s",
+      "1m00s",
+      "2m05s",
+      "1h02m",
+    ]);
+  });
+
+  it("corta pela largura no terminal, contando CJK e emoji como 2 colunas", () => {
+    expect(cortarNaLargura("Ação", 4)).toBe("Ação");
+    expect(cortarNaLargura("Desenvolvedora", 6)).toBe("Desen…");
+    expect(cortarNaLargura("🚀 Dev", 6)).toBe("🚀 Dev");
+    expect(cortarNaLargura("🚀🚀 Dev", 6)).toBe("🚀🚀 …");
+    expect(cortarNaLargura("株式会社", 6)).toBe("株式…");
+    expect(cortarNaLargura("👨‍👩‍👧 Família Dev", 6)).toBe("👨‍👩‍👧 Fa…");
+  });
+
+  it("rotula a vaga pela empresa e pelo cargo, ou pelo host antes da extração", () => {
+    expect(rotuloVaga(vaga)).toBe("#7 linkedin.com");
+    expect(rotuloVaga({ ...vaga, empresa: " Blip Global ", cargo: null })).toBe("#7 Blip Global");
+    expect(rotuloVaga({ ...vaga, urlOriginal: "sem-url" })).toBe("#7 sem-url");
+  });
+
+  it("antecipa a demora no cabeçalho e resume a conclusão com motivo e aderência", () => {
+    expect(formatarCabecalhoPreparo(1, 1)).toBe(
+      "Preparando 1 vaga(s). Cada uma leva alguns minutos (várias chamadas ao Claude).",
+    );
+    const descartada = {
+      ...vaga,
+      empresa: "Acme",
+      status: "DESCARTADA" as const,
+      motivo: "aderencia_baixa" as const,
+      aderencia: 42,
+    };
+    expect(puro(formatarConclusao(descartada, null, 70_000))).toBe(
+      "– #7 Acme: DESCARTADA aderencia_baixa, aderência 42 (1m10s)",
+    );
+    expect(
+      puro(
+        formatarConclusao(
+          { ...vaga, status: "MANUAL", motivo: "easy_apply", aderencia: null },
+          null,
+          null,
+        ),
+      ),
+    ).toBe("! #7 linkedin.com: MANUAL easy_apply");
   });
 });

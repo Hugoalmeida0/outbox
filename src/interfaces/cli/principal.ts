@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { Command } from "commander";
-import { criarContainer, type Container } from "#composicao";
+import { criarContainer, type Container, type NivelLog } from "#composicao";
 import { cores } from "./apresentacao/cores.ts";
 import { codigoDoErro, ehErroPrevisto, mensagemDoErro } from "./codigos-saida.ts";
 import type { ContextoComando, Saida } from "./contexto.ts";
+import { criarSaidaTerminal } from "./saida-terminal.ts";
 import { instalarSinais, type AlvoSinais } from "./sinais.ts";
 
 export interface DependenciasCli {
@@ -13,13 +14,11 @@ export interface DependenciasCli {
   readonly sair?: (codigo: number) => void;
 }
 
-const SAIDA_PADRAO: Saida = {
-  escrever: (texto) => {
-    process.stdout.write(`${texto}\n`);
-  },
-  erro: (texto) => {
-    process.stderr.write(`${texto}\n`);
-  },
+const COR_DO_NIVEL: Readonly<Record<NivelLog, (texto: string) => string>> = {
+  depurar: cores.cinza,
+  informar: (texto) => texto,
+  avisar: cores.amarelo,
+  erro: cores.vermelho,
 };
 
 const TITULOS_AJUDA: Readonly<Record<string, string>> = {
@@ -155,10 +154,18 @@ export async function executar(
   argv: readonly string[],
   deps: DependenciasCli = {},
 ): Promise<number> {
-  const saida = deps.saida ?? SAIDA_PADRAO;
+  const saida = deps.saida ?? criarSaidaTerminal();
   const controle = new AbortController();
   const estado: { container: Container | null; codigo: number } = { container: null, codigo: 0 };
-  const fabricar = deps.fabricarContainer ?? (() => criarContainer());
+  // O log do terminal passa pela `Saida` para sair acima da região viva do progresso, sem embaralhá-la.
+  const fabricar =
+    deps.fabricarContainer ??
+    (() =>
+      criarContainer({
+        escreverTerminal: (linha, nivel) => {
+          saida.erro(COR_DO_NIVEL[nivel](linha));
+        },
+      }));
   const ctx: ContextoComando = {
     container: () => (estado.container ??= fabricar()),
     saida,

@@ -27,8 +27,15 @@ export function formatarResumoRevisao(r: ResumoRevisao): string {
     linhas.push(cores.amarelo("Alertas:"));
     for (const a of r.alertas) linhas.push(cores.amarelo(`  ! ${a}`));
   }
-  const novas = r.respostas.filter((x) => x.nova);
-  const conhecidas = r.respostas.length - novas.length;
+  const vazias = r.respostas.filter((x) => x.vaziaNaPagina);
+  const preenchidas = r.respostas.filter((x) => !x.vaziaNaPagina);
+  const novas = preenchidas.filter((x) => x.nova);
+  const conhecidas = preenchidas.length - novas.length;
+  if (vazias.length > 0) {
+    linhas.push(cores.amarelo("Vazias na página (preencha no navegador):"));
+    for (const v of vazias)
+      linhas.push(cores.amarelo(`  ⚠ ${v.rotulo}: ${v.valor.replace(/\s+/g, " ")}`));
+  }
   if (novas.length > 0) {
     linhas.push("Respostas novas (confira no navegador):");
     for (const n of novas) linhas.push(`  • ${n.rotulo}: ${n.valor.replace(/\s+/g, " ")}`);
