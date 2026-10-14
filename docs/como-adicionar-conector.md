@@ -72,4 +72,5 @@ npm run verificar
 
 Rode `outbox aplicar --simular --id <id>` numa vaga real do ATS e confira os campos no navegador. Se o
 conector falhar em produção, o registro sanitizado em `falhas/<motor>/` mostra o passo e o seletor; o
-agente assume a vaga enquanto isso.
+agente assume a vaga enquanto isso. Falha ao preencher um campo não derruba o conector: o campo é pulado,
+anunciado antes da revisão e marcado como vazio na tela de revisão.

@@ -100,6 +100,7 @@ toda escrita passa pelo `RepositorioVagas`.
 | `RenderizadorDocumentos`             | `RenderizadorPdfPlaywright`                                 | Contexto sem JavaScript e rede bloqueada                                                           |
 | `Interacao`                          | `InteracaoTerminal` (interfaces)                            | `@inquirer/prompts`; Ctrl+C num prompt aborta o comando                                            |
 | `Notificador`                        | `NotificadorWindows`                                        | `node-notifier` importado sob demanda; falha vira aviso no log                                     |
+| `ProgressoPreparo`                   | `ProgressoTerminal` (interfaces)                            | Eventos de início, etapa e conclusão por vaga; com TTY, região viva no stderr (ADR-0021)           |
 | `NavegadorUsuario`                   | `NavegadorOutbox`                                           | Chrome dedicado com perfil persistente e porta CDP                                                 |
 | `Relogio`                            | `RelogioSistema`                                            | ISO com offset; `hoje()`                                                                           |
 | `Registrador`                        | `RegistradorJsonl`                                          | Terminal mais JSONL diário, com redação de PII                                                     |
@@ -114,22 +115,26 @@ genérico e processa as vagas elegíveis com `executarComLimite`:
 
 1. `resolverVaga`: resolução e deduplicação por URL, numa transação.
 2. Rota `manual` (Easy Apply): gera currículo e carta quando possível e marca MANUAL.
-3. `extrairVaga`: extração estrutural; vazia, cai no LLM (`extrair-vaga`).
+3. `extrairVaga`: extração estrutural; vazia, cai no LLM (`extrair-vaga`). Vaga encerrada (404/410 da
+   API do ATS, ou página de erro reconhecida pelo LLM) vira DESCARTADA `vaga_encerrada`, sem aderência.
 4. `analisarVaga`: LLM (`analisar-vaga`), saneamento e gaps.
 5. Issue do GitHub (`a_definir`): link resolve de novo; e-mail vira MANUAL `candidatura_por_email`.
 6. Deduplicação por chave (`BEGIN IMMEDIATE`), aderência e corte (`--forcar` ignora o corte, nunca a
    afirmativa inelegível).
 7. `gerarCurriculo`: tailoring, lastro com 1 nova tentativa e, se falhar, master genérico; PDF e ATS.
 8. `responderCampos` (só com conector que lê campos no preparo): código para padrão, documentos,
-   diversidade, consentimento e salário; LLM só para perguntas e carta.
+   diversidade, consentimento, salário e salário atual (`salario.atual` do perfil, nunca a pretensão);
+   LLM só para perguntas e carta. Regras de campo-padrão e documento só valem para rótulos de até 12
+   palavras, e um valor por código que não está entre as opções do select/radio vira pergunta.
 
 Falha por vaga vira ERRO_PREPARO (com tentativas); `ErroLimiteUso` e cancelamento encerram o lote de
 forma ordenada; ao fim, toast com o resumo.
 
 **`outbox aplicar`:** rodada de gaps (sim grava a skill e refaz o currículo das vagas afetadas), depois,
-por aderência decrescente: `montarPacote`, `preencherFormulario` (conector; se lançar
-`ErroFalhaConector`, registro sanitizado e agente com o contexto; sem conector, agente e registro
-`sem_conector`) e `revisarEEnviar` (tela, resumo, menu; envio só com `[e]nviar`, confirmação, telas,
+por aderência decrescente: `montarPacote`, `preencherFormulario` (conector; campo que falha é pulado e
+fica para a revisão; se o conector lançar `ErroFalhaConector` num passo estrutural, registro sanitizado e
+agente com o contexto; sem conector, agente e registro `sem_conector`) e `revisarEEnviar` (tela que
+confere a página e marca respostas vazias, resumo, menu; envio só com `[e]nviar`, confirmação, telas,
 respostas enviadas, `anexo_manual` e aprendizado no banco). Erro inesperado numa vaga não interrompe as
 demais.
 

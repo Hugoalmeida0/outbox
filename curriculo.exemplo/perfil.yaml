@@ -21,6 +21,9 @@ salario:
   clt_brl_mensal: 15000
   pj_brl_mensal: 20000
   usd_anual: 60000
+  # Opcional: salário atual ou último, para campos "compartilhe seu salário atual". Sem ele, o campo fica
+  # vazio (o Outbox nunca usa a pretensão no lugar).
+  # atual: "12000 CLT + VR/VA + plano de saúde"
 
 disponibilidade:
   avisoPrevioDias: 30

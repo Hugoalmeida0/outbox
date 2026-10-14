@@ -6,8 +6,11 @@ navegador:
   portaCdp: 9333 # porta de depuração do navegador dedicado do Outbox
 
 llm:
-  modeloTexto: sonnet # alias aceito por `claude --model` (tailoring, análise, respostas)
-  modeloAgente: sonnet # modelo do fallback agêntico
+  modeloTexto: claude-haiku-5-5 # extração, análise e respostas (use o id completo: o alias `haiku` ainda aponta para a 4.5)
+  modeloTailoring: claude-sonnet-5-5 # reescrita do currículo e da carta
+  modeloAgente: claude-haiku-5-5 # modelo do fallback agêntico
+  modeloAgenteReserva: claude-sonnet-5-5 # refaz a vaga com este modelo se o agente degenerar (saída sem fim)
+  maxTokensThinking: 0 # teto de tokens de raciocínio por chamada (0 desliga; mais caro e lento)
   timeoutTextoSeg: 180 # tempo máximo de cada chamada de texto
 
 agente:

@@ -1,5 +1,5 @@
 ---
-versao: 1
+versao: 2
 ---
 
 # Tarefa
@@ -25,6 +25,9 @@ master (escrito em `{{idiomaMaster}}`). O objetivo é passar pelos filtros de AT
 - Tamanho: {{metaPaginas}}.
 
 Correções obrigatórias de uma tentativa anterior (violações de lastro a eliminar): {{correcoes}}
+
+Keywords da vaga que o master comprova e que uma tentativa anterior deixou de fora (escreva cada uma
+literalmente, como está aqui, no resumo, nas skills ou num bullet que a comprove): {{keywordsFaltantes}}
 
 Análise da vaga (JSON):
 
