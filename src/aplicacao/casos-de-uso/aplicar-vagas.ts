@@ -44,7 +44,13 @@ export type DepsAplicarVagas = Omit<DepsRodadaGaps, "paralelo"> &
     >;
     readonly curriculo: Pick<
       ArmazemCurriculo,
-      "lerMaster" | "lerPerfil" | "lerBanco" | "gravarBanco" | "adicionarSkill" | "negarGap"
+      | "lerMaster"
+      | "lerPerfil"
+      | "lerBanco"
+      | "gravarBanco"
+      | "adicionarSkill"
+      | "definirIdioma"
+      | "negarGap"
     >;
     readonly artefatos: Pick<
       ArmazemArtefatos,

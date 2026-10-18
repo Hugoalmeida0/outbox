@@ -284,6 +284,54 @@ describe("aplicarVagas: rodada de gaps (AC10)", () => {
     expect(amb.gerador.pedidosDe("tailoring")).toHaveLength(tailoringsAntes);
   });
 
+  describe("idioma acima do nível do master", () => {
+    const analiseIdioma = umaAnalise({
+      requisitos: [
+        ...umaAnalise().requisitos,
+        {
+          texto: "Inglês fluente",
+          termo: "Inglês fluente",
+          obrigatorio: true,
+          status: "ausente",
+          evidencias: [],
+          idiomaExigido: { idioma: "Inglês", nivel: "fluente" },
+        },
+      ],
+    });
+
+    it("pergunta só o nível, atualiza `idiomas` (sem criar skill) e refaz o currículo", async () => {
+      const { amb } = criar();
+      amb.gerador.sempre("analisar-vaga", analiseIdioma);
+      const [id] = await prontas(amb);
+      const tailoringsAntes = amb.gerador.pedidosDe("tailoring").length;
+      const skillsAntes = amb.curriculo.master?.skills.length;
+      const interacao = roteiro(amb, "fluente", "pular");
+      await aplicarVagas(amb.deps(), { simular: false }, sinal());
+      expect(interacao.perguntas[0]).toBe(
+        "A vaga pede Inglês fluente (1 vaga). Qual o seu nível de Inglês?",
+      );
+      expect(amb.curriculo.master?.idiomas).toContainEqual({ idioma: "Inglês", nivel: "fluente" });
+      expect(amb.curriculo.master?.skills).toHaveLength(skillsAntes ?? -1);
+      expect(amb.gerador.pedidosDe("tailoring")).toHaveLength(tailoringsAntes + 1);
+      expect(amb.vagas.listarGapsAbertos([id as IdVaga])).toEqual([]);
+    });
+
+    it("nível ainda abaixo do exigido atualiza o master, nega o gap e não refaz nada", async () => {
+      const { amb } = criar();
+      amb.gerador.sempre("analisar-vaga", analiseIdioma);
+      await prontas(amb);
+      const tailoringsAntes = amb.gerador.pedidosDe("tailoring").length;
+      roteiro(amb, "intermediario", "pular");
+      await aplicarVagas(amb.deps(), { simular: false }, sinal());
+      expect(amb.curriculo.master?.idiomas).toContainEqual({
+        idioma: "Inglês",
+        nivel: "intermediario",
+      });
+      expect(amb.curriculo.negados).toEqual(["idioma:ingles:fluente"]);
+      expect(amb.gerador.pedidosDe("tailoring")).toHaveLength(tailoringsAntes);
+    });
+  });
+
   it("limite de uso ao refazer o currículo encerra o aplicar sem revisar", async () => {
     const { amb, formulario } = criar();
     amb.gerador.sempre("analisar-vaga", analiseComGap);

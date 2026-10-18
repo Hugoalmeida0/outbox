@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NIVEIS_IDIOMA } from "../curriculo/master.ts";
 
 export const SENIORIDADES = [
   "estagio",
@@ -33,6 +34,8 @@ export const esquemaRequisito = z.object({
   obrigatorio: z.boolean(),
   status: z.enum(["coberto", "parcial", "ausente"]),
   evidencias: z.array(z.string()).default([]),
+  /** Preenchido quando o requisito é um idioma: o código decide o `status` pelo master, não o LLM. */
+  idiomaExigido: z.object({ idioma: z.string().min(1), nivel: z.enum(NIVEIS_IDIOMA) }).optional(),
 });
 export type Requisito = z.infer<typeof esquemaRequisito>;
 

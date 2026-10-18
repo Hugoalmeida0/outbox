@@ -168,3 +168,44 @@ describe("sanearAnalise e gapsDaAnalise", () => {
     expect(gapsDaAnalise(analise, ["go"])).toEqual([{ termo: "Kafka", termoNormalizado: "kafka" }]);
   });
 });
+
+describe("requisitos de idioma", () => {
+  const master = umMaster();
+  const exigindo = (idioma: string, nivel: "intermediario" | "avancado" | "fluente" | "nativo") =>
+    umaAnalise({
+      requisitos: [
+        {
+          texto: `${idioma} ${nivel}`,
+          termo: `${idioma} ${nivel}`,
+          obrigatorio: true,
+          status: "coberto",
+          evidencias: ["ingles-inventado"],
+          idiomaExigido: { idioma, nivel },
+        },
+      ],
+    });
+
+  it("o master decide o status: coberto, parcial (nível menor) ou ausente (não fala)", () => {
+    const status = (idioma: string, nivel: "intermediario" | "avancado" | "fluente") =>
+      sanearAnalise(exigindo(idioma, nivel), master).requisitos[0]?.status;
+    expect(status("Inglês", "intermediario")).toBe("coberto");
+    expect(status("ingles", "avancado")).toBe("coberto");
+    expect(status("Inglês", "fluente")).toBe("parcial");
+    expect(status("Espanhol", "avancado")).toBe("ausente");
+  });
+
+  it("gera um gap por idioma e nível, sem tratar como skill, e respeita o negado", () => {
+    const analise = sanearAnalise(exigindo("Inglês", "fluente"), master);
+    const gaps = gapsDaAnalise(analise, []);
+    expect(gaps).toEqual([{ termo: "Inglês", termoNormalizado: "idioma:ingles:fluente" }]);
+    expect(gapsDaAnalise(analise, ["idioma:ingles:fluente"])).toEqual([]);
+    expect(gapsDaAnalise(sanearAnalise(exigindo("Inglês", "avancado"), master), [])).toEqual([]);
+  });
+
+  it("recalcularComGaps rejulga o idioma pelo master atualizado", () => {
+    const analise = sanearAnalise(exigindo("Inglês", "fluente"), master);
+    const fluente = [{ idioma: "Inglês", nivel: "fluente" as const }];
+    expect(recalcularComGaps(analise, new Set(), fluente).requisitos[0]?.status).toBe("coberto");
+    expect(recalcularComGaps(analise, new Set()).requisitos[0]?.status).toBe("parcial");
+  });
+});

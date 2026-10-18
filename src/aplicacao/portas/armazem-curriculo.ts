@@ -1,4 +1,4 @@
-import type { Master, SkillMaster } from "#dominio/curriculo/master.ts";
+import type { Master, NivelIdioma, SkillMaster } from "#dominio/curriculo/master.ts";
 import type { BancoRespostas } from "#dominio/respostas/banco.ts";
 import type { Perfil } from "#dominio/respostas/perfil.ts";
 
@@ -11,6 +11,8 @@ export interface ArmazemCurriculo {
   gravarMasterNovo(master: Master, opcoes: { readonly sobrescrever: boolean }): { backup?: string };
   /** Acrescenta uma skill aprendida, preservando comentários do YAML. */
   adicionarSkill(skill: SkillMaster): void;
+  /** Define o nível de um idioma em `idiomas` (acrescenta o idioma se ausente), preservando comentários. */
+  definirIdioma(idioma: string, nivel: NivelIdioma): void;
   lerPerfil(): Perfil;
   lerBanco(): BancoRespostas;
   gravarBanco(banco: BancoRespostas): void;

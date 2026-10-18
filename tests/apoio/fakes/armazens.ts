@@ -3,12 +3,13 @@ import type { ZodType } from "zod";
 import type { ArmazemArtefatos, NomeArtefato } from "#aplicacao/portas/armazem-artefatos.ts";
 import type { ArmazemCurriculo } from "#aplicacao/portas/armazem-curriculo.ts";
 import { ErroUsuario } from "#dominio/compartilhado/erros.ts";
+import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
 import type { ExtratorVagas, ResultadoExtracao } from "#aplicacao/portas/extrator-vagas.ts";
 import type { RegistroFalhas } from "#aplicacao/portas/registro-falhas.ts";
 import type { RenderizadorDocumentos } from "#aplicacao/portas/renderizador-documentos.ts";
 import type { Resolucao, ResolvedorVagas } from "#aplicacao/portas/resolvedor-vagas.ts";
 import type { DocumentoCarta, DocumentoCurriculo } from "#dominio/curriculo/documento.ts";
-import type { Master, SkillMaster } from "#dominio/curriculo/master.ts";
+import type { Master, NivelIdioma, SkillMaster } from "#dominio/curriculo/master.ts";
 import type { RegistroFalha } from "#dominio/falhas/registro-falha.ts";
 import type { BancoRespostas } from "#dominio/respostas/banco.ts";
 import type { Perfil } from "#dominio/respostas/perfil.ts";
@@ -48,6 +49,15 @@ export class ArmazemCurriculoMemoria implements ArmazemCurriculo {
     const master = this.lerMaster();
     this.master = { ...master, skills: [...master.skills, skill] };
     this.atualizado = "2026-10-10T12:00:00-03:00";
+  }
+  definirIdioma(idioma: string, nivel: NivelIdioma): void {
+    const master = this.lerMaster();
+    const alvo = normalizarTexto(idioma);
+    const existe = master.idiomas.some((i) => normalizarTexto(i.idioma) === alvo);
+    const idiomas = existe
+      ? master.idiomas.map((i) => (normalizarTexto(i.idioma) === alvo ? { ...i, nivel } : i))
+      : [...master.idiomas, { idioma, nivel }];
+    this.master = { ...master, idiomas };
   }
   lerPerfil(): Perfil {
     return this.perfil;

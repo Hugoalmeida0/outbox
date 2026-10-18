@@ -244,6 +244,7 @@ async function processarVaga(
 
 function reavaliarDescartadas(deps: DepsPrepararVagas): number {
   const confirmados = new Set(deps.vagas.termosConfirmados());
+  const idiomas = deps.curriculo.lerMaster().idiomas;
   let reabertas = 0;
   for (const vaga of deps.vagas.listarPorStatus(["DESCARTADA"])) {
     if (vaga.motivo !== "aderencia_baixa") continue;
@@ -251,7 +252,7 @@ function reavaliarDescartadas(deps: DepsPrepararVagas): number {
     if (!analise) continue;
     const recalculada = {
       ...analise,
-      requisitos: recalcularComGaps(analise, confirmados).requisitos,
+      requisitos: recalcularComGaps(analise, confirmados, idiomas).requisitos,
     };
     deps.artefatos.gravarJson(vaga.id, "analise.json", recalculada);
     const { score, eliminada } = aplicarAderencia(deps, vaga, recalculada);

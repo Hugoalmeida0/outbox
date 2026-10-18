@@ -1,6 +1,8 @@
 import { normalizarTexto } from "../compartilhado/texto.ts";
 import { SENIORIDADES, type AnaliseVaga, type Senioridade } from "./analise-vaga.ts";
 import { gruposDoPerfil, perfilInformaGrupo } from "./grupos.ts";
+import type { IdiomaFalado } from "../curriculo/master.ts";
+import { statusIdioma } from "./idiomas.ts";
 import type { Diversidade, Preferencias } from "../respostas/perfil.ts";
 
 export interface DetalhesAderencia {
@@ -88,15 +90,22 @@ export function calcularAderencia(
   return { score, detalhes, alertas: [] };
 }
 
-/** Marca como cobertos os requisitos cujo termo normalizado o usuário confirmou ter (gap respondido "sim"). */
+/**
+ * Marca como cobertos os requisitos cujo termo normalizado o usuário confirmou ter (gap respondido "sim").
+ * Requisitos de idioma são rejulgados contra `idiomas` (o master já atualizado pela resposta).
+ */
 export function recalcularComGaps(
   analise: AnaliseVaga,
   termosSim: ReadonlySet<string>,
+  idiomas?: readonly IdiomaFalado[],
 ): AnaliseVaga {
   return {
     ...analise,
-    requisitos: analise.requisitos.map((r) =>
-      termosSim.has(normalizarTexto(r.termo)) ? { ...r, status: "coberto" } : r,
-    ),
+    requisitos: analise.requisitos.map((r) => {
+      if (r.idiomaExigido) {
+        return idiomas ? { ...r, status: statusIdioma(idiomas, r.idiomaExigido) } : r;
+      }
+      return termosSim.has(normalizarTexto(r.termo)) ? { ...r, status: "coberto" } : r;
+    }),
   };
 }

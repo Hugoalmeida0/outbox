@@ -103,6 +103,7 @@ export const esquemaIdiomaFalado = z.object({
   idioma: z.string().min(1),
   nivel: z.enum(NIVEIS_IDIOMA),
 });
+export type IdiomaFalado = z.infer<typeof esquemaIdiomaFalado>;
 
 const esquemaMasterBase = z.object({
   idioma: esquemaIdiomaCurriculo,

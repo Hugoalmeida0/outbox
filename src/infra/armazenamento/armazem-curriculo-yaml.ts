@@ -1,11 +1,17 @@
 import { copyFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { isSeq, stringify } from "yaml";
+import { isMap, isSeq, stringify } from "yaml";
 import type { ArmazemCurriculo } from "#aplicacao/portas/armazem-curriculo.ts";
 import type { Relogio } from "#aplicacao/portas/relogio.ts";
 import { ErroUsuario } from "#dominio/compartilhado/erros.ts";
+import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
 import { esquemaGapsNegados } from "#dominio/analise/gaps.ts";
-import { esquemaMaster, type Master, type SkillMaster } from "#dominio/curriculo/master.ts";
+import {
+  esquemaMaster,
+  type Master,
+  type NivelIdioma,
+  type SkillMaster,
+} from "#dominio/curriculo/master.ts";
 import { esquemaBancoRespostas, type BancoRespostas } from "#dominio/respostas/banco.ts";
 import { esquemaPerfil, type Perfil } from "#dominio/respostas/perfil.ts";
 import type { Caminhos } from "../sistema/caminhos.ts";
@@ -67,6 +73,22 @@ export class ArmazemCurriculoYaml implements ArmazemCurriculo {
       const skills = doc.get("skills");
       if (isSeq(skills)) skills.add(doc.createNode(skill));
       else doc.set("skills", doc.createNode([skill]));
+    });
+  }
+
+  definirIdioma(idioma: string, nivel: NivelIdioma): void {
+    const alvo = normalizarTexto(idioma);
+    editarYaml(this.caminhos.master, esquemaMaster, (doc) => {
+      const idiomas = doc.get("idiomas");
+      if (!isSeq(idiomas)) {
+        doc.set("idiomas", doc.createNode([{ idioma, nivel }]));
+        return;
+      }
+      const existente = idiomas.items.find(
+        (i) => isMap(i) && normalizarTexto(String(i.get("idioma"))) === alvo,
+      );
+      if (isMap(existente)) existente.set("nivel", nivel);
+      else idiomas.add(doc.createNode({ idioma, nivel }));
     });
   }
 

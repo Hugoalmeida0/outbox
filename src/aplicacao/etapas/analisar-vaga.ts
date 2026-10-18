@@ -1,4 +1,5 @@
 import { esquemaAnaliseVaga } from "#dominio/analise/analise-vaga.ts";
+import { lerChaveGapIdioma } from "#dominio/analise/idiomas.ts";
 import { gapsDaAnalise, sanearAnalise } from "#dominio/analise/validar-analise.ts";
 import { chaveDedup } from "#dominio/vagas/chave.ts";
 import type { VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
@@ -50,11 +51,12 @@ export async function analisarVaga(
   const master = deps.curriculo.lerMaster();
   const perfil = deps.curriculo.lerPerfil();
   const negados = deps.curriculo.lerGapsNegados();
+  const termosNegados = negados.filter((n) => lerChaveGapIdioma(n) === null);
   const bruta = await deps.gerador.gerar(
     {
       tarefa: "analisar-vaga",
       variaveis: {
-        negados: negados.length > 0 ? negados.join(", ") : "nenhum",
+        negados: termosNegados.length > 0 ? termosNegados.join(", ") : "nenhum",
         preferencias: JSON.stringify(perfil.preferencias),
         master: JSON.stringify(master),
       },

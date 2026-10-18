@@ -1,5 +1,7 @@
 import { calcularAderencia, recalcularComGaps } from "#dominio/analise/aderencia.ts";
+import { lerChaveGapIdioma, nivelAtende, nivelNoMaster } from "#dominio/analise/idiomas.ts";
 import { paraKebab } from "#dominio/compartilhado/texto.ts";
+import { NIVEIS_IDIOMA, type NivelIdioma } from "#dominio/curriculo/master.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
 import { executarComLimite } from "../compartilhado/concorrencia.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
@@ -20,7 +22,7 @@ export type DepsRodadaGaps = DepsGerarCurriculo & {
   >;
   readonly curriculo: Pick<
     ArmazemCurriculo,
-    "lerMaster" | "lerPerfil" | "adicionarSkill" | "negarGap"
+    "lerMaster" | "lerPerfil" | "adicionarSkill" | "definirIdioma" | "negarGap"
   >;
   readonly interacao: Interacao;
   readonly paralelo: number;
@@ -36,6 +38,40 @@ function idSkillLivre(base: string, existentes: ReadonlySet<string>): string {
   let id = base || "skill";
   for (let n = 2; existentes.has(id); n++) id = `${base}-${String(n)}`;
   return id;
+}
+
+const ROTULO_NIVEL: Record<NivelIdioma, string> = {
+  basico: "Básico",
+  intermediario: "Intermediário",
+  avancado: "Avançado",
+  fluente: "Fluente",
+  nativo: "Nativo",
+};
+
+/**
+ * Gap de idioma: pergunta só o nível. Atualiza `idiomas` do master e devolve se o nível atende ao exigido
+ * (`null` quando a pessoa não fala o idioma).
+ */
+async function perguntarNivelIdioma(
+  deps: DepsRodadaGaps,
+  grupo: GapAgrupado,
+  idioma: string,
+  exigido: NivelIdioma,
+  quantidade: string,
+): Promise<boolean> {
+  const nomeIdioma = grupo.termo;
+  const atual = nivelNoMaster(deps.curriculo.lerMaster().idiomas, idioma);
+  if (nivelAtende(atual, exigido)) return true;
+  const resposta = await deps.interacao.escolher<NivelIdioma | "nenhum">(
+    `A vaga pede ${nomeIdioma} ${ROTULO_NIVEL[exigido].toLowerCase()} (${quantidade}). Qual o seu nível de ${nomeIdioma}?`,
+    [
+      ...NIVEIS_IDIOMA.map((n) => ({ valor: n, rotulo: ROTULO_NIVEL[n] })),
+      { valor: "nenhum" as const, rotulo: "Não falo" },
+    ],
+  );
+  if (resposta === "nenhum") return false;
+  deps.curriculo.definirIdioma(nomeIdioma, resposta);
+  return nivelAtende(resposta, exigido);
 }
 
 /**
@@ -66,6 +102,23 @@ export async function rodadaGaps(
   for (const grupo of ordenados) {
     if (sinal.aborted) break;
     const quantidade = grupo.vagas.size === 1 ? "1 vaga" : `${String(grupo.vagas.size)} vagas`;
+    const idiomaExigido = lerChaveGapIdioma(grupo.termoNormalizado);
+    if (idiomaExigido) {
+      const atende = await perguntarNivelIdioma(
+        deps,
+        grupo,
+        idiomaExigido.idioma,
+        idiomaExigido.nivel,
+        quantidade,
+      );
+      if (atende) {
+        for (const id of deps.vagas.responderGaps(grupo.termoNormalizado, "sim")) afetadas.add(id);
+      } else {
+        deps.curriculo.negarGap(grupo.termoNormalizado);
+        deps.vagas.responderGaps(grupo.termoNormalizado, "nao");
+      }
+      continue;
+    }
     const tem = await deps.interacao.perguntarSimNao(
       `A vaga pede ${grupo.termo} (${quantidade}). Você tem?`,
     );
@@ -100,6 +153,7 @@ export async function rodadaGaps(
   if (afetadas.size === 0) return [];
   const confirmados = new Set(deps.vagas.termosConfirmados());
   const perfil = deps.curriculo.lerPerfil();
+  const idiomas = deps.curriculo.lerMaster().idiomas;
   const refeitas: IdVaga[] = [];
   await executarComLimite(
     [...afetadas],
@@ -109,7 +163,7 @@ export async function rodadaGaps(
       if (vaga?.status !== "PRONTA") return;
       const analise = atualizarAnalise(deps.artefatos, vaga, (a) => ({
         ...a,
-        requisitos: recalcularComGaps(a, confirmados).requisitos,
+        requisitos: recalcularComGaps(a, confirmados, idiomas).requisitos,
       }));
       if (!analise) return;
       const r = calcularAderencia(
