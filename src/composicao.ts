@@ -243,6 +243,8 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
       pastaPrompts: caminhos.promptsDir,
       cwd,
       modelo: config.llm.modeloTexto,
+      modeloPorTarefa: { tailoring: config.llm.modeloTailoring },
+      maxTokensThinking: config.llm.maxTokensThinking,
       timeoutMs: config.llm.timeoutTextoSeg * 1000,
       executar: executarClaude,
     });
@@ -259,6 +261,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
         pastaTmp: caminhos.tmpDir,
         pastaPrompts: caminhos.promptsDir,
         modelo: config.llm.modeloAgente,
+        maxTokensThinking: config.llm.maxTokensThinking,
         artefatos: artefatos(),
         registrador: registrador(),
       }),

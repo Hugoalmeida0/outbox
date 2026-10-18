@@ -65,6 +65,8 @@ export interface OpcoesExecutorAgente {
   readonly pastaTmp: string;
   readonly pastaPrompts: string;
   readonly modelo: string;
+  /** Vira `MAX_THINKING_TOKENS` do processo; 0 desliga o raciocínio estendido. */
+  readonly maxTokensThinking: number;
   readonly artefatos: ArmazemArtefatos;
   readonly registrador: Registrador;
 }
@@ -130,6 +132,7 @@ export class ExecutorAgenteClaude implements ExecutorAgente {
           cwd: pastaTrabalho,
           timeoutMs: msRestantes,
           sinal,
+          env: { MAX_THINKING_TOKENS: String(this.opcoes.maxTokensThinking) },
         });
       } catch (erro) {
         if (erro instanceof ErroMaxTurnos || erro instanceof ErroTimeoutLlm) {

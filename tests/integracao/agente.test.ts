@@ -41,6 +41,7 @@ function criarExecutor(artefatos = new ArmazemArtefatosMemoria()) {
     pastaTmp: mkdtempSync(join(tmpdir(), "outbox-agente-")),
     pastaPrompts: join(RAIZ, "prompts"),
     modelo: "sonnet",
+    maxTokensThinking: 0,
     artefatos,
     registrador: new RegistradorMemoria(),
   });

@@ -2,7 +2,11 @@ import { mkdirSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z, type ZodType } from "zod";
 import { ErroLlm } from "#aplicacao/portas/erros.ts";
-import type { GeradorEstruturado, PedidoGeracao } from "#aplicacao/portas/gerador-estruturado.ts";
+import type {
+  GeradorEstruturado,
+  PedidoGeracao,
+  TarefaLlm,
+} from "#aplicacao/portas/gerador-estruturado.ts";
 import { escreverAtomico } from "../sistema/escrita-atomica.ts";
 import { carregarPrompt } from "./prompts.ts";
 import type { ExecutarClaude, ResultadoClaude } from "./processo-claude.ts";
@@ -12,6 +16,10 @@ export interface OpcoesGerador {
   /** Pasta vazia usada como cwd (não carrega CLAUDE.md nem skills do repositório). */
   readonly cwd: string;
   readonly modelo: string;
+  /** Modelo de tarefas específicas, em vez de `modelo` (ex.: `tailoring`). */
+  readonly modeloPorTarefa?: Partial<Record<TarefaLlm, string>>;
+  /** Vira `MAX_THINKING_TOKENS` do processo; 0 desliga o raciocínio estendido. */
+  readonly maxTokensThinking: number;
   readonly timeoutMs: number;
   readonly executar: ExecutarClaude;
 }
@@ -64,7 +72,9 @@ export class GeradorEstruturadoClaude implements GeradorEstruturado {
       z.toJSONSchema(pedido.schema, { io: "input", unrepresentable: "any" }),
     );
     const entrada = `${prompt.texto}\n\n${INSTRUCAO_SAIDA}\n\n${schemaJson}\n`;
-    const args = this.argumentos(pedido.arquivosLeitura ?? []);
+    const modelo = this.opcoes.modeloPorTarefa?.[pedido.tarefa] ?? this.opcoes.modelo;
+    const args = this.argumentos(modelo, pedido.arquivosLeitura ?? []);
+    const env = { MAX_THINKING_TOKENS: String(this.opcoes.maxTokensThinking) };
     mkdirSync(this.opcoes.cwd, { recursive: true });
 
     const inicio = Date.now();
@@ -74,6 +84,7 @@ export class GeradorEstruturadoClaude implements GeradorEstruturado {
       cwd: this.opcoes.cwd,
       timeoutMs: this.opcoes.timeoutMs,
       sinal,
+      env,
     });
     this.registrar(pedido, prompt.versao, args, entrada, primeira, Date.now() - inicio);
     try {
@@ -90,14 +101,15 @@ export class GeradorEstruturadoClaude implements GeradorEstruturado {
         cwd: this.opcoes.cwd,
         timeoutMs: this.opcoes.timeoutMs,
         sinal,
+        env,
       });
       this.registrar(pedido, prompt.versao, argsRetry, correcao, segunda, Date.now() - inicioRetry);
       return extrairJson(segunda.resultado, pedido.schema);
     }
   }
 
-  private argumentos(arquivos: readonly string[]): string[] {
-    const base = ["-p", "--output-format", "json", "--model", this.opcoes.modelo];
+  private argumentos(modelo: string, arquivos: readonly string[]): string[] {
+    const base = ["-p", "--output-format", "json", "--model", modelo];
     if (arquivos.length === 0) return [...base, "--max-turns", "1", "--tools", ""];
     const dirs = [...new Set(arquivos.map((a) => dirname(a)))];
     return [

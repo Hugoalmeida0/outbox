@@ -20,6 +20,7 @@ if (caminhoRegistro) {
   const env = {
     OUTBOX_VAGA_ID: process.env.OUTBOX_VAGA_ID,
     OUTBOX_HOSTS_PERMITIDOS: process.env.OUTBOX_HOSTS_PERMITIDOS,
+    MAX_THINKING_TOKENS: process.env.MAX_THINKING_TOKENS,
   };
   appendFileSync(caminhoRegistro, `${JSON.stringify({ args, prompt: entrada, env })}\n`);
 }
