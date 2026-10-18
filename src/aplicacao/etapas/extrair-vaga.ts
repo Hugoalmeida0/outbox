@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { esquemaVagaExtraida, type VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
+import {
+  esquemaVagaExtraida,
+  normalizarEmpresa,
+  type VagaExtraida,
+} from "#dominio/vagas/vaga-extraida.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
 import { ErroExtracao, ErroVagaIndisponivel } from "../portas/erros.ts";
@@ -46,7 +50,7 @@ export async function extrairVaga(
       `a vaga ${url} não está mais disponível (página de erro ou vaga encerrada)`,
     );
   }
-  const extraida = lida;
+  const extraida = { ...lida, empresa: normalizarEmpresa(lida.empresa) };
   deps.artefatos.gravarJson(vaga.id, "vaga.json", extraida);
   deps.artefatos.gravarTexto(
     vaga.id,
