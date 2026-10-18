@@ -11,6 +11,10 @@ export type ChavePadrao =
   | "github"
   | "portfolio"
   | "cidade"
+  /** Localização em autocomplete ("Current location"): cidade, estado e país. */
+  | "localizacao"
+  /** Empregador atual (experiência sem data de fim no master). */
+  | "empresaAtual"
   | "pais";
 export type ChaveDocumento =
   "cpf" | "rg" | "dataNascimento" | "logradouro" | "numero" | "complemento" | "bairro" | "cep";
@@ -54,6 +58,10 @@ const AUTOCOMPLETE: Readonly<Record<string, Classificacao>> = {
 const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
   // Dados de outra pessoa (quem indicou, referência, contato de emergência) nunca recebem os do candidato.
   [/\bindic(ou|ad[oa]|acao)\b|\breferr|\breferenc|\bemergenc/, { categoria: "pergunta" }],
+  [
+    /current (company|employer)|empresa atual|company where you (currently )?work|empresa (em|na) que (voce )?trabalha|empresa onde (voce )?trabalha/,
+    { categoria: "padrao", chave: "empresaAtual" },
+  ],
   [/\bcpf\b/, { categoria: "documento", chave: "cpf" }],
   [/\brg\b|registro geral|carteira de identidade/, { categoria: "documento", chave: "rg" }],
   [
@@ -106,6 +114,10 @@ const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
   ],
   [/^numero$|^number$/, { categoria: "documento", chave: "numero" }],
   [/cidade|city/, { categoria: "padrao", chave: "cidade" }],
+  [
+    /^(current |your )?location$|current location|^localizacao( atual)?$|localizacao atual/,
+    { categoria: "padrao", chave: "localizacao" },
+  ],
   [/\bpais\b|country/, { categoria: "padrao", chave: "pais" }],
 ];
 
@@ -190,8 +202,13 @@ export function classificarCampoDetalhado(campo: DescricaoCampo): Classificacao 
     const longo = texto.split(" ").length > MAX_PALAVRAS_PADRAO;
     for (const [regex, classificacao] of REGRAS) {
       if (!regex.test(texto)) continue;
+      // "Confirm the name of the company where you work / Confirme o nome da empresa…" é longo, mas é o
+      // empregador atual.
+      const empregador =
+        classificacao.categoria === "padrao" && classificacao.chave === "empresaAtual";
       if (
         longo &&
+        !empregador &&
         (classificacao.categoria === "padrao" || classificacao.categoria === "documento")
       )
         continue;

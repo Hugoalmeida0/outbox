@@ -185,6 +185,58 @@ describe("responderCampos", () => {
     });
   });
 
+  it("empresa atual por código, anexo desconhecido sem resposta e consentimento sem opção reconhecível vai ao LLM", async () => {
+    const amb = criarAmbienteAplicacao({
+      master: umMaster({
+        experiencias: [
+          { ...umMaster().experiencias[0]!, empresa: "Grupo Aurora — Unidade Sul", fim: null },
+        ],
+      }),
+    });
+    const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
+    amb.gerador.sempre("responder-perguntas", {
+      respostas: [{ campoId: "lgpd", valor: "Li o documento", confianca: "alta" }],
+      salarios: [],
+    });
+    const saida = await responderCampos(
+      amb.deps(),
+      { vaga, analise: { ...umaAnalise(), alertas: [] } },
+      [
+        {
+          id: "emp",
+          rotulo: "Current company",
+          tipo: "texto",
+          obrigatorio: true,
+          categoria: "pergunta",
+        },
+        {
+          id: "laudo",
+          rotulo: "Laudo médico",
+          tipo: "arquivo",
+          obrigatorio: false,
+          categoria: "anexo",
+        },
+        {
+          id: "lgpd",
+          rotulo: "Consinto com o tratamento dos meus dados pessoais",
+          tipo: "select",
+          obrigatorio: true,
+          opcoes: ["Li o documento"],
+          categoria: "pergunta",
+        },
+      ],
+      sinal(),
+    );
+    expect(saida.respostas).toMatchObject([
+      { campoId: "emp", valor: "Grupo Aurora", fonte: "codigo" },
+      { campoId: "lgpd", valor: "Li o documento", fonte: "gerada" },
+    ]);
+    const campos = JSON.parse(
+      String(amb.gerador.pedidosDe("responder-perguntas")[0]?.variaveis.campos),
+    ) as { campoId: string }[];
+    expect(campos.map((c) => c.campoId)).toEqual(["lgpd"]);
+  });
+
   it("carta em campo de arquivo vira PDF; carta avulsa vazia não grava nada", async () => {
     const amb = criarAmbienteAplicacao();
     const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");

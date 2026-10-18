@@ -9,7 +9,8 @@ import {
 import { respostaDiversidade } from "./diversidade.ts";
 import { respostaConsentimento } from "./consentimento.ts";
 import { calcularSalario, escolherFaixa, resolverRegime, valorSalarioAtual } from "./salario.ts";
-import { formatarData, valorDocumento, valorPadrao } from "./valor-codigo.ts";
+import { consultasLocalizacao, localizacaoCompleta } from "./localidade.ts";
+import { empresaAtual, formatarData, valorDocumento, valorPadrao } from "./valor-codigo.ts";
 import type { BancoRespostas } from "./banco.ts";
 
 describe("classificarCampo", () => {
@@ -397,6 +398,29 @@ describe("consentimento e ajustes vistos em formulários reais", () => {
     ).toBe("anexo");
   });
 
+  it("empresa atual e localização são campos padrão", () => {
+    expect(classificarCampoDetalhado({ rotulo: "Current company", tipo: "texto" })).toEqual({
+      categoria: "padrao",
+      chave: "empresaAtual",
+    });
+    expect(
+      classificarCampoDetalhado({
+        rotulo:
+          "Confirm the name of the company where you work/ Confirme o nome da empresa em que você trabalha atualmente",
+        tipo: "texto",
+      }),
+    ).toEqual({ categoria: "padrao", chave: "empresaAtual" });
+    expect(classificarCampoDetalhado({ rotulo: "Current location", tipo: "texto" })).toEqual({
+      categoria: "padrao",
+      chave: "localizacao",
+    });
+    // "Localização (Cidade)" continua cidade: o autocomplete do Greenhouse casa só com a cidade.
+    expect(classificarCampoDetalhado({ rotulo: "Localização (Cidade)", tipo: "select" })).toEqual({
+      categoria: "padrao",
+      chave: "cidade",
+    });
+  });
+
   it("sem consentimento de diversidade, responde 'prefiro não informar' mesmo com o dado no perfil", () => {
     const opcoes = ["Parda", "Branca", "Prefiro não informar"];
     expect(respostaDiversidade("raca", opcoes, { raca: "parda" }).valor).toBe("Parda");
@@ -407,6 +431,38 @@ describe("consentimento e ajustes vistos em formulários reais", () => {
       valor: null,
       confianca: "baixa",
     });
+  });
+
+  it("empresa atual vem da experiência sem fim, sem a unidade após o travessão", () => {
+    const master = umMaster({
+      experiencias: [
+        { ...umMaster().experiencias[0]!, empresa: "Antiga SA", inicio: "2020-01", fim: "2023-01" },
+        {
+          ...umMaster().experiencias[0]!,
+          empresa: "Grupo Autoglass — Autoglass",
+          inicio: "2025-09",
+          fim: null,
+        },
+      ],
+    });
+    expect(empresaAtual(master)).toBe("Grupo Autoglass");
+    expect(empresaAtual({ experiencias: [] })).toBeNull();
+  });
+
+  it("localização completa e consultas em cascata (cidade, cidade e estado, capital)", () => {
+    expect(localizacaoCompleta("Cariacica", "ES", "Brasil")).toBe(
+      "Cariacica, Espírito Santo, Brasil",
+    );
+    expect(consultasLocalizacao("Cariacica, Espírito Santo, Brasil")).toEqual([
+      "Cariacica",
+      "Cariacica, Espírito Santo",
+      "Vitória",
+    ]);
+    expect(consultasLocalizacao("São Paulo, SP, Brasil")).toEqual([
+      "São Paulo",
+      "São Paulo, São Paulo",
+    ]);
+    expect(consultasLocalizacao("Lisboa")).toEqual(["Lisboa"]);
   });
 
   it("reconhece 'I don't wish to answer' como prefiro não informar", () => {

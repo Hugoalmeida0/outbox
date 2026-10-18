@@ -1,11 +1,24 @@
 import type { Campo } from "./campo.ts";
 import type { ChaveDocumento, ChavePadrao } from "./classificar-campo.ts";
+import type { Master } from "../curriculo/master.ts";
+import { localizacaoCompleta } from "./localidade.ts";
 import type { Contato } from "./pacote.ts";
 import type { Documentos, Endereco } from "./perfil.ts";
 
 function partesNome(nome: string): { primeiro: string; sobrenome: string } {
   const partes = nome.trim().split(/\s+/);
   return { primeiro: partes[0] ?? "", sobrenome: partes.slice(1).join(" ") };
+}
+
+/**
+ * Empregador atual: a experiência sem data de fim mais recente. "Grupo Autoglass — Autoglass" (grupo —
+ * unidade) vira "Grupo Autoglass", o empregador formal.
+ */
+export function empresaAtual(master: Pick<Master, "experiencias">): string | null {
+  const atual = master.experiencias
+    .filter((e) => e.fim === null)
+    .sort((a, b) => b.inicio.localeCompare(a.inicio))[0];
+  return atual?.empresa.split(/\s+[—–]\s+/)[0]?.trim() || null;
 }
 
 /** Valor de um campo padrão (nome, contato, links) a partir do contato do master. */
@@ -29,6 +42,10 @@ export function valorPadrao(chave: ChavePadrao, contato: Contato): string | null
       return contato.portfolio ?? contato.github ?? null;
     case "cidade":
       return contato.cidade;
+    case "localizacao":
+      return localizacaoCompleta(contato.cidade, contato.uf, contato.pais);
+    case "empresaAtual":
+      return contato.empresaAtual ?? null;
     case "pais":
       return contato.pais;
   }

@@ -33,6 +33,8 @@ export const esquemaContato = z.object({
   linkedin: z.string().optional(),
   github: z.string().optional(),
   portfolio: z.string().optional(),
+  /** Empregador atual, derivado da experiência sem data de fim no master. */
+  empresaAtual: z.string().optional(),
 });
 export type Contato = z.infer<typeof esquemaContato>;
 

@@ -19,7 +19,7 @@ import {
   resolverRegime,
   valorSalarioAtual,
 } from "#dominio/respostas/salario.ts";
-import { valorDocumento, valorPadrao } from "#dominio/respostas/valor-codigo.ts";
+import { empresaAtual, valorDocumento, valorPadrao } from "#dominio/respostas/valor-codigo.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArquivoAnalise } from "../compartilhado/artefatos.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
@@ -71,7 +71,8 @@ export interface SaidaResponderCampos {
 }
 
 export function contatoDo(master: Master): Contato {
-  return { ...master.pessoal };
+  const empresa = empresaAtual(master);
+  return { ...master.pessoal, ...(empresa ? { empresaAtual: empresa } : {}) };
 }
 
 function base(
