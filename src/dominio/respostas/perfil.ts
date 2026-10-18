@@ -36,6 +36,8 @@ export const esquemaSalario = z.object({
   clt_brl_mensal: z.number().nonnegative(),
   pj_brl_mensal: z.number().nonnegative(),
   usd_anual: z.number().nonnegative(),
+  /** Salário atual ou último, em texto livre (ex.: "7000 CLT + VR/VA"). Ausente, o campo fica vazio. */
+  atual: z.string().min(1).optional(),
 });
 export type TabelaSalario = z.infer<typeof esquemaSalario>;
 

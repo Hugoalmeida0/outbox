@@ -209,6 +209,63 @@ describe("responderCampos", () => {
     expect(amb.artefatos.existe(vaga.id, "carta.md")).toBe(false);
   });
 
+  it("valor por código fora das opções do select vira pergunta para o LLM", async () => {
+    const amb = criarAmbienteAplicacao();
+    const vaga = vagaPronta(amb, "https://jobs.lever.co/acme/1");
+    const select = (id: string, rotulo: string, opcoes: string[]): Campo => ({
+      id,
+      rotulo,
+      tipo: "select",
+      obrigatorio: true,
+      opcoes,
+      categoria: "pergunta",
+    });
+    amb.gerador.sempre("responder-perguntas", {
+      respostas: [{ campoId: "familia", valor: "Não" }],
+      salarios: [],
+    });
+    const saida = await responderCampos(
+      amb.deps(),
+      { vaga, analise: null },
+      [
+        select("pais", "País", ["Argentina", "Brazil"]),
+        select("familia", "Seus pais?", ["Sim", "Não"]),
+      ],
+      sinal(),
+    );
+    expect(saida.respostas).toMatchObject([
+      { campoId: "pais", categoria: "padrao", valor: "Brasil", fonte: "codigo" },
+      { campoId: "familia", categoria: "pergunta", valor: "Não", fonte: "gerada" },
+    ]);
+    const campos = JSON.parse(
+      String(amb.gerador.pedidosDe("responder-perguntas")[0]?.variaveis.campos),
+    ) as { campoId: string }[];
+    expect(campos.map((c) => c.campoId)).toEqual(["familia"]);
+  });
+
+  it("salário atual vem do perfil, é sensível e nunca usa a pretensão", async () => {
+    const amb = criarAmbienteAplicacao();
+    const vaga = vagaPronta(amb, "https://jobs.lever.co/acme/1");
+    const atual: Campo = {
+      id: "atual",
+      rotulo: "Please share your current or last salary and benefits",
+      tipo: "texto",
+      obrigatorio: false,
+      categoria: "pergunta",
+    };
+    const semDado = await responderCampos(amb.deps(), { vaga, analise: null }, [atual], sinal());
+    expect(semDado.respostas).toMatchObject([
+      { campoId: "atual", categoria: "salario_atual", valor: null, sensivel: true },
+    ]);
+    amb.curriculo.perfil = {
+      ...amb.curriculo.perfil,
+      salario: { ...amb.curriculo.perfil.salario, atual: "7000 CLT + VR" },
+    };
+    const comDado = await responderCampos(amb.deps(), { vaga, analise: null }, [atual], sinal());
+    expect(comDado.respostas[0]?.valor).toBe("7000 CLT + VR");
+    expect(amb.gerador.pedidosDe("responder-perguntas")).toHaveLength(0);
+  });
+
   it("salvarRespostas mescla por campo e numera as chaves protegidas a partir da maior", () => {
     const amb = criarAmbienteAplicacao();
     const vaga = { id: 1 as IdVaga };

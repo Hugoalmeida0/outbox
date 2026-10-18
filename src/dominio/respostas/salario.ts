@@ -17,6 +17,17 @@ export function resolverRegime(
 }
 
 /**
+ * Valor para "salário atual ou último": o texto do perfil, nunca a pretensão. Campo numérico recebe só o
+ * primeiro número do texto ("7.000 CLT + VR" vira "7000"); sem o dado, `null`.
+ */
+export function valorSalarioAtual(atual: string | undefined, numerico: boolean): string | null {
+  if (atual === undefined) return null;
+  if (!numerico) return atual;
+  const numero = /\d[\d.,]*/.exec(atual)?.[0];
+  return numero ? numero.replace(/[.,](?=\d{3}(?!\d))/g, "").replace(",", ".") : null;
+}
+
+/**
  * Pretensão salarial calculada pela tabela do perfil. CLT anual considera 13 salários; PJ anual, 12.
  * Contractor ou moeda USD usam `usd_anual`.
  */

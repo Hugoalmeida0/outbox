@@ -12,7 +12,13 @@ import {
   type RespostaSugerida,
 } from "#dominio/respostas/pacote.ts";
 import type { Perfil } from "#dominio/respostas/perfil.ts";
-import { calcularSalario, escolherFaixa, resolverRegime } from "#dominio/respostas/salario.ts";
+import { melhorOpcao } from "#dominio/respostas/opcoes.ts";
+import {
+  calcularSalario,
+  escolherFaixa,
+  resolverRegime,
+  valorSalarioAtual,
+} from "#dominio/respostas/salario.ts";
 import { valorDocumento, valorPadrao } from "#dominio/respostas/valor-codigo.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArquivoAnalise } from "../compartilhado/artefatos.ts";
@@ -111,6 +117,8 @@ function respostaPorCodigo(
       const c = respostaConsentimento(campo);
       return r(c.valor, c.confianca);
     }
+    case "salario_atual":
+      return r(valorSalarioAtual(perfil.salario.atual, campo.tipo === "numero"));
     case "curriculo":
       return null;
     case "salario":
@@ -118,6 +126,16 @@ function respostaPorCodigo(
     case "pergunta":
       return null;
   }
+}
+
+/**
+ * Valor de campo-padrão ou documento que não está entre as opções do campo: o rótulo enganou a
+ * classificação ("familiar como pais..." não é país) e o campo vira pergunta para o LLM.
+ */
+function foraDasOpcoes(campo: Campo, resposta: RespostaSugerida): boolean {
+  if (resposta.categoria !== "padrao" && resposta.categoria !== "documento") return false;
+  if (!campo.opcoes || campo.opcoes.length === 0 || resposta.valor === null) return false;
+  return melhorOpcao(campo.opcoes, resposta.valor) === null;
 }
 
 /**
@@ -144,7 +162,8 @@ export async function responderCampos(
     const classificacao = classificacoes[i] ?? { categoria: "pergunta" as const };
     if (campo.tipo === "arquivo" && classificacao.categoria === "curriculo") return;
     const porCodigo = respostaPorCodigo(campo, classificacao, perfil, contato);
-    if (porCodigo) respostas.set(campo.id, porCodigo);
+    if (porCodigo && !foraDasOpcoes(campo, porCodigo)) respostas.set(campo.id, porCodigo);
+    else if (porCodigo) paraLlm.push({ campo, categoria: "pergunta" });
     else paraLlm.push({ campo, categoria: classificacao.categoria });
   });
 

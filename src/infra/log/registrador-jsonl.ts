@@ -8,7 +8,8 @@ import { redigirPii } from "#dominio/falhas/sanitizar.ts";
 export const NIVEIS_LOG = ["depurar", "informar", "avisar", "erro"] as const;
 export type NivelLog = (typeof NIVEIS_LOG)[number];
 
-const CHAVES_SENSIVEIS = /^(senha|password|cpf|rg|datanascimento|salario|diversidade)$/i;
+const CHAVES_SENSIVEIS =
+  /^(senha|password|cpf|rg|datanascimento|salario|salario_atual|diversidade)$/i;
 
 export interface OpcoesRegistrador {
   readonly pastaLogs: string;

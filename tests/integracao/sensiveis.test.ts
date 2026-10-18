@@ -32,6 +32,7 @@ import { ExtratorFake, RenderizadorFake, ResolvedorFake } from "#testes/apoio/fa
 import {
   InteracaoRoteirizada,
   NotificadorEspiao,
+  ProgressoEspiao,
   RelogioFixo,
 } from "#testes/apoio/fakes/basicos.ts";
 import { CatalogoConectoresFake, ConectorFake } from "#testes/apoio/fakes/formularios.ts";
@@ -143,6 +144,7 @@ describe("dados sensíveis fora do LLM e dos logs (AC11, AC16, AC27)", () => {
       pastaPrompts: caminhos.promptsDir,
       cwd,
       modelo: "sonnet",
+      maxTokensThinking: 0,
       timeoutMs: 30_000,
       executar: executarClaude,
     });
@@ -157,6 +159,7 @@ describe("dados sensíveis fora do LLM e dos logs (AC11, AC16, AC27)", () => {
       pastaTmp: caminhos.tmpDir,
       pastaPrompts: caminhos.promptsDir,
       modelo: "sonnet",
+      maxTokensThinking: 0,
       artefatos,
       registrador,
     });
@@ -185,6 +188,7 @@ describe("dados sensíveis fora do LLM e dos logs (AC11, AC16, AC27)", () => {
       registrador,
       relogio,
       interacao: new InteracaoRoteirizada(),
+      progresso: new ProgressoEspiao(),
       config: CONFIG_TESTE,
       cartaMaxPalavras: CONFIG_TESTE.cartaMaxPalavras,
     };

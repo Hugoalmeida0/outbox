@@ -45,6 +45,8 @@ const AUTOCOMPLETE: Readonly<Record<string, Classificacao>> = {
 
 /** Regras em ordem de prioridade: as mais específicas primeiro. */
 const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
+  // Dados de outra pessoa (quem indicou, referência, contato de emergência) nunca recebem os do candidato.
+  [/\bindic(ou|ad[oa]|acao)\b|\breferr|\breferenc|\bemergenc/, { categoria: "pergunta" }],
   [/\bcpf\b/, { categoria: "documento", chave: "cpf" }],
   [/\brg\b|registro geral|carteira de identidade/, { categoria: "documento", chave: "rg" }],
   [
@@ -58,6 +60,11 @@ const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
   ],
   [/bairro|neighborhood|district/, { categoria: "documento", chave: "bairro" }],
   [/complemento|address line 2|apartment/, { categoria: "documento", chave: "complemento" }],
+  // Salário atual/último é outro dado: nunca recebe a pretensão.
+  [
+    /^(?!.*(pretens|expectat|desired|pretend))(?=.*(salari|salary|compensation|remuneracao)).*\b(atual|ultim[oa]|current|last|previous|anterior)\b/,
+    { categoria: "salario_atual" },
+  ],
   [/pretensao|salari|salary|compensation|remuneracao/, { categoria: "salario" }],
   [/genero|gender|\bsexo\b/, { categoria: "diversidade", chave: "genero" }],
   [
@@ -76,7 +83,11 @@ const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
   [/telefone|celular|phone|mobile|whatsapp/, { categoria: "padrao", chave: "telefone" }],
   [/linkedin/, { categoria: "padrao", chave: "linkedin" }],
   [/github/, { categoria: "padrao", chave: "github" }],
-  [/portfolio|website|\bsite\b|personal url/, { categoria: "padrao", chave: "portfolio" }],
+  // "on-site" (presencial) não é site.
+  [
+    /portfolio|website|(?<!\bon )\bsite\b|personal url/,
+    { categoria: "padrao", chave: "portfolio" },
+  ],
   [/primeiro nome|first name|given name/, { categoria: "padrao", chave: "primeiroNome" }],
   [
     /sobrenome|ultimo nome|last name|surname|family name/,
@@ -90,6 +101,13 @@ const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
   [/cidade|city/, { categoria: "padrao", chave: "cidade" }],
   [/\bpais\b|country/, { categoria: "padrao", chave: "pais" }],
 ];
+
+/**
+ * Rótulos de campo-padrão e de documento são curtos ("Cidade", "Which city do you live in?"). Acima disto, o
+ * rótulo é uma pergunta que só cita a palavra ("familiar como pais...", "trabalho na cidade de Campinas") e
+ * vai para o LLM.
+ */
+const MAX_PALAVRAS_PADRAO = 12;
 
 /** Checkboxes/radios de consentimento (privacidade, termos, comunicações). */
 const CONSENTIMENTO =
@@ -128,8 +146,14 @@ export function classificarCampoDetalhado(campo: DescricaoCampo): Classificacao 
     (c) => c.length > 0,
   );
   for (const texto of candidatos) {
+    const longo = texto.split(" ").length > MAX_PALAVRAS_PADRAO;
     for (const [regex, classificacao] of REGRAS) {
       if (!regex.test(texto)) continue;
+      if (
+        longo &&
+        (classificacao.categoria === "padrao" || classificacao.categoria === "documento")
+      )
+        continue;
       // Rótulo de currículo em campo de texto (ex.: "link para o currículo") é uma pergunta comum.
       return classificacao.categoria === "curriculo" ? { categoria: "pergunta" } : classificacao;
     }

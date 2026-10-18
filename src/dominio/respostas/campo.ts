@@ -20,6 +20,7 @@ export const CATEGORIAS_CAMPO = [
   "curriculo",
   "carta",
   "salario",
+  "salario_atual",
   "diversidade",
   "consentimento",
   "pergunta",
@@ -30,6 +31,7 @@ export type CategoriaCampo = (typeof CATEGORIAS_CAMPO)[number];
 export const CATEGORIAS_SENSIVEIS: ReadonlySet<CategoriaCampo> = new Set([
   "documento",
   "salario",
+  "salario_atual",
   "diversidade",
 ]);
 

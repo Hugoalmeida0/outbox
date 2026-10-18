@@ -8,7 +8,7 @@ import {
 } from "./classificar-campo.ts";
 import { respostaDiversidade } from "./diversidade.ts";
 import { respostaConsentimento } from "./consentimento.ts";
-import { calcularSalario, escolherFaixa, resolverRegime } from "./salario.ts";
+import { calcularSalario, escolherFaixa, resolverRegime, valorSalarioAtual } from "./salario.ts";
 import { formatarData, valorDocumento, valorPadrao } from "./valor-codigo.ts";
 import type { BancoRespostas } from "./banco.ts";
 
@@ -27,10 +27,50 @@ describe("classificarCampo", () => {
     ["Cover letter", "arquivo", "carta"],
     ["Link para o seu currículo", "texto", "pergunta"],
     ["E-mail", "texto", "padrao"],
+    ["Se sim, informe o e-mail corporativo da pessoa que te indicou!", "texto", "pergunta"],
+    ["Referred by (email)", "email", "pergunta"],
+    ["Emergency contact phone", "telefone", "pergunta"],
+    ["Preferred First Name", "texto", "padrao"],
     ["Phone", "telefone", "padrao"],
     ["LinkedIn Profile", "texto", "padrao"],
     ["Por que você quer trabalhar aqui?", "textarea", "pergunta"],
     ["Qualquer coisa", "email", "padrao"],
+    ["Which city/state do you currently reside in?", "texto", "padrao"],
+    ["Are you open to on-site work?", "radio", "pergunta"],
+    ["Personal website", "texto", "padrao"],
+    // Perguntas longas (formulários da CI&T no Lever) que só citam palavras de campo-padrão.
+    [
+      "Você possui algum familiar (como pais, irmãos, sogros, cunhados, cônjuges, ou filhos) que atualmente trabalha na CI&T?",
+      "select",
+      "pergunta",
+    ],
+    [
+      "Do you have availability for on-site work at the Campinas office (Brazil) every day?",
+      "select",
+      "pergunta",
+    ],
+    [
+      "Você tem disponibilidade para trabalho presencial na cidade de Campinas todos os dias?",
+      "select",
+      "pergunta",
+    ],
+    [
+      "If you feel comfortable, please share your current or last salary and benefits",
+      "texto",
+      "salario_atual",
+    ],
+    [
+      "Caso se sinta confortável, compartilhe seu salário atual ou ultimo e benefícios!",
+      "texto",
+      "salario_atual",
+    ],
+    ["Último salário", "numero", "salario_atual"],
+    [
+      "What is your salary expectation? Only the numeric value (no currency, text, or benefits)/ Qual é a sua pretensão salarial?",
+      "texto",
+      "salario",
+    ],
+    ["Qual sua pretensão salarial para vagas CLT?", "texto", "salario"],
   ] as const)("%s (%s) → %s", (rotulo, tipo, categoria) => {
     expect(classificarCampo({ rotulo, tipo })).toBe(categoria);
   });
@@ -140,6 +180,16 @@ describe("salário", () => {
     [["Prefiro não dizer"], 1000, null],
   ] as const)("faixa entre %o para %i", (opcoes, valor, esperado) => {
     expect(escolherFaixa(opcoes, valor)).toBe(esperado);
+  });
+});
+
+describe("salário atual", () => {
+  it("usa o texto do perfil e nunca a pretensão; sem dado, null", () => {
+    expect(valorSalarioAtual("7.000 CLT + VR/VA", false)).toBe("7.000 CLT + VR/VA");
+    expect(valorSalarioAtual("7.000 CLT + VR/VA", true)).toBe("7000");
+    expect(valorSalarioAtual("R$ 12.500,50", true)).toBe("12500.50");
+    expect(valorSalarioAtual("sem número", true)).toBeNull();
+    expect(valorSalarioAtual(undefined, false)).toBeNull();
   });
 });
 
