@@ -192,6 +192,7 @@ export function criarConector(definicao: DefinicaoConector, deps: DepsConector):
           await ctx.aguardarUsuario(m);
           ctx.informar("retomando o preenchimento…");
         },
+        dispensados: new Set(),
         naoPreenchidos: [],
       };
       const aoAbortar = (): void => {

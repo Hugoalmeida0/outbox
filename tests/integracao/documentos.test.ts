@@ -110,12 +110,32 @@ describe("detectarBloqueio e LeitorHeadless", () => {
         '<iframe src="https://www.google.com/recaptcha/api2/anchor" width="300" height="80"></iframe>',
       );
       expect(await detectarBloqueio(pagina)).toBe("captcha");
+      // Desafio do reCAPTCHA invisível que apareceu de fato: o iframe `bframe` ficou visível.
+      await pagina.setContent(
+        '<iframe src="https://www.google.com/recaptcha/api2/bframe?k=x" width="400" height="580"></iframe>',
+      );
+      expect(await detectarBloqueio(pagina)).toBe("captcha");
       await pagina.setContent(
         '<iframe src="https://www.google.com/recaptcha/api2/anchor" style="display:none"></iframe><p>ok</p>',
       );
       expect(await detectarBloqueio(pagina)).toBeNull();
       await pagina.setContent("<p>Enviamos um código de verificação para o seu e-mail</p>");
       expect(await detectarBloqueio(pagina)).toBe("verificacao_email");
+    });
+  });
+
+  it("ignora o selo do reCAPTCHA invisível, o desafio ainda escondido e o hCaptcha invisível", async () => {
+    await leitor.comPagina(async (pagina) => {
+      // Marcação do Greenhouse real: selo fixo no canto e iframe de desafio fora da tela, escondido.
+      await pagina.setContent(
+        '<div class="grecaptcha-badge" style="width:256px;height:60px;position:fixed;bottom:14px;right:-186px">' +
+          '<iframe title="reCAPTCHA" width="256" height="60" src="https://www.recaptcha.net/recaptcha/enterprise/anchor?ar=1&amp;k=x&amp;size=invisible&amp;cb=y"></iframe></div>' +
+          '<div style="visibility:hidden;position:absolute;top:-10000px">' +
+          '<iframe src="https://www.recaptcha.net/recaptcha/enterprise/bframe?k=x" width="400" height="580"></iframe></div>' +
+          '<iframe src="https://newassets.hcaptcha.com/captcha/v1/x/static/hcaptcha.html#frame=checkbox-invisible" width="300" height="80"></iframe>' +
+          "<button>Submit application</button>",
+      );
+      expect(await detectarBloqueio(pagina)).toBeNull();
     });
   });
 

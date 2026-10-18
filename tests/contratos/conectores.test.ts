@@ -174,7 +174,11 @@ describe("catálogo e comportamentos comuns", () => {
       ctx,
       sinal,
     );
-    expect(pausas.some((p) => p.includes("CAPTCHA"))).toBe(true);
+    // O CAPTCHA da fixture nunca some: pausa, insiste uma vez e depois não trava os demais passos.
+    expect(pausas.filter((p) => p.includes("CAPTCHA"))).toEqual([
+      "A página pede um CAPTCHA. Resolva no navegador e pressione Enter",
+      "Ainda detecto um CAPTCHA. Se já resolveu ou não há nada para fazer, pressione Enter para seguir",
+    ]);
     await formulario.fechar();
   });
 
