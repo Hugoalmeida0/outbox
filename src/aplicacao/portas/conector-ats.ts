@@ -7,6 +7,11 @@ import type { FormularioAberto } from "./formulario-aberto.ts";
 export interface CtxPreenchimento {
   /** Responde campos encontrados só durante o preenchimento (ex.: Gupy). */
   responderAoVivo(campos: readonly Campo[]): Promise<RespostaSugerida[]>;
+  /**
+   * A resposta não casou com nenhuma opção do campo: escolhe de novo entre as opções reais exibidas na
+   * página. `null` quando não há escolha possível.
+   */
+  reescolher?(campo: Campo, opcoes: readonly string[]): Promise<string | null>;
   /** Pausa para o usuário resolver algo no navegador (login, CAPTCHA, verificação de e-mail). */
   aguardarUsuario(mensagem: string): Promise<void>;
   /** Andamento para o usuário: o preenchimento leva de segundos a minutos e não pode parecer travado. */

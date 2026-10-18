@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import type { ConectorAts, CtxPreenchimento } from "#aplicacao/portas/conector-ats.ts";
-import { ErroFalhaConector } from "#aplicacao/portas/erros.ts";
+import { ErroFalhaConector, ErroLimiteUso } from "#aplicacao/portas/erros.ts";
 import type { FormularioAberto } from "#aplicacao/portas/formulario-aberto.ts";
 import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
 import type { Campo } from "#dominio/respostas/campo.ts";
@@ -13,6 +13,7 @@ import type { ClienteHttp } from "#infra/sistema/cliente-http.ts";
 import {
   ErroSemOpcao,
   lerDescritores,
+  listarOpcoes,
   paraCampos,
   preencherCampo,
   type DescritorCampo,
@@ -114,10 +115,11 @@ async function preencherEtapa(
   for (const [i, campo] of campos.entries()) {
     const descritor = descritores[i];
     if (!descritor) continue;
+    const nome = campo.rotulo || campo.id;
     if (campo.tipo === "arquivo" && campo.categoria === "anexo") {
       // Anexo que não é CV nem carta (laudo, portfólio): nunca recebe o currículo.
       if (campo.obrigatorio)
-        contexto.naoPreenchidos.push(`${campo.rotulo || campo.id} (anexo que você precisa enviar)`);
+        contexto.naoPreenchidos.push(`${nome} (anexo que você precisa enviar)`);
       continue;
     }
     const valor =
@@ -127,33 +129,57 @@ async function preencherEtapa(
           : pacote.pdfCurriculo
         : (acharResposta(indice, campo)?.valor ?? null);
     if (valor === null || valor === "") {
-      if (campo.obrigatorio)
-        contexto.naoPreenchidos.push(`${campo.rotulo || campo.id} (sem resposta)`);
+      if (campo.obrigatorio) contexto.naoPreenchidos.push(`${nome} (sem resposta)`);
       continue;
     }
+    const preencher = (v: string): Promise<void> =>
+      passo(`preencher:${nome}`, descritor.seletor, contexto, async () => {
+        if (
+          definicao.preencherEspecial &&
+          (await definicao.preencherEspecial(pagina, descritor, v))
+        )
+          return;
+        await preencherCampo(pagina, descritor, v);
+      });
     try {
-      await passo(
-        `preencher:${campo.rotulo || campo.id}`,
-        descritor.seletor,
-        contexto,
-        async () => {
-          if (
-            definicao.preencherEspecial &&
-            (await definicao.preencherEspecial(pagina, descritor, valor))
-          )
-            return;
-          await preencherCampo(pagina, descritor, valor);
-        },
-      );
+      await preencher(valor);
     } catch (erro) {
       // Falha num campo não derruba o conector: ele segue para os próximos e o campo fica para o usuário
       // completar na revisão. O agente só assume em falhas estruturais (abrir, autenticar, avançar etapa).
       if (pagina.isClosed()) throw erro;
       const semOpcao = erro instanceof Error && erro.cause instanceof ErroSemOpcao;
+      if (semOpcao && (await reescolherEPreencher(pagina, campo, descritor, valor, ctx, preencher)))
+        continue;
       contexto.naoPreenchidos.push(
-        `${campo.rotulo || campo.id} (${semOpcao ? "nenhuma opção corresponde à resposta" : "falhou"})`,
+        `${nome} (${semOpcao ? "nenhuma opção corresponde à resposta" : "falhou"})`,
       );
     }
+  }
+}
+
+/**
+ * A resposta não casou com nenhuma opção: lê as opções reais do campo e pede uma nova escolha (uma vez).
+ * Devolve `true` se o campo ficou preenchido.
+ */
+async function reescolherEPreencher(
+  pagina: Page,
+  campo: Campo,
+  descritor: DescritorCampo,
+  valorAnterior: string,
+  ctx: CtxPreenchimento,
+  preencher: (valor: string) => Promise<void>,
+): Promise<boolean> {
+  if (!ctx.reescolher) return false;
+  try {
+    const opcoes = await listarOpcoes(pagina, descritor);
+    if (opcoes.length === 0) return false;
+    const novo = await ctx.reescolher(campo, opcoes);
+    if (!novo || normalizarTexto(novo) === normalizarTexto(valorAnterior)) return false;
+    await preencher(novo);
+    return true;
+  } catch (erro) {
+    if (pagina.isClosed() || erro instanceof ErroLimiteUso) throw erro;
+    return false;
   }
 }
 

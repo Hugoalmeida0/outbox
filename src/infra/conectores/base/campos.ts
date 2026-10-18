@@ -329,6 +329,20 @@ async function escolherNoCombobox(
   if ((await caixa.inputValue().catch(() => "")).trim() === "") throw semOpcao;
 }
 
+/**
+ * Opções reais de um campo, para escolher de novo quando a resposta não casou: as lidas do DOM (select,
+ * radio, checkbox) ou, num combobox, as listadas ao abrir o menu sem filtro. Fecha o menu ao final.
+ */
+export async function listarOpcoes(pagina: Page, campo: DescritorCampo): Promise<string[]> {
+  if (campo.opcoes.length > 0 || !campo.combobox) return campo.opcoes;
+  const caixa = pagina.locator(campo.seletor).first();
+  await caixa.click();
+  await caixa.fill("");
+  const { opcoes } = await esperarOpcoes(pagina, caixa);
+  await caixa.blur();
+  return opcoes;
+}
+
 const VERDADEIRO = /^(sim|yes|true|1|x|on)$/i;
 
 /**

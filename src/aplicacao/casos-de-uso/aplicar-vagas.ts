@@ -10,6 +10,7 @@ import {
   type DepsPreencherFormulario,
 } from "../etapas/preencher-formulario.ts";
 import {
+  corrigirNoCache,
   responderCampos,
   salvarRespostas,
   type DepsResponderCampos,
@@ -167,7 +168,7 @@ async function aplicarUma(
   const informar = (mensagem: string): void => {
     deps.interacao.informar(`  ${mensagem}`);
   };
-  // Só avisa quando há chamada ao LLM: os campos respondidos por código são instantâneos.
+  // Só avisa quando há chamada ao LLM: os campos respondidos por código ou pelo cache são instantâneos.
   const aoConsultarLlm = (quantidade: number): void => {
     informar(`${String(quantidade)} campo(s) sem resposta pronta: consultando o Claude…`);
   };
@@ -181,6 +182,17 @@ async function aplicarUma(
     salvarRespostas(deps.artefatos, vaga, saida);
     return saida.respostas;
   };
+  const reescolher = async (campo: Campo, opcoes: readonly string[]): Promise<string | null> => {
+    informar(
+      `"${campo.rotulo}": a resposta não casou com as opções; escolhendo entre as exibidas…`,
+    );
+    const [resposta] = await responderAoVivo([
+      { ...campo, opcoes: [...opcoes], categoria: "pergunta" },
+    ]);
+    const valor = resposta?.valor ?? null;
+    if (valor) corrigirNoCache(depsRespostas, { analise }, campo, valor);
+    return valor;
+  };
 
   const resultado = await preencherFormulario(
     {
@@ -190,7 +202,12 @@ async function aplicarUma(
     },
     vaga,
     montarPacote(depsPacote, vaga),
-    { responderAoVivo, aguardarUsuario: (m) => deps.interacao.aguardarUsuario(m), informar },
+    {
+      responderAoVivo,
+      reescolher,
+      aguardarUsuario: (m) => deps.interacao.aguardarUsuario(m),
+      informar,
+    },
     sinal,
   );
   if (resultado.tipo === "manual") {

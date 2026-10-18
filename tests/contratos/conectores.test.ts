@@ -20,7 +20,7 @@ import {
   httpComRespostas,
   pdfDeTeste,
 } from "#testes/apoio/harness-conector.ts";
-import { umPacote } from "#testes/apoio/builders.ts";
+import { umPacote, umaResposta } from "#testes/apoio/builders.ts";
 import { descreverContratoConector } from "./contrato-conector.ts";
 import { descreverContratoFormulario } from "./contrato-formulario.ts";
 
@@ -141,6 +141,19 @@ describe("catálogo e comportamentos comuns", () => {
         "https://empresa.inhire.app/vagas/vazia",
         { html: "<html><body><p>Vaga encerrada</p></body></html>" },
       ],
+      [
+        "https://empresa.inhire.app/vagas/reescolha",
+        {
+          html: `<html><body><form>
+            <label for="esc">Escolaridade</label>
+            <select id="esc" name="esc" required><option value="">Selecione</option>
+              <option>Superior completo</option><option>Superior incompleto</option></select>
+            <label for="cv">Resume/CV</label><input id="cv" name="resume" type="file">
+            <div class="field"><label class="label">Envie o laudo médico (PcD)</label>
+              <label>UPLOAD FILE<input name="laudo" type="file" required></label></div>
+          </form></body></html>`,
+        },
+      ],
     ],
     {
       cofre: {
@@ -212,6 +225,42 @@ describe("catálogo e comportamentos comuns", () => {
     expect(erro).toBeInstanceOf(ErroFalhaConector);
     expect((erro as ErroFalhaConector).passo).toBe("abrir");
     expect((erro as ErroFalhaConector).formulario).toBeDefined();
+  });
+
+  it("resposta fora das opções é escolhida de novo entre as reais; laudo nunca recebe o CV", async () => {
+    const informacoes: string[] = [];
+    const pedidos: { rotulo: string; opcoes: readonly string[] }[] = [];
+    const conector = criarConector(definicaoInhire, ambiente.deps);
+    const formulario = await conector.abrirEPreencher(
+      "https://empresa.inhire.app/vagas/reescolha",
+      umPacote({
+        pdfCurriculo: pdfDeTeste(),
+        respostas: [
+          umaResposta({ campoId: "esc", rotulo: "Escolaridade", valor: "Graduação em andamento" }),
+        ],
+      }),
+      {
+        ...ctx,
+        informar: (m: string) => void informacoes.push(m),
+        reescolher: (campo, opcoes) => {
+          pedidos.push({ rotulo: campo.rotulo, opcoes });
+          return Promise.resolve("Superior incompleto");
+        },
+      },
+      sinal,
+    );
+    const pagina = ambiente.paginas.at(-1);
+    expect(pedidos).toEqual([
+      { rotulo: "Escolaridade", opcoes: ["Superior completo", "Superior incompleto"] },
+    ]);
+    expect(await pagina?.locator("#esc").inputValue()).toBe("Superior incompleto");
+    const valores = await formulario.lerValores();
+    expect(valores.find((v) => v.rotulo.startsWith("Envie o laudo"))?.valor).toBe("");
+    expect(valores.find((v) => v.rotulo === "Resume/CV")?.valor).toBe("Ana_Silva_CV.pdf");
+    expect(informacoes.join("\n")).toMatch(
+      /Envie o laudo médico \(PcD\) \(anexo que você precisa enviar\)/,
+    );
+    await formulario.fechar();
   });
 
   it("formulário vazio não preenche nada e não lança", async () => {

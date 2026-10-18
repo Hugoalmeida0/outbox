@@ -90,6 +90,19 @@ function chaveCache(campo: Campo, idioma: string): string {
   return JSON.stringify([normalizarTexto(campo.rotulo), campo.tipo, opcoes, idioma]);
 }
 
+/**
+ * Corrige no cache a resposta de um campo (ex.: escolhida de novo entre as opções reais, depois de a
+ * resposta anterior não casar com nenhuma), para que a próxima vaga não repita a resposta que falhou.
+ */
+export function corrigirNoCache(
+  deps: Pick<DepsResponderCampos, "cache">,
+  contexto: Pick<ContextoResposta, "analise">,
+  campo: Campo,
+  valor: string,
+): void {
+  deps.cache?.gravar(chaveCache(campo, contexto.analise?.idioma === "pt" ? "pt" : "en"), valor);
+}
+
 function base(
   campo: Campo,
   categoria: Campo["categoria"],
