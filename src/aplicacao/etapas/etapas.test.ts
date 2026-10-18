@@ -6,7 +6,11 @@ import type { IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
 import { umaAnalise, umCurriculoGerado, umMaster } from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao, type AmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { InteracaoRoteirizada } from "#testes/apoio/fakes/basicos.ts";
-import { ALERTA_PDF_LONGO, esquemaArquivoAnalise } from "../compartilhado/artefatos.ts";
+import {
+  ALERTA_ATS_CAIU,
+  ALERTA_PDF_LONGO,
+  esquemaArquivoAnalise,
+} from "../compartilhado/artefatos.ts";
 import { anosDeExperiencia, gerarCurriculo } from "./gerar-curriculo.ts";
 import { montarPacote } from "./montar-pacote.ts";
 import { resolverVaga } from "./resolver-vaga.ts";
@@ -79,6 +83,55 @@ describe("gerarCurriculo", () => {
       "anterior",
       ALERTA_PDF_LONGO,
     ]);
+  });
+
+  it("score ATS abaixo do genérico: refaz 1x pedindo as keywords perdidas e fica com a melhor", async () => {
+    const amb = criarAmbienteAplicacao();
+    const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
+    amb.artefatos.gravarTextoMaster("Ana TypeScript AWS");
+    const analise = {
+      ...umaAnalise({
+        keywords: [
+          { termo: "TypeScript", tipo: "tecnologia" },
+          { termo: "AWS", tipo: "tecnologia" },
+        ],
+      }),
+      alertas: [],
+    };
+    amb.gerador.quando(
+      "tailoring",
+      umCurriculoGerado({ skills: [] }),
+      umCurriculoGerado({ skills: ["aws"] }),
+    );
+    const saida = await gerarCurriculo(amb.deps(), vaga, analise, sinal());
+    const pedidos = amb.gerador.pedidosDe("tailoring");
+    expect(pedidos).toHaveLength(2);
+    expect(pedidos[0]?.variaveis.keywordsFaltantes).toBe("nenhuma");
+    expect(pedidos[1]?.variaveis.keywordsFaltantes).toBe("AWS");
+    expect(saida).toMatchObject({ atsAntes: 100, atsDepois: 100 });
+  });
+
+  it("score ATS ainda abaixo depois de refazer: mantém a versão e alerta na revisão", async () => {
+    const amb = criarAmbienteAplicacao();
+    const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
+    amb.artefatos.gravarJson(vaga.id, "analise.json", { ...umaAnalise(), alertas: [] });
+    amb.artefatos.gravarTextoMaster("Ana TypeScript AWS");
+    const analise = {
+      ...umaAnalise({
+        keywords: [
+          { termo: "TypeScript", tipo: "tecnologia" },
+          { termo: "AWS", tipo: "tecnologia" },
+        ],
+      }),
+      alertas: [],
+    };
+    amb.gerador.sempre("tailoring", umCurriculoGerado({ skills: [] }));
+    const saida = await gerarCurriculo(amb.deps(), vaga, analise, sinal());
+    expect(amb.gerador.pedidosDe("tailoring")).toHaveLength(2);
+    expect(saida).toMatchObject({ atsAntes: 100, atsDepois: 50 });
+    expect(
+      amb.artefatos.lerJson(vaga.id, "analise.json", esquemaArquivoAnalise)?.alertas,
+    ).toContain(ALERTA_ATS_CAIU);
   });
 
   it("soma os meses de experiência até hoje para a atual", () => {

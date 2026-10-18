@@ -5,9 +5,10 @@ import {
 import { montarDocumento, paraTexto } from "#dominio/curriculo/documento.ts";
 import { validarLastro, type Violacao } from "#dominio/curriculo/lastro.ts";
 import type { IdiomaCurriculo, Master } from "#dominio/curriculo/master.ts";
-import { scoreAts } from "#dominio/curriculo/score-ats.ts";
+import { keywordsPerdidas, scoreAts } from "#dominio/curriculo/score-ats.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import {
+  ALERTA_ATS_CAIU,
   ALERTA_CAMALEAO_FALHOU,
   ALERTA_PDF_LONGO,
   type ArquivoAnalise,
@@ -76,7 +77,7 @@ export async function gerarCurriculo(
   const metaPaginas =
     anosDeExperiencia(master, deps.relogio.hoje()) < 5 ? "1 página" : "no máximo 2 páginas";
 
-  const pedir = (correcoes: string): Promise<CurriculoGerado> =>
+  const pedir = (correcoes: string, keywordsFaltantes = "nenhuma"): Promise<CurriculoGerado> =>
     deps.gerador.gerar(
       {
         tarefa: "tailoring",
@@ -85,6 +86,7 @@ export async function gerarCurriculo(
           idiomaMaster: master.idioma,
           metaPaginas,
           correcoes,
+          keywordsFaltantes,
           analise: JSON.stringify({
             requisitos: analise.requisitos,
             keywords: analise.keywords,
@@ -106,6 +108,29 @@ export async function gerarCurriculo(
     if (validarLastro(gerado, master, analise).length > 0) gerado = null;
   }
 
+  const textoMaster =
+    deps.artefatos.lerTextoMaster() ?? paraTexto(montarDocumento(master, null, master.idioma));
+  const textoDe = (g: CurriculoGerado | null): string =>
+    paraTexto(montarDocumento(master, g, g ? idioma : master.idioma));
+  const atsAntes = scoreAts(textoMaster, analise.keywords, master);
+
+  // O ajuste não pode deixar o currículo pior no ATS que o genérico: refaz uma vez pedindo as keywords
+  // com lastro que se perderam e fica com a versão de maior score.
+  if (
+    gerado &&
+    atsAntes !== null &&
+    (scoreAts(textoDe(gerado), analise.keywords, master) ?? 0) < atsAntes
+  ) {
+    const perdidas = keywordsPerdidas(textoMaster, textoDe(gerado), analise.keywords, master);
+    if (perdidas.length > 0) {
+      const refeito = await pedir("nenhuma", perdidas.join(", "));
+      const scoreRefeito = scoreAts(textoDe(refeito), analise.keywords, master) ?? 0;
+      const scoreAtual = scoreAts(textoDe(gerado), analise.keywords, master) ?? 0;
+      if (validarLastro(refeito, master, analise).length === 0 && scoreRefeito > scoreAtual)
+        gerado = refeito;
+    }
+  }
+
   const documento = montarDocumento(master, gerado, gerado ? idioma : master.idioma);
   const { paginas } = await deps.renderizador.renderizarCurriculo(
     documento,
@@ -116,11 +141,9 @@ export async function gerarCurriculo(
   deps.artefatos.gravarTexto(vaga.id, "curriculo.txt", texto);
   deps.artefatos.gravarJson(vaga.id, "curriculo.json", gerado);
 
-  const textoMaster =
-    deps.artefatos.lerTextoMaster() ?? paraTexto(montarDocumento(master, null, master.idioma));
-  const atsAntes = scoreAts(textoMaster, analise.keywords, master);
   const atsDepois = scoreAts(texto, analise.keywords, master);
   const camaleaoFalhou = gerado === null;
+  const atsCaiu = atsAntes !== null && atsDepois !== null && atsDepois < atsAntes;
   deps.vagas.atualizar(vaga.id, {
     atsAntes,
     atsDepois,
@@ -129,9 +152,12 @@ export async function gerarCurriculo(
   atualizarAnalise(deps.artefatos, vaga, (atual) => ({
     ...atual,
     alertas: [
-      ...atual.alertas.filter((a) => a !== ALERTA_PDF_LONGO && a !== ALERTA_CAMALEAO_FALHOU),
+      ...atual.alertas.filter(
+        (a) => a !== ALERTA_PDF_LONGO && a !== ALERTA_CAMALEAO_FALHOU && a !== ALERTA_ATS_CAIU,
+      ),
       ...(paginas > 2 ? [ALERTA_PDF_LONGO] : []),
       ...(camaleaoFalhou ? [ALERTA_CAMALEAO_FALHOU] : []),
+      ...(atsCaiu ? [ALERTA_ATS_CAIU] : []),
     ],
   }));
   return { paginas, camaleaoFalhou, atsAntes, atsDepois };

@@ -55,7 +55,15 @@ describe("carregarPrompt", () => {
     ["analisar-vaga", ["negados", "preferencias", "master"], ["descricao"]],
     [
       "tailoring",
-      ["idioma", "idiomaMaster", "metaPaginas", "correcoes", "analise", "master"],
+      [
+        "idioma",
+        "idiomaMaster",
+        "metaPaginas",
+        "correcoes",
+        "keywordsFaltantes",
+        "analise",
+        "master",
+      ],
       ["descricao"],
     ],
     [

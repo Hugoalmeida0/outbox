@@ -13,12 +13,36 @@ function termosAceitos(termo: string, master: Master): string[] {
   return termos;
 }
 
+/** Keywords da vaga presentes no texto (pelo termo, ou pelo nome e aliases da skill do master). */
+export function keywordsPresentes(
+  texto: string,
+  keywords: readonly Keyword[],
+  master: Master,
+): Keyword[] {
+  const normalizado = normalizarTexto(texto);
+  return keywords.filter((k) =>
+    termosAceitos(k.termo, master).some((t) => contemTermo(normalizado, t)),
+  );
+}
+
 /** Percentual das keywords da vaga presentes no texto (0 a 100), ou `null` sem keywords. */
 export function scoreAts(texto: string, keywords: readonly Keyword[], master: Master): number | null {
   if (keywords.length === 0) return null;
-  const normalizado = normalizarTexto(texto);
-  const acertos = keywords.filter((k) =>
-    termosAceitos(k.termo, master).some((t) => contemTermo(normalizado, t)),
-  ).length;
-  return Math.round((100 * acertos) / keywords.length);
+  return Math.round((100 * keywordsPresentes(texto, keywords, master).length) / keywords.length);
+}
+
+/**
+ * Keywords que o currículo genérico do master tem (logo, com lastro) e o currículo ajustado perdeu: o
+ * que o tailoring deve recolocar quando o score cai.
+ */
+export function keywordsPerdidas(
+  textoMaster: string,
+  textoAjustado: string,
+  keywords: readonly Keyword[],
+  master: Master,
+): string[] {
+  const noAjustado = new Set(keywordsPresentes(textoAjustado, keywords, master).map((k) => k.termo));
+  return keywordsPresentes(textoMaster, keywords, master)
+    .map((k) => k.termo)
+    .filter((t) => !noAjustado.has(t));
 }

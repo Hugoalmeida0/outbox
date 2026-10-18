@@ -24,5 +24,7 @@ export type ArquivoAnalise = z.infer<typeof esquemaArquivoAnalise>;
 export const esquemaArquivoCampos = z.array(esquemaCampo);
 
 export const ALERTA_PDF_LONGO = "pdf_mais_de_2_paginas";
+export const ALERTA_ATS_CAIU =
+  "score ATS do currículo ajustado ficou abaixo do currículo genérico (veja as keywords no PDF)";
 export const ALERTA_CAMALEAO_FALHOU =
   "camaleão falhou (lastro): foi usado o currículo genérico do master";
