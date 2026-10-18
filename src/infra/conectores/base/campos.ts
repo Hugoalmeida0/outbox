@@ -60,6 +60,9 @@ export async function lerDescritores(
       const ROTULOS_CONTEINER =
         "legend, .application-label, .ashby-application-form-question-title, [class*=label], [class*=Label], [class*=title], label";
 
+      const ROTULO_ANEXO_GENERICO =
+        /^(upload( a)? file|attach( file)?|choose file|select file|browse|anexar( arquivo)?|escolher arquivo|selecionar arquivo|enviar arquivo)?$/i;
+
       const rotuloDoConteiner = (el: Element, excluir: readonly Element[]): string => {
         let atual: Element | null = el.parentElement;
         for (let nivel = 0; atual && nivel < 6; nivel++, atual = atual.parentElement) {
@@ -170,7 +173,11 @@ export async function lerDescritores(
           continue;
         }
         const { id, seletor } = idDe(el);
-        const bruto = rotuloBruto(el);
+        let bruto = rotuloBruto(el);
+        // Anexo cujo rótulo é o texto do botão ("UPLOAD FILE"): a pergunta está no contêiner.
+        if (tipo === "arquivo" && ROTULO_ANEXO_GENERICO.test(limpar(bruto))) {
+          bruto = rotuloDoConteiner(el, [el]) || bruto;
+        }
         const opcoes =
           el.tagName === "SELECT"
             ? [...(el as HTMLSelectElement).options]
@@ -452,10 +459,20 @@ export async function lerValoresGenerico(
         if (!el) return "";
         if (el instanceof HTMLSelectElement) return el.selectedOptions[0]?.text.trim() ?? "";
         if (el.value) return el.value;
-        const exibido = el
-          .closest("[class*=select], [class*=Select]")
-          ?.querySelector("[class*=single-value], [class*=singleValue]");
-        return ((exibido as HTMLElement | null)?.innerText ?? "").trim();
+        // react-select: o valor exibido fica no `value-container`, irmão do `input-container` do input.
+        // Sobe até o `control` (ou o contêiner externo), não até o primeiro ancestral com "select" na classe.
+        const controle = el.closest(
+          "[class*=__control], [class*=-control], [class*=__container], [class*=-container]:not([class*=input-container])",
+        );
+        const exibidos = [
+          ...(controle?.querySelectorAll(
+            "[class*=single-value], [class*=singleValue], [class*=multi-value__label], [class*=multiValue] > div:first-child",
+          ) ?? []),
+        ];
+        return exibidos
+          .map((e) => ((e as HTMLElement).innerText || e.textContent || "").trim())
+          .filter(Boolean)
+          .join("; ");
       }, d.tipo)
       .catch(() => "");
     valores.push({ rotulo: d.rotulo || d.id, valor, ehArquivo: d.tipo === "arquivo" });

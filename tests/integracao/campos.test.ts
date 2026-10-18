@@ -3,6 +3,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   ErroSemOpcao,
+  lerDescritores,
+  lerValoresGenerico,
   preencherCampo,
   type DescritorCampo,
 } from "#infra/conectores/base/campos.ts";
@@ -132,6 +134,42 @@ describe("preencherCampo", () => {
       });
       expect(await pagina.locator("#b").isChecked()).toBe(true);
       expect(await pagina.locator("#a").isChecked()).toBe(false);
+    });
+  });
+});
+
+describe("lerValoresGenerico e lerDescritores", () => {
+  it("lê o valor exibido do react-select do Greenhouse (irmão do input)", async () => {
+    await leitor.comPagina(async (pagina) => {
+      await pagina.setContent(`
+        <label for="q1">Qual é a sua pretensão salarial?*</label>
+        <div class="select__container"><div class="select__control"><div class="select__value-container">
+          <div class="select__single-value">Entre R$8.000,00 - R$9.000,00</div>
+          <div class="select__input-container"><input id="q1" role="combobox" class="select__input" value=""></div>
+        </div></div></div>
+        <label for="q2">Escolaridade</label>
+        <div class="select__container"><div class="select__control"><div class="select__value-container">
+          <div class="select__placeholder">Select...</div>
+          <div class="select__input-container"><input id="q2" role="combobox" class="select__input" value=""></div>
+        </div></div></div>`);
+      const valores = await lerValoresGenerico(pagina);
+      expect(valores.find((v) => v.rotulo.startsWith("Qual é a sua"))?.valor).toBe(
+        "Entre R$8.000,00 - R$9.000,00",
+      );
+      expect(valores.find((v) => v.rotulo === "Escolaridade")?.valor).toBe("");
+    });
+  });
+
+  it('anexo com rótulo de botão ("UPLOAD FILE") usa a pergunta do contêiner', async () => {
+    await leitor.comPagina(async (pagina) => {
+      await pagina.setContent(`
+        <ul><li class="application-question">
+          <div class="application-label"><div class="text">Envie o laudo médico (PcD)</div></div>
+          <div class="application-field"><label>UPLOAD FILE<input type="file" name="cards[a][field11]"></label></div>
+        </li></ul>`);
+      const [anexo] = await lerDescritores(pagina);
+      expect(anexo?.tipo).toBe("arquivo");
+      expect(anexo?.rotulo).toBe("Envie o laudo médico (PcD)");
     });
   });
 });
