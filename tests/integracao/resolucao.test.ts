@@ -16,7 +16,13 @@ import { htmlParaTexto } from "#infra/extracao/html-texto.ts";
 import { ExtratorEstrutural } from "#infra/extracao/extrator-estrutural.ts";
 import type { ClienteHttp } from "#infra/sistema/cliente-http.ts";
 import { canonizar } from "#dominio/vagas/motores.ts";
-import { ErroAgregadorExigeLogin, ErroExtracao, ErroResolucao } from "#aplicacao/portas/erros.ts";
+import {
+  ErroAgregadorExigeLogin,
+  ErroExtracao,
+  ErroHttp,
+  ErroResolucao,
+  ErroVagaIndisponivel,
+} from "#aplicacao/portas/erros.ts";
 import { lerFixture, servirFixtures, type MapaFixtures } from "#testes/apoio/fixtures.ts";
 import { CatalogoConectoresFake, ConectorFake } from "#testes/apoio/fakes/formularios.ts";
 import { RegistradorMemoria } from "#testes/apoio/fakes/basicos.ts";
@@ -264,5 +270,21 @@ describe("extração", () => {
     await expect(extrator.extrair("https://github.com/x", "github", sinal)).rejects.toBeInstanceOf(
       ErroExtracao,
     );
+  });
+
+  it("404 da API do conector é vaga encerrada: não cai para a página", async () => {
+    const conector = new ConectorFake("lever");
+    conector.extrairVaga = () => Promise.reject(new ErroHttp("HTTP 404 em api.lever.co", 404));
+    const registrador = new RegistradorMemoria();
+    const extrator = new ExtratorEstrutural({
+      catalogo: new CatalogoConectoresFake(conector),
+      leitor,
+      http: httpFalso({}),
+      registrador,
+    });
+    await expect(
+      extrator.extrair("https://vagas.exemplo.com/jsonld", "lever", sinal),
+    ).rejects.toBeInstanceOf(ErroVagaIndisponivel);
+    expect(registrador.entradas).toEqual([]);
   });
 });

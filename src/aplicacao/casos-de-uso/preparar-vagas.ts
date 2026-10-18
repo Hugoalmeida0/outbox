@@ -34,6 +34,7 @@ import {
   ErroNavegador,
   ErroResolucao,
   ErroTimeoutLlm,
+  ErroVagaIndisponivel,
 } from "../portas/erros.ts";
 import type { Notificador } from "../portas/notificador.ts";
 import type { EtapaPreparo, ProgressoPreparo } from "../portas/progresso-preparo.ts";
@@ -101,6 +102,17 @@ export interface ResumoPreparo {
   readonly erros: readonly ErroPreparo[];
   readonly reavaliadas: number;
   readonly interrompido: "limite" | "cancelado" | null;
+}
+
+/**
+ * Vaga encerrada vira DESCARTADA (não volta a cada `preparar`) e perde a aderência de uma análise antiga,
+ * que não vale mais.
+ */
+function descartarEncerrada(deps: DepsPrepararVagas, id: IdVaga): void {
+  const atual = deps.vagas.buscar(id);
+  if (!atual || (atual.status !== "NOVA" && atual.status !== "ERRO_PREPARO")) return;
+  deps.vagas.atualizar(id, { aderencia: null });
+  deps.vagas.transicionar(id, "DESCARTADA", { motivo: "vaga_encerrada" });
 }
 
 /** Mapeia o erro de uma vaga para o motivo de ERRO_PREPARO (arquitetura.md §10.1). */
@@ -324,6 +336,12 @@ export async function prepararVagas(
             deps.progresso.emitir({ tipo: "concluida", vaga: final, erro: null });
           } catch (erro) {
             if (s.aborted || erro instanceof ErroLimiteUso) throw erro;
+            if (erro instanceof ErroVagaIndisponivel) {
+              descartarEncerrada(deps, vaga.id);
+              const final = deps.vagas.buscar(vaga.id) ?? vaga;
+              deps.progresso.emitir({ tipo: "concluida", vaga: final, erro: null });
+              return;
+            }
             const motivo = motivoDoErro(erro);
             const mensagem = erro instanceof Error ? erro.message : String(erro);
             if (!(erro instanceof ErroOutbox)) {

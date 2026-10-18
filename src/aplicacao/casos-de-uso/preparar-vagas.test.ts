@@ -451,6 +451,27 @@ describe("prepararVagas", () => {
     expect(segundo.processadas).toBe(1);
   });
 
+  it("vaga encerrada vira DESCARTADA vaga_encerrada, sem erro, tentativa nem aderência antiga", async () => {
+    const { amb } = ambienteComConector(null);
+    const vaga = amb.inserirVaga(URL_GH);
+    amb.vagas.atualizar(vaga.id, { aderencia: 100 });
+    amb.extrator.definir(URL_GH, {
+      estruturada: null,
+      textoPagina: "Sorry, we couldn't find anything",
+    });
+    amb.gerador.quando("extrair-vaga", { indisponivel: true });
+    const resumo = await prepararVagas(amb.deps(), { forcar: false, reavaliar: false }, sinal());
+    expect(amb.vagas.buscar(vaga.id)).toMatchObject({
+      status: "DESCARTADA",
+      motivo: "vaga_encerrada",
+      aderencia: null,
+      tentativasPreparo: 0,
+    });
+    expect(resumo.erros).toEqual([]);
+    expect(amb.progresso.daVaga(vaga.id)).toEqual(["resolver", "extrair", "DESCARTADA"]);
+    expect(amb.gerador.pedidosDe("analisar-vaga")).toHaveLength(0);
+  });
+
   it("para no limite de uso: não inicia novas, mantém NOVA e notifica (AC20)", async () => {
     const { amb } = ambienteComConector(null);
     amb.gerador.quando("analisar-vaga", umaAnalise(), new ErroLimiteUso());

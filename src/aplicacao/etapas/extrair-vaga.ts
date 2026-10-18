@@ -1,7 +1,8 @@
+import { z } from "zod";
 import { esquemaVagaExtraida, type VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
-import { ErroExtracao } from "../portas/erros.ts";
+import { ErroExtracao, ErroVagaIndisponivel } from "../portas/erros.ts";
 import type { ExtratorVagas } from "../portas/extrator-vagas.ts";
 import type { GeradorEstruturado } from "../portas/gerador-estruturado.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
@@ -15,6 +16,9 @@ export interface DepsExtrairVaga {
   readonly vagas: Pick<RepositorioVagas, "atualizar">;
 }
 
+/** Resposta do LLM quando o texto da página é um erro (404, vaga encerrada), não uma vaga. */
+const esquemaPaginaIndisponivel = z.object({ indisponivel: z.literal(true) });
+
 /** Extrai a vaga (API/JSON-LD; sem estrutura, o LLM lê o texto da página) e grava `vaga.json`. */
 export async function extrairVaga(
   deps: DepsExtrairVaga,
@@ -25,18 +29,24 @@ export async function extrairVaga(
   const { estruturada, textoPagina } = await deps.extrator.extrair(url, vaga.motor, sinal);
   if (!estruturada && textoPagina.trim() === "")
     throw new ErroExtracao(`a página da vaga ${url} está vazia`);
-  const extraida =
+  const lida =
     estruturada ??
     (await deps.gerador.gerar(
       {
         tarefa: "extrair-vaga",
         variaveis: { url },
         conteudoNaoConfiavel: { textoPagina: textoPagina.slice(0, LIMITE_TEXTO_PAGINA) },
-        schema: esquemaVagaExtraida,
+        schema: esquemaVagaExtraida.or(esquemaPaginaIndisponivel),
         pastaLog: deps.artefatos.pastaLlm(vaga.id),
       },
       sinal,
     ));
+  if ("indisponivel" in lida) {
+    throw new ErroVagaIndisponivel(
+      `a vaga ${url} não está mais disponível (página de erro ou vaga encerrada)`,
+    );
+  }
+  const extraida = lida;
   deps.artefatos.gravarJson(vaga.id, "vaga.json", extraida);
   deps.artefatos.gravarTexto(
     vaga.id,

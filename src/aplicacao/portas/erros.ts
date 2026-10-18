@@ -69,6 +69,9 @@ export class ErroExtracao extends ErroInfra {
   }
 }
 
+/** A vaga saiu do ar (404 da API do ATS ou página de erro): não adianta tentar de novo. */
+export class ErroVagaIndisponivel extends ErroExtracao {}
+
 /** Falha de um conector determinístico num passo; carrega o formulário parcial para o agente assumir. */
 export class ErroFalhaConector extends ErroInfra {
   readonly passo: string;

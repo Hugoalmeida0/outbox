@@ -1,6 +1,11 @@
 import { z } from "zod";
 import type { CatalogoConectores } from "#aplicacao/portas/catalogo-conectores.ts";
-import { ErroExtracao, ErroInfra } from "#aplicacao/portas/erros.ts";
+import {
+  ErroExtracao,
+  ErroHttp,
+  ErroInfra,
+  ErroVagaIndisponivel,
+} from "#aplicacao/portas/erros.ts";
 import type { ExtratorVagas, ResultadoExtracao } from "#aplicacao/portas/extrator-vagas.ts";
 import type { Registrador } from "#aplicacao/portas/registrador.ts";
 import type { Motor } from "#dominio/vagas/motores.ts";
@@ -41,6 +46,13 @@ export class ExtratorEstrutural implements ExtratorVagas {
         const viaApi = await conector.extrairVaga(url, sinal);
         if (viaApi) return { estruturada: viaApi, textoPagina: viaApi.descricao };
       } catch (erro) {
+        // A API do ATS responde 404/410 para vaga removida: sinal determinístico, sem depender do LLM.
+        if (erro instanceof ErroHttp && (erro.status === 404 || erro.status === 410)) {
+          throw new ErroVagaIndisponivel(
+            `a vaga ${url} não está mais disponível (HTTP ${String(erro.status)} na API do ${motor})`,
+            { cause: erro },
+          );
+        }
         this.registrador.avisar(`extração pela API do ${motor} falhou; usando a página`, {
           url,
           erro,

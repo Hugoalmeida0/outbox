@@ -17,7 +17,13 @@ export const TODOS_STATUS: readonly Status[] = Object.values(STATUS);
 
 /** Motivos aceitos por status. Status ausentes deste mapa não aceitam motivo. */
 export const MOTIVOS = {
-  DESCARTADA: ["aderencia_baixa", "duplicada_antiga", "afirmativa_inelegivel", "manual"],
+  DESCARTADA: [
+    "aderencia_baixa",
+    "duplicada_antiga",
+    "afirmativa_inelegivel",
+    "vaga_encerrada",
+    "manual",
+  ],
   DUPLICADA: ["url_ja_enviada", "mesma_vaga_na_fila"],
   MANUAL: [
     "easy_apply",
