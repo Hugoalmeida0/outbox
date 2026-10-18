@@ -167,9 +167,17 @@ async function aplicarUma(
   const informar = (mensagem: string): void => {
     deps.interacao.informar(`  ${mensagem}`);
   };
+  // Só avisa quando há chamada ao LLM: os campos respondidos por código são instantâneos.
+  const aoConsultarLlm = (quantidade: number): void => {
+    informar(`${String(quantidade)} campo(s) sem resposta pronta: consultando o Claude…`);
+  };
   const responderAoVivo = async (campos: readonly Campo[]): Promise<RespostaSugerida[]> => {
-    informar(`${String(campos.length)} campo(s) sem resposta pronta: consultando o Claude…`);
-    const saida = await responderCampos(depsRespostas, { vaga, analise }, campos, sinal);
+    const saida = await responderCampos(
+      depsRespostas,
+      { vaga, analise, aoConsultarLlm },
+      campos,
+      sinal,
+    );
     salvarRespostas(deps.artefatos, vaga, saida);
     return saida.respostas;
   };

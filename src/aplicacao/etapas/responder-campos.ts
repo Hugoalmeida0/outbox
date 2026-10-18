@@ -62,6 +62,8 @@ export interface DepsResponderCampos {
 export interface ContextoResposta {
   readonly vaga: Vaga;
   readonly analise: ArquivoAnalise | null;
+  /** Avisado só quando há chamada ao LLM, com a quantidade de campos que ele vai responder. */
+  readonly aoConsultarLlm?: (quantidade: number) => void;
 }
 
 export interface SaidaResponderCampos {
@@ -186,6 +188,7 @@ export async function responderCampos(
   let carta: string | undefined;
   let pdfCarta: string | undefined;
   if (paraLlm.length > 0) {
+    contexto.aoConsultarLlm?.(paraLlm.length);
     const banco = deps.curriculo.lerBanco();
     const idsBanco = new Set(banco.map((e) => e.id));
     const descricao = deps.artefatos.lerTexto(contexto.vaga.id, "descricao.md") ?? "";
