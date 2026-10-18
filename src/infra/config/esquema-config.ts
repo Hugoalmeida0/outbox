@@ -16,6 +16,7 @@ export const esquemaConfig = z.object({
       modeloTexto: z.string().min(1).default("claude-haiku-5-5"),
       modeloTailoring: z.string().min(1).default("claude-sonnet-5-5"),
       modeloAgente: z.string().min(1).default("claude-haiku-5-5"),
+      modeloAgenteReserva: z.string().min(1).default("claude-sonnet-5-5"),
       maxTokensThinking: z.number().int().min(0).default(0),
       timeoutTextoSeg: z.number().int().positive().default(180),
     })

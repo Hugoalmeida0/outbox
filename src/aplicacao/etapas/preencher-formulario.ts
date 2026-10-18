@@ -7,7 +7,7 @@ import type { Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
 import type { CatalogoConectores } from "../portas/catalogo-conectores.ts";
 import type { CtxPreenchimento } from "../portas/conector-ats.ts";
-import { ErroFalhaConector } from "../portas/erros.ts";
+import { ErroFalhaConector, ErroLimiteUso } from "../portas/erros.ts";
 import type { ExecutorAgente, ResultadoAgente } from "../portas/executor-agente.ts";
 import type { FormularioAberto } from "../portas/formulario-aberto.ts";
 import type { RegistroFalhas } from "../portas/registro-falhas.ts";
@@ -64,6 +64,34 @@ async function htmlSanitizado(
   return sanitizarHtml(html, pii);
 }
 
+type ExecucaoAgente =
+  | { readonly tipo: "ok"; readonly resultado: ResultadoAgente }
+  | { readonly tipo: "erro"; readonly mensagem: string; readonly stack: string | null };
+
+/**
+ * Roda o agente convertendo um erro inesperado (ex.: o `claude -p` quebrou) em resultado, para que a falha
+ * seja registrada. Cancelamento e limite de uso continuam interrompendo o `aplicar`.
+ */
+async function executarAgente(
+  deps: DepsPreencherFormulario,
+  entrada: Parameters<ExecutorAgente["preencher"]>[0],
+  ctx: CtxPreenchimento,
+  sinal: AbortSignal,
+): Promise<ExecucaoAgente> {
+  try {
+    const resultado = await deps.agente.preencher(
+      entrada,
+      { aguardarUsuario: (m) => ctx.aguardarUsuario(m) },
+      sinal,
+    );
+    return { tipo: "ok", resultado };
+  } catch (erro) {
+    if (sinal.aborted || erro instanceof ErroLimiteUso) throw erro;
+    const e = erro instanceof Error ? erro : new Error(String(erro));
+    return { tipo: "erro", mensagem: e.message.slice(0, 500), stack: e.stack ?? null };
+  }
+}
+
 /**
  * Abre e preenche o formulário: com conector, usa-o; se ele falhar, registra a falha em `falhas/` e o
  * agente assume com o contexto; sem conector, o agente preenche e a vaga é registrada em `_sem-conector`.
@@ -118,7 +146,8 @@ export async function preencherFormulario(
         },
         await htmlSanitizado(deps, erro.formulario),
       );
-      const resultado = await deps.agente.preencher(
+      const execucao = await executarAgente(
+        deps,
         {
           ...entradaAgente,
           contextoFalha: {
@@ -127,9 +156,15 @@ export async function preencherFormulario(
             url: erro.formulario?.urlAtual() ?? url,
           },
         },
-        { aguardarUsuario: (m) => ctx.aguardarUsuario(m) },
+        ctx,
         sinal,
       );
+      if (execucao.tipo === "erro") {
+        deps.falhas.atualizar(idRegistro, { resultadoAgente: `erro: ${execucao.mensagem}` });
+        ctx.informar(`o agente falhou (${execucao.mensagem}); a vaga fica para você`);
+        return { tipo: "manual", motivo: "teto_agente" };
+      }
+      const resultado = execucao.resultado;
       deps.falhas.atualizar(idRegistro, {
         resultadoAgente: resultado.tipo,
         passosAgente: resultado.passos,
@@ -141,11 +176,28 @@ export async function preencherFormulario(
   ctx.informar(
     `sem conector para ${vaga.motor}: o agente (Claude) preenche o formulário, o que pode levar alguns minutos…`,
   );
-  const resultado = await deps.agente.preencher(
-    entradaAgente,
-    { aguardarUsuario: (m) => ctx.aguardarUsuario(m) },
-    sinal,
-  );
+  const execucao = await executarAgente(deps, entradaAgente, ctx, sinal);
+  if (execucao.tipo === "erro") {
+    // Mesmo quebrando, o agente deixa registro: sem ele, a vaga some de `outbox falhas`.
+    deps.falhas.registrar(
+      {
+        ...registroBase,
+        tipo: "sem_conector",
+        conector: null,
+        versaoConector: null,
+        passo: null,
+        seletor: null,
+        erro: execucao.mensagem,
+        stack: execucao.stack,
+        resultadoAgente: "erro",
+        passosAgente: [],
+      },
+      "",
+    );
+    ctx.informar(`o agente falhou (${execucao.mensagem}); a vaga fica para você`);
+    return { tipo: "manual", motivo: "teto_agente" };
+  }
+  const resultado = execucao.resultado;
   deps.falhas.registrar(
     {
       ...registroBase,

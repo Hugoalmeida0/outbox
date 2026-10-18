@@ -1,7 +1,7 @@
 // Executável falso do `claude` para testes (configurado via OUTBOX_CLAUDE_BIN).
 // OUTBOX_CLAUDE_ROTEIRO: JSON { "regras": [ { "contem"?, "resultado"?, "erro"?, "atrasoMs"?, "turnos"?, "usos"? } ] }
 //   - a primeira regra cujo `contem` aparece no prompt (ou sem `contem`) e com usos restantes é usada;
-//   - erro: "limite" | "max_turns" | "falha" | "texto_invalido".
+//   - erro: "limite" | "max_turns" | "falha" | "texto_invalido" | "saida_longa".
 // OUTBOX_CLAUDE_REGISTRO: arquivo JSONL onde cada chamada grava { args, prompt, env }.
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 
@@ -21,6 +21,7 @@ if (caminhoRegistro) {
     OUTBOX_VAGA_ID: process.env.OUTBOX_VAGA_ID,
     OUTBOX_HOSTS_PERMITIDOS: process.env.OUTBOX_HOSTS_PERMITIDOS,
     MAX_THINKING_TOKENS: process.env.MAX_THINKING_TOKENS,
+    CLAUDE_CODE_MAX_OUTPUT_TOKENS: process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS,
   };
   appendFileSync(caminhoRegistro, `${JSON.stringify({ args, prompt: entrada, env })}\n`);
 }
@@ -64,6 +65,18 @@ switch (regra.erro) {
         is_error: true,
         session_id: sessao,
         num_turns: regra.turnos ?? 40,
+      }),
+    );
+    break;
+  case "saida_longa":
+    console.log(
+      JSON.stringify({
+        type: "result",
+        subtype: "success",
+        is_error: true,
+        result:
+          "API Error: Claude's response exceeded the 8000 output token maximum. To configure this behavior, set the CLAUDE_CODE_MAX_OUTPUT_TOKENS environment variable.",
+        session_id: sessao,
       }),
     );
     break;

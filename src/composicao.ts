@@ -271,6 +271,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
         pastaTmp: caminhos.tmpDir,
         pastaPrompts: caminhos.promptsDir,
         modelo: config.llm.modeloAgente,
+        modeloReserva: config.llm.modeloAgenteReserva,
         maxTokensThinking: config.llm.maxTokensThinking,
         artefatos: artefatos(),
         registrador: registrador(),

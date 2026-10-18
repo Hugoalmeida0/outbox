@@ -447,6 +447,33 @@ describe("aplicarVagas: conector, agente e registro de falhas (AC15 a AC18)", ()
     );
   });
 
+  it("agente que quebra: a falha é registrada e a vaga vira MANUAL", async () => {
+    const agente = new ExecutorAgenteFake();
+    agente.erro = new Error("claude devolveu erro (success): API Error: exceeded output");
+    const { amb } = criar({ campos: null, agente });
+    const url = "https://acme.wd5.myworkdayjobs.com/pt-BR/careers/job/Remoto/Dev_R1";
+    amb.resolvedor.definir(url, {
+      motor: "workday",
+      urlResolvida: url,
+      canonica: url as never,
+      rota: "agente",
+    });
+    const [id] = await prontas(amb, url);
+    roteiro(amb);
+    const resumo = await aplicarVagas(amb.deps(), { simular: false }, sinal());
+    expect(resumo.desfechos).toEqual({ manual_automatica: 1 });
+    expect(amb.vagas.buscar(id as IdVaga)).toMatchObject({
+      status: "MANUAL",
+      motivo: "teto_agente",
+    });
+    expect([...amb.falhas.registros.values()][0]).toMatchObject({
+      tipo: "sem_conector",
+      motor: "workday",
+      resultadoAgente: "erro",
+      erro: "claude devolveu erro (success): API Error: exceeded output",
+    });
+  });
+
   it("perguntas novas no formulário são respondidas ao vivo e salvas", async () => {
     const { amb, conector } = criar();
     const [id] = await prontas(amb);

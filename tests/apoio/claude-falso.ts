@@ -9,7 +9,7 @@ export const BINARIO_FALSO = fileURLToPath(new URL("../fakes/claude.mjs", import
 export interface RegraClaude {
   readonly contem?: string;
   readonly resultado?: string;
-  readonly erro?: "limite" | "max_turns" | "falha" | "texto_invalido";
+  readonly erro?: "limite" | "max_turns" | "falha" | "texto_invalido" | "saida_longa";
   readonly atrasoMs?: number;
   readonly turnos?: number;
   readonly usos?: number;

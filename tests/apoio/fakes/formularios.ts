@@ -131,8 +131,11 @@ export class ExecutorAgenteFake implements ExecutorAgente {
     };
   }
 
+  /** Quando definido, `preencher` falha com este erro (ex.: o `claude -p` quebrou). */
+  erro: Error | null = null;
+
   preencher(entrada: EntradaAgente): Promise<ResultadoAgente> {
     this.entradas.push(entrada);
-    return Promise.resolve(this.resultado);
+    return this.erro ? Promise.reject(this.erro) : Promise.resolve(this.resultado);
   }
 }

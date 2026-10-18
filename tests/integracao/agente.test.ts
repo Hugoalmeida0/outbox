@@ -31,8 +31,9 @@ async function paginaNaVaga() {
   return pagina;
 }
 
-function criarExecutor(artefatos = new ArmazemArtefatosMemoria()) {
+function criarExecutor(artefatos = new ArmazemArtefatosMemoria(), modeloReserva?: string) {
   return new ExecutorAgenteClaude({
+    ...(modeloReserva ? { modeloReserva } : {}),
     executar: executarClaude,
     paginaMaisRecente: paginaNaVaga,
     garantirNavegador: () => Promise.resolve(),
@@ -130,6 +131,38 @@ describe("ExecutorAgenteClaude com o claude falso", () => {
       expect(await r.formulario.confirmarEnvio(100)).toBe("indeterminada");
       await r.formulario.fechar();
     }
+  });
+
+  it("saída degenerada: refaz do início com o modelo reserva e limita os tokens de saída", async () => {
+    falso = usarClaudeFalso([
+      { erro: "saida_longa", usos: 1 },
+      { resultado: pronto, turnos: 5 },
+    ]);
+    const r = await criarExecutor(new ArmazemArtefatosMemoria(), "reserva").preencher(
+      entrada(),
+      ctx(),
+      new AbortController().signal,
+    );
+    expect(r.tipo).toBe("pronto");
+    expect(r.passos[0]).toMatch(/degenerada com sonnet; refeito do início com reserva/);
+    const [primeira, segunda] = falso.chamadas();
+    expect(primeira?.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS).toBe("8000");
+    const args = segunda?.args ?? [];
+    expect(args[args.indexOf("--model") + 1]).toBe("reserva");
+    expect(args).not.toContain("--resume");
+    expect(segunda?.prompt).toBe(primeira?.prompt);
+    if (r.tipo === "pronto") await r.formulario.fechar();
+  });
+
+  it("saída degenerada sem modelo reserva (ou de novo na reserva) termina em teto", async () => {
+    falso = usarClaudeFalso([{ erro: "saida_longa" }]);
+    const r = await criarExecutor(new ArmazemArtefatosMemoria(), "reserva").preencher(
+      entrada(),
+      ctx(),
+      new AbortController().signal,
+    );
+    expect(r.tipo).toBe("teto");
+    expect(falso.chamadas()).toHaveLength(2);
   });
 
   it("pausa em BLOQUEADO e retoma a sessão descontando os turnos", async () => {

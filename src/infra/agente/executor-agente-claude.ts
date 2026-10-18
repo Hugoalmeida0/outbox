@@ -3,7 +3,7 @@ import { basename, join } from "node:path";
 import type { Page } from "playwright";
 import { z } from "zod";
 import type { ArmazemArtefatos } from "#aplicacao/portas/armazem-artefatos.ts";
-import { ErroMaxTurnos, ErroTimeoutLlm } from "#aplicacao/portas/erros.ts";
+import { ErroLlm, ErroMaxTurnos, ErroTimeoutLlm } from "#aplicacao/portas/erros.ts";
 import type {
   EntradaAgente,
   ExecutorAgente,
@@ -15,6 +15,12 @@ import type { ExecutarClaude } from "#infra/llm/processo-claude.ts";
 import { carregarPrompt } from "#infra/llm/prompts.ts";
 import { escreverAtomico } from "#infra/sistema/escrita-atomica.ts";
 import { FormularioPlaywright } from "#infra/conectores/base/formulario-playwright.ts";
+
+/** Teto de tokens por resposta do agente (`CLAUDE_CODE_MAX_OUTPUT_TOKENS`). */
+const MAX_TOKENS_SAIDA_AGENTE = 8000;
+
+/** Erro do `claude -p` quando uma resposta passa do teto de saída: o modelo entrou em loop. */
+const SAIDA_DEGENERADA = /exceeded the \d+ output token maximum/i;
 
 /**
  * Ferramentas liberadas ao agente (verificadas no @playwright/mcp 0.0.83, 2026-10-10). Ficam de fora a
@@ -66,6 +72,8 @@ export interface OpcoesExecutorAgente {
   readonly pastaTmp: string;
   readonly pastaPrompts: string;
   readonly modelo: string;
+  /** Modelo que refaz a vaga quando o principal degenera (saída sem fim); igual ao principal desliga. */
+  readonly modeloReserva?: string;
   /** Vira `MAX_THINKING_TOKENS` do processo; 0 desliga o raciocínio estendido. */
   readonly maxTokensThinking: number;
   readonly artefatos: ArmazemArtefatos;
@@ -104,6 +112,7 @@ export class ExecutorAgenteClaude implements ExecutorAgente {
     let msRestantes = entrada.saldo.ms;
     let sessao: string | null = null;
     let mensagem = prompt;
+    let modelo = this.opcoes.modelo;
     const passos: string[] = [];
 
     while (turnosRestantes > 0 && msRestantes > 0) {
@@ -112,7 +121,7 @@ export class ExecutorAgenteClaude implements ExecutorAgente {
         "--output-format",
         "json",
         "--model",
-        this.opcoes.modelo,
+        modelo,
         "--max-turns",
         String(turnosRestantes),
         "--mcp-config",
@@ -133,9 +142,29 @@ export class ExecutorAgenteClaude implements ExecutorAgente {
           cwd: pastaTrabalho,
           timeoutMs: msRestantes,
           sinal,
-          env: { MAX_THINKING_TOKENS: String(this.opcoes.maxTokensThinking) },
+          env: {
+            MAX_THINKING_TOKENS: String(this.opcoes.maxTokensThinking),
+            // Uma resposta do agente é um passo curto ou o JSON final: estourar isto é saída degenerada
+            // (ex.: "<br>" repetido sem fim), que deve falhar em segundos, não em minutos.
+            CLAUDE_CODE_MAX_OUTPUT_TOKENS: String(MAX_TOKENS_SAIDA_AGENTE),
+          },
         });
       } catch (erro) {
+        if (erro instanceof ErroLlm && SAIDA_DEGENERADA.test(erro.message)) {
+          msRestantes -= Date.now() - inicio;
+          const reserva = this.opcoes.modeloReserva;
+          if (reserva && reserva !== modelo) {
+            this.opcoes.registrador.avisar(
+              `vaga #${String(entrada.vaga.id)}: saída degenerada do agente (${modelo}); refazendo com ${reserva}`,
+            );
+            passos.push(`saída degenerada com ${modelo}; refeito do início com ${reserva}`);
+            modelo = reserva;
+            sessao = null;
+            mensagem = prompt;
+            continue;
+          }
+          return this.finalizar(entrada, { tipo: "teto", passos }, { erro: erro.message });
+        }
         if (erro instanceof ErroMaxTurnos || erro instanceof ErroTimeoutLlm) {
           return this.finalizar(
             entrada,
