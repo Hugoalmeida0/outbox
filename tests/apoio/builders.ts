@@ -140,6 +140,7 @@ export function umPerfil(override: Partial<Perfil> = {}): Perfil {
     disponibilidade: { avisoPrevioDias: 30, inicioImediato: false, viagens: true, mudanca: false },
     autorizacaoTrabalho: { brasil: true, precisaSponsorship: true, paisesAutorizados: ["BR"] },
     diversidade: { genero: "mulher_cis" },
+    consentimentos: {},
     preferencias: {
       modelos: ["remoto", "hibrido"],
       cidades: ["São Paulo"],

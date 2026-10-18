@@ -110,11 +110,16 @@ function respostaPorCodigo(
     case "documento":
       return r(valorDocumento(classificacao.chave, campo.tipo, perfil.documentos, perfil.endereco));
     case "diversidade": {
-      const d = respostaDiversidade(classificacao.chave, campo.opcoes, perfil.diversidade);
+      const d = respostaDiversidade(
+        classificacao.chave,
+        campo.opcoes,
+        perfil.diversidade,
+        perfil.consentimentos.diversidade ?? true,
+      );
       return r(d.valor, d.confianca);
     }
     case "consentimento": {
-      const c = respostaConsentimento(campo);
+      const c = respostaConsentimento(campo, classificacao.chave, perfil.consentimentos);
       return r(c.valor, c.confianca);
     }
     case "salario_atual":
@@ -162,7 +167,11 @@ export async function responderCampos(
     const classificacao = classificacoes[i] ?? { categoria: "pergunta" as const };
     if (campo.tipo === "arquivo" && classificacao.categoria === "curriculo") return;
     const porCodigo = respostaPorCodigo(campo, classificacao, perfil, contato);
-    if (porCodigo && !foraDasOpcoes(campo, porCodigo)) respostas.set(campo.id, porCodigo);
+    // Consentimento sem opção afirmativa/negativa reconhecível vira pergunta, em vez de ficar vazio.
+    const consentimentoIndefinido =
+      porCodigo?.categoria === "consentimento" && porCodigo.valor === null;
+    if (porCodigo && !foraDasOpcoes(campo, porCodigo) && !consentimentoIndefinido)
+      respostas.set(campo.id, porCodigo);
     else if (porCodigo) paraLlm.push({ campo, categoria: "pergunta" });
     else paraLlm.push({ campo, categoria: classificacao.categoria });
   });

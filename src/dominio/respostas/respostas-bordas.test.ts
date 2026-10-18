@@ -78,33 +78,66 @@ describe("salário", () => {
 });
 
 describe("respostaConsentimento", () => {
-  it("radio: obrigatório aceita, opcional recusa; sem opção reconhecível, null", () => {
+  it("radio: aceita por padrão, recusa o que o perfil recusa; sem opção reconhecível, null", () => {
     expect(
-      respostaConsentimento({ tipo: "radio", obrigatorio: true, opcoes: ["Sim, concordo", "Não"] }),
-    ).toEqual({
-      valor: "Sim, concordo",
-      confianca: "alta",
-    });
+      respostaConsentimento(
+        { tipo: "radio", obrigatorio: true, opcoes: ["Sim, concordo", "Não"] },
+        "tratamentoDados",
+        {},
+      ),
+    ).toEqual({ valor: "Sim, concordo", confianca: "alta" });
     expect(
-      respostaConsentimento({ tipo: "radio", obrigatorio: false, opcoes: ["Yes", "No"] }),
-    ).toEqual({
-      valor: "No",
-      confianca: "alta",
-    });
-    expect(respostaConsentimento({ tipo: "radio", obrigatorio: true, opcoes: ["Talvez"] })).toEqual(
-      {
-        valor: null,
-        confianca: "baixa",
-      },
-    );
-    expect(respostaConsentimento({ tipo: "radio", obrigatorio: true })).toEqual({
-      valor: null,
-      confianca: "baixa",
-    });
-    expect(respostaConsentimento({ tipo: "checkbox", obrigatorio: false })).toEqual({
-      valor: "Não",
-      confianca: "alta",
-    });
+      respostaConsentimento(
+        { tipo: "radio", obrigatorio: false, opcoes: ["Yes", "No"] },
+        "reterDados",
+        {},
+      ),
+    ).toEqual({ valor: "Yes", confianca: "alta" });
+    expect(
+      respostaConsentimento(
+        { tipo: "radio", obrigatorio: false, opcoes: ["Yes", "No"] },
+        "reterDados",
+        { reterDados: false },
+      ),
+    ).toEqual({ valor: "No", confianca: "alta" });
+    expect(
+      respostaConsentimento(
+        { tipo: "radio", obrigatorio: true, opcoes: ["Talvez"] },
+        "tratamentoDados",
+        {},
+      ),
+    ).toEqual({ valor: null, confianca: "baixa" });
+    expect(
+      respostaConsentimento({ tipo: "radio", obrigatorio: true }, "tratamentoDados", {}),
+    ).toEqual({ valor: null, confianca: "baixa" });
+    expect(
+      respostaConsentimento({ tipo: "checkbox", obrigatorio: false }, "comunicacoes", {
+        comunicacoes: false,
+      }),
+    ).toEqual({ valor: "Não", confianca: "alta" });
+  });
+
+  it("tratamento de dados obrigatório é aceito mesmo com o perfil recusando", () => {
+    expect(
+      respostaConsentimento({ tipo: "checkbox", obrigatorio: true }, "tratamentoDados", {
+        tratamentoDados: false,
+      }).valor,
+    ).toBe("Sim");
+  });
+
+  it("não confunde a negativa que contém 'concordo' com a afirmativa", () => {
+    const opcoes = [
+      "Não. Eu não concordo com a coleta e uso dessas informações",
+      "Sim. Eu concordo com a coleta e uso dessas informações",
+    ];
+    expect(
+      respostaConsentimento({ tipo: "select", obrigatorio: true, opcoes }, "diversidade", {}).valor,
+    ).toBe(opcoes[1]);
+    expect(
+      respostaConsentimento({ tipo: "select", obrigatorio: true, opcoes }, "diversidade", {
+        diversidade: false,
+      }).valor,
+    ).toBe(opcoes[0]);
   });
 });
 

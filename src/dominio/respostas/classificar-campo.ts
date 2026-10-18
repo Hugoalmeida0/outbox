@@ -1,4 +1,5 @@
 import type { CategoriaCampo, TipoCampo } from "./campo.ts";
+import type { TipoConsentimento } from "./perfil.ts";
 
 export type ChavePadrao =
   | "nome"
@@ -19,7 +20,13 @@ export type Classificacao =
   | { readonly categoria: "padrao"; readonly chave: ChavePadrao }
   | { readonly categoria: "documento"; readonly chave: ChaveDocumento }
   | { readonly categoria: "diversidade"; readonly chave: ChaveDiversidade }
-  | { readonly categoria: Exclude<CategoriaCampo, "padrao" | "documento" | "diversidade"> };
+  | { readonly categoria: "consentimento"; readonly chave: TipoConsentimento }
+  | {
+      readonly categoria: Exclude<
+        CategoriaCampo,
+        "padrao" | "documento" | "diversidade" | "consentimento"
+      >;
+    };
 
 export interface DescricaoCampo {
   readonly rotulo: string;
@@ -109,9 +116,42 @@ const REGRAS: readonly (readonly [RegExp, Classificacao])[] = [
  */
 const MAX_PALAVRAS_PADRAO = 12;
 
-/** Checkboxes/radios de consentimento (privacidade, termos, comunicações). */
+/**
+ * Consentimento genérico (privacidade, termos, LGPD): o tratamento de dados. "terms" sozinho, como em
+ * "in terms of", não conta.
+ */
 const CONSENTIMENTO =
-  /consent|consinto|privacidade|privacy|termos de uso|terms|lgpd|gdpr|li e concordo|i agree|i confirm that i have read/;
+  /consent|consinto|privacidade|privacy|termos de uso|\bterms\b(?! of (?!use|service))|lgpd|gdpr|li e concordo|i agree|i confirm that i have read|tratamento d[oe]s? (meus )?dados|dados pessoais sejam (armazenados|processados)/;
+
+/**
+ * Tipos específicos de opt-in, em ordem de prioridade. O que não casar com nenhum, mas for consentimento,
+ * é tratamento de dados.
+ */
+const TIPOS_CONSENTIMENTO: readonly (readonly [RegExp, TipoConsentimento])[] = [
+  [
+    /(diversidade|diversity|\bd ?& ?i\b|\bdei\b|inclusao|inclusion).*(consent|concord|autoriz|agree|dados|data|opcion|optional)|(consent|concord|autoriz|agree|opcionais|optional).*(diversidade|diversity|inclusao|inclusion|acoes afirmativas|affirmative action)/,
+    "diversidade",
+  ],
+  [
+    /(interview|entrevista).*(transcri|record|grava)|(transcri|record|grava).*(interview|entrevista)|(transcri|grava).*(intelig|artificial|\bia\b|\bai\b)/,
+    "transcricaoIa",
+  ],
+  [/(share|shared|sharing|compartilh).*(partner|parceir|third|terceir)/, "compartilharParceiros"],
+  [
+    /(retain|retention|keep|store|armazen|reter|manter|guardar).*(future|futur)|talent (pool|community|network)|banco de talentos|future (opportunit|roles|openings|positions|vacanc)|oportunidades futuras|vagas futuras|processos futuros/,
+    "reterDados",
+  ],
+  [
+    /(send|enviar|receive|receber|contact|contatar).*(informa|news|comunica|marketing|updates|novidades|promoc|mensage|messages)|marketing|newsletter|midias sociais|text messages|\bsms\b/,
+    "comunicacoes",
+  ],
+];
+
+/** Tipo do consentimento pelo rótulo normalizado, ou `null` se o campo não for de consentimento. */
+function tipoConsentimento(texto: string): TipoConsentimento | null {
+  for (const [regex, tipo] of TIPOS_CONSENTIMENTO) if (regex.test(texto)) return tipo;
+  return CONSENTIMENTO.test(texto) ? "tratamentoDados" : null;
+}
 
 function normalizarRotulo(texto: string): string {
   return texto
@@ -132,11 +172,9 @@ export function classificarCampoDetalhado(campo: DescricaoCampo): Classificacao 
       ? { categoria: "carta" }
       : { categoria: "curriculo" };
   }
-  if (
-    (campo.tipo === "checkbox" || campo.tipo === "radio") &&
-    CONSENTIMENTO.test(normalizarRotulo(`${campo.rotulo} ${campo.nome ?? ""}`))
-  ) {
-    return { categoria: "consentimento" };
+  if (campo.tipo === "checkbox" || campo.tipo === "radio" || campo.tipo === "select") {
+    const tipo = tipoConsentimento(normalizarRotulo(`${campo.rotulo} ${campo.nome ?? ""}`));
+    if (tipo) return { categoria: "consentimento", chave: tipo };
   }
   const autocomplete = campo.autocomplete?.toLowerCase().trim();
   const porAutocomplete = autocomplete ? AUTOCOMPLETE[autocomplete] : undefined;

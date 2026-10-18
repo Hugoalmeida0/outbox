@@ -45,6 +45,19 @@ diversidade:
   # pcd: false
   # lgbtqia: false
 
+# Opt-ins e consentimentos dos formulários, preenchidos por código (sem LLM). Chave ausente = aceitar.
+# O tratamento de dados obrigatório (LGPD, privacidade) é sempre aceito: sem ele não há candidatura.
+# Chaves aceitas (true ou false):
+#   tratamentoDados: privacidade, LGPD, termos de uso (quando opcional)
+#   reterDados: manter os dados para vagas futuras (banco de talentos)
+#   compartilharParceiros: compartilhar o currículo com parceiros ou terceiros
+#   transcricaoIa: gravar ou transcrever entrevistas, inclusive com IA
+#   comunicacoes: receber e-mail, SMS, WhatsApp e novidades
+#   diversidade: false responde "prefiro não informar" nos campos de diversidade
+consentimentos:
+  compartilharParceiros: false
+  comunicacoes: false
+
 # Usadas no score de aderência.
 preferencias:
   modelos: [remoto, hibrido] # remoto, hibrido, presencial

@@ -107,16 +107,18 @@ function valorDoPerfil(
 
 /**
  * Resposta de diversidade a partir do perfil, sem LLM. Sem dado ou sem opção correspondente, escolhe
- * "prefiro não informar"; sem essa opção, devolve `null` com confiança baixa.
+ * "prefiro não informar"; sem essa opção, devolve `null` com confiança baixa. Sem consentimento de uso dos
+ * dados de diversidade (`consentimentos.diversidade: false`), nunca informa o dado do perfil.
  */
 export function respostaDiversidade(
   chave: ChaveDiversidade,
   opcoes: readonly string[] | undefined,
   diversidade: Diversidade | undefined,
+  consentido = true,
 ): { valor: string | null; confianca: "alta" | "baixa" } {
   const lista = opcoes ?? [];
   const prefiroNao = lista.find((o) => PREFIRO_NAO.test(normalizar(o)));
-  if (chave !== "veterano") {
+  if (chave !== "veterano" && consentido) {
     const alvo = valorDoPerfil(chave, diversidade);
     if (alvo !== undefined) {
       const opcao = lista.find((o) => valorDaOpcao(o, SINONIMOS[chave]) === alvo);

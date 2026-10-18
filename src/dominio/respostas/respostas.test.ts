@@ -314,28 +314,85 @@ describe("consentimento e ajustes vistos em formulários reais", () => {
     );
   });
 
-  it("aceita o obrigatório e recusa os opcionais", () => {
-    expect(respostaConsentimento({ tipo: "checkbox", obrigatorio: true })).toEqual({
-      valor: "Sim",
-      confianca: "alta",
-    });
-    expect(respostaConsentimento({ tipo: "checkbox", obrigatorio: false, opcoes: ["x"] })).toEqual({
-      valor: "Não",
-      confianca: "alta",
-    });
+  it("aceita por padrão e recusa o opt-in que o perfil recusa", () => {
+    expect(
+      respostaConsentimento({ tipo: "checkbox", obrigatorio: true }, "tratamentoDados", {}),
+    ).toEqual({ valor: "Sim", confianca: "alta" });
+    expect(
+      respostaConsentimento(
+        { tipo: "checkbox", obrigatorio: false, opcoes: ["x"] },
+        "reterDados",
+        {},
+      ),
+    ).toEqual({ valor: "Sim", confianca: "alta" });
     const opcoes = [
       "Yes - I consent to receiving text messages",
       "No - I do not consent to receiving text messages",
     ];
-    expect(respostaConsentimento({ tipo: "radio", obrigatorio: false, opcoes }).valor).toBe(
-      opcoes[1],
+    expect(
+      respostaConsentimento({ tipo: "radio", obrigatorio: false, opcoes }, "comunicacoes", {
+        comunicacoes: false,
+      }).valor,
+    ).toBe(opcoes[1]);
+    expect(
+      respostaConsentimento({ tipo: "radio", obrigatorio: false, opcoes }, "comunicacoes", {})
+        .valor,
+    ).toBe(opcoes[0]);
+    expect(
+      respostaConsentimento(
+        { tipo: "radio", obrigatorio: true, opcoes: ["Talvez"] },
+        "tratamentoDados",
+        {},
+      ),
+    ).toEqual({ valor: null, confianca: "baixa" });
+  });
+
+  it("classifica o tipo de opt-in visto nos formulários reais", () => {
+    const tipo = (rotulo: string, t: "select" | "checkbox" = "select"): unknown => {
+      const c = classificarCampoDetalhado({ rotulo, tipo: t });
+      return c.categoria === "consentimento" ? c.chave : c.categoria;
+    };
+    expect(tipo("On Data Privacy")).toBe("tratamentoDados");
+    expect(
+      tipo(
+        "Do you agree that this interview may be transcribed using artificial intelligence tools?",
+      ),
+    ).toBe("transcricaoIa");
+    expect(
+      tipo("Would you like your resume to be shared with Blip partners for future open roles?"),
+    ).toBe("compartilharParceiros");
+    expect(
+      tipo(
+        "By checking this box, I agree to allow Blip Global to retain my data for future opportunities",
+        "checkbox",
+      ),
+    ).toBe("reterDados");
+    expect(
+      tipo(
+        "Autorizo a CI&T a enviar informações através de mídias sociais, telefone e email sobre novas oportunidades",
+        "checkbox",
+      ),
+    ).toBe("comunicacoes");
+    expect(tipo("Consentimento - Diversidade e Inclusão (D&I)")).toBe("diversidade");
+    expect(
+      tipo(
+        "As respostas abaixo são opcionais. Estes dados serão usados para nossas ações afirmativas. Você se sente confortável de responder as questões abaixo?",
+      ),
+    ).toBe("diversidade");
+    // "in terms of" não é consentimento.
+    expect(tipo("In terms of English, how fluent are you?")).toBe("pergunta");
+  });
+
+  it("sem consentimento de diversidade, responde 'prefiro não informar' mesmo com o dado no perfil", () => {
+    const opcoes = ["Parda", "Branca", "Prefiro não informar"];
+    expect(respostaDiversidade("raca", opcoes, { raca: "parda" }).valor).toBe("Parda");
+    expect(respostaDiversidade("raca", opcoes, { raca: "parda" }, false).valor).toBe(
+      "Prefiro não informar",
     );
-    expect(respostaConsentimento({ tipo: "radio", obrigatorio: true, opcoes }).valor).toBe(
-      opcoes[0],
-    );
-    expect(respostaConsentimento({ tipo: "radio", obrigatorio: true, opcoes: ["Talvez"] })).toEqual(
-      { valor: null, confianca: "baixa" },
-    );
+    expect(respostaDiversidade("raca", ["Parda", "Branca"], { raca: "parda" }, false)).toEqual({
+      valor: null,
+      confianca: "baixa",
+    });
   });
 
   it("reconhece 'I don't wish to answer' como prefiro não informar", () => {

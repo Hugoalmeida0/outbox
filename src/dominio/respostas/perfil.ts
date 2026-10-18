@@ -49,6 +49,27 @@ export const esquemaDiversidade = z.object({
 });
 export type Diversidade = z.infer<typeof esquemaDiversidade>;
 
+/**
+ * Opt-ins e consentimentos dos formulários, decididos por código. Chave ausente = aceitar. O tratamento de
+ * dados obrigatório é sempre aceito (sem ele não há candidatura).
+ */
+export const esquemaConsentimentos = z.object({
+  /** Política de privacidade, LGPD/GDPR, termos de uso. */
+  tratamentoDados: z.boolean().optional(),
+  /** Manter os dados para vagas futuras (banco de talentos). */
+  reterDados: z.boolean().optional(),
+  /** Compartilhar o currículo com parceiros ou terceiros. */
+  compartilharParceiros: z.boolean().optional(),
+  /** Gravar ou transcrever entrevistas (inclusive com IA). */
+  transcricaoIa: z.boolean().optional(),
+  /** Receber comunicações (e-mail, SMS, WhatsApp, redes sociais, marketing). */
+  comunicacoes: z.boolean().optional(),
+  /** Uso dos dados de diversidade. `false` responde "prefiro não informar" nos campos de diversidade. */
+  diversidade: z.boolean().optional(),
+});
+export type Consentimentos = z.infer<typeof esquemaConsentimentos>;
+export type TipoConsentimento = keyof Consentimentos;
+
 export const esquemaPreferencias = z.object({
   modelos: z.array(z.enum(MODELOS_TRABALHO)).min(1),
   cidades: z.array(z.string().min(1)).default([]),
@@ -74,6 +95,7 @@ export const esquemaPerfil = z.object({
     paisesAutorizados: z.array(z.string()).default([]),
   }),
   diversidade: esquemaDiversidade.optional(),
+  consentimentos: esquemaConsentimentos.default({}),
   preferencias: esquemaPreferencias,
   comoSoube: z.string().min(1),
 });
