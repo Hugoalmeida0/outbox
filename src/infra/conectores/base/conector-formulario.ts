@@ -10,7 +10,13 @@ import type { VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
 import type { CofreCredenciais } from "#infra/credenciais/cofre.ts";
 import type { LeitorHeadless } from "#infra/navegador/leitor-headless.ts";
 import type { ClienteHttp } from "#infra/sistema/cliente-http.ts";
-import { lerDescritores, paraCampos, preencherCampo, type DescritorCampo } from "./campos.ts";
+import {
+  ErroSemOpcao,
+  lerDescritores,
+  paraCampos,
+  preencherCampo,
+  type DescritorCampo,
+} from "./campos.ts";
 import { FormularioPlaywright, type RegrasConfirmacao } from "./formulario-playwright.ts";
 import { dispensarCookies, navegar, tratarAutenticacao, type ModoAutenticacao } from "./pagina.ts";
 import { passo, type ContextoPasso } from "./passo.ts";
@@ -103,6 +109,7 @@ async function preencherEtapa(
     (c) => c.tipo !== "arquivo" && acharResposta(indice, c) === undefined,
   );
   if (faltantes.length > 0) indexar(await ctx.responderAoVivo(faltantes), indice);
+  ctx.informar(`preenchendo ${String(campos.length)} campo(s)…`);
 
   for (const [i, campo] of campos.entries()) {
     const descritor = descritores[i];
@@ -113,7 +120,11 @@ async function preencherEtapa(
           ? (pacote.pdfCarta ?? null)
           : pacote.pdfCurriculo
         : (acharResposta(indice, campo)?.valor ?? null);
-    if (valor === null || valor === "") continue;
+    if (valor === null || valor === "") {
+      if (campo.obrigatorio)
+        contexto.naoPreenchidos.push(`${campo.rotulo || campo.id} (sem resposta)`);
+      continue;
+    }
     try {
       await passo(
         `preencher:${campo.rotulo || campo.id}`,
@@ -129,8 +140,13 @@ async function preencherEtapa(
         },
       );
     } catch (erro) {
-      // Campo opcional que falhou fica para a revisão do usuário; obrigatório interrompe o conector.
-      if (campo.obrigatorio) throw erro;
+      // Falha num campo não derruba o conector: ele segue para os próximos e o campo fica para o usuário
+      // completar na revisão. O agente só assume em falhas estruturais (abrir, autenticar, avançar etapa).
+      if (pagina.isClosed()) throw erro;
+      const semOpcao = erro instanceof Error && erro.cause instanceof ErroSemOpcao;
+      contexto.naoPreenchidos.push(
+        `${campo.rotulo || campo.id} (${semOpcao ? "nenhuma opção corresponde à resposta" : "falhou"})`,
+      );
     }
   }
 }
@@ -172,7 +188,11 @@ export function criarConector(definicao: DefinicaoConector, deps: DepsConector):
       const contexto: ContextoPasso = {
         pagina,
         formulario,
-        aguardarUsuario: (m) => ctx.aguardarUsuario(m),
+        aguardarUsuario: async (m) => {
+          await ctx.aguardarUsuario(m);
+          ctx.informar("retomando o preenchimento…");
+        },
+        naoPreenchidos: [],
       };
       const aoAbortar = (): void => {
         void formulario.fechar();
@@ -212,6 +232,11 @@ export function criarConector(definicao: DefinicaoConector, deps: DepsConector):
               .waitForLoadState("networkidle", { timeout: 10_000 })
               .catch(() => undefined);
           });
+        }
+        if (contexto.naoPreenchidos.length > 0) {
+          ctx.informar(
+            `não consegui preencher: ${contexto.naoPreenchidos.join("; ")}. Complete no navegador antes de enviar.`,
+          );
         }
         return formulario;
       } catch (erro) {

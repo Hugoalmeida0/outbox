@@ -40,6 +40,7 @@ export function descreverContratoConector(config: ConfiguracaoContrato): void {
     const conector = criarConector(config.definicao, ambiente.deps);
     const pausas: string[] = [];
     const respondidosAoVivo: Campo[] = [];
+    const informacoes: string[] = [];
     const ctx = {
       responderAoVivo: (campos: readonly Campo[]): Promise<RespostaSugerida[]> => {
         respondidosAoVivo.push(...campos);
@@ -48,6 +49,9 @@ export function descreverContratoConector(config: ConfiguracaoContrato): void {
       aguardarUsuario: (mensagem: string): Promise<void> => {
         pausas.push(mensagem);
         return Promise.resolve();
+      },
+      informar: (mensagem: string): void => {
+        informacoes.push(mensagem);
       },
     };
 
@@ -94,6 +98,9 @@ export function descreverContratoConector(config: ConfiguracaoContrato): void {
         })
         .map((c) => c.rotulo || c.id);
       expect(vazios).toEqual([]);
+      // Campo obrigatório que fica vazio é anunciado ao usuário, nunca deixado para trás em silêncio.
+      const avisos = informacoes.filter((m) => m.startsWith("não consegui")).join(" ");
+      for (const rotulo of vazios) expect(avisos).toContain(rotulo);
       expect(formulario.urlAtual()).toMatch(/^https:/);
       await formulario.fechar();
     });

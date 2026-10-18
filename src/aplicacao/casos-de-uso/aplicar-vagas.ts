@@ -117,12 +117,17 @@ export async function aplicarVagas(
   // Lido por função: um `await` (ou Ctrl+C num prompt) pode abortar o sinal entre as checagens.
   const cancelado = (): boolean => sinal.aborted;
 
-  for (const vaga of prontas) {
+  for (const [indice, vaga] of prontas.entries()) {
     if (cancelado()) {
       interrompido = "cancelado";
       break;
     }
     try {
+      const nome = [vaga.empresa, vaga.cargo].filter(Boolean).join(" · ");
+      const posicao = `${String(indice + 1)} de ${String(prontas.length)}`;
+      deps.interacao.informar(
+        `\nVaga #${String(vaga.id)} ${nome} (${posicao}): abrindo o formulário no navegador do Outbox…`,
+      );
       const desfecho = await aplicarUma(deps, vaga, entrada, sinal);
       contar(desfecho);
       revisadas++;
@@ -159,7 +164,11 @@ async function aplicarUma(
   const analise = lerAnalise(deps.artefatos, vaga);
   const depsPacote = { ...deps, gupyAnexoPorCandidatura: deps.config.gupyAnexoPorCandidatura };
   const depsRespostas = { ...deps, cartaMaxPalavras: deps.config.cartaMaxPalavras };
+  const informar = (mensagem: string): void => {
+    deps.interacao.informar(`  ${mensagem}`);
+  };
   const responderAoVivo = async (campos: readonly Campo[]): Promise<RespostaSugerida[]> => {
+    informar(`${String(campos.length)} campo(s) sem resposta pronta: consultando o Claude…`);
     const saida = await responderCampos(depsRespostas, { vaga, analise }, campos, sinal);
     salvarRespostas(deps.artefatos, vaga, saida);
     return saida.respostas;
@@ -173,7 +182,7 @@ async function aplicarUma(
     },
     vaga,
     montarPacote(depsPacote, vaga),
-    { responderAoVivo, aguardarUsuario: (m) => deps.interacao.aguardarUsuario(m) },
+    { responderAoVivo, aguardarUsuario: (m) => deps.interacao.aguardarUsuario(m), informar },
     sinal,
   );
   if (resultado.tipo === "manual") {

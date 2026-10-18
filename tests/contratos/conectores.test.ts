@@ -161,6 +161,7 @@ describe("catálogo e comportamentos comuns", () => {
       pausas.push(m);
       return Promise.resolve();
     },
+    informar: () => undefined,
   };
   const sinal = new AbortController().signal;
 
@@ -230,7 +231,11 @@ descreverContratoFormulario("FormularioPlaywright (conector)", async () => {
   const formulario = await conector.abrirEPreencher(
     "https://empresa.inhire.app/vagas/f",
     umPacote({ pdfCurriculo: pdfDeTeste() }),
-    { responderAoVivo: () => Promise.resolve([]), aguardarUsuario: () => Promise.resolve() },
+    {
+      responderAoVivo: () => Promise.resolve([]),
+      aguardarUsuario: () => Promise.resolve(),
+      informar: () => undefined,
+    },
     new AbortController().signal,
   );
   return { formulario, encerrar: () => ambiente.fechar() };

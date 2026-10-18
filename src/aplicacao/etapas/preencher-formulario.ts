@@ -100,6 +100,9 @@ export async function preencherFormulario(
       return { tipo: "formulario", formulario, perguntasNaHora: [] };
     } catch (erro) {
       if (!(erro instanceof ErroFalhaConector)) throw erro;
+      ctx.informar(
+        `o conector parou em "${erro.passo}"; o agente (Claude) assume a partir daí, o que pode levar alguns minutos…`,
+      );
       const idRegistro = deps.falhas.registrar(
         {
           ...registroBase,
@@ -135,6 +138,9 @@ export async function preencherFormulario(
     }
   }
 
+  ctx.informar(
+    `sem conector para ${vaga.motor}: o agente (Claude) preenche o formulário, o que pode levar alguns minutos…`,
+  );
   const resultado = await deps.agente.preencher(
     entradaAgente,
     { aguardarUsuario: (m) => ctx.aguardarUsuario(m) },

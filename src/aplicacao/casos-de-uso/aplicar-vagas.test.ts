@@ -128,6 +128,10 @@ describe("aplicarVagas: revisão e envio", () => {
     expect(formulario.fechado).toBe(true);
     expect(amb.vagas.buscar(id as IdVaga)?.status).toBe("PRONTA");
     expect(amb.interacao.informacoes).toContain("simulação: nada enviado (a vaga continua PRONTA)");
+    // Andamento antes de cada vaga: o preenchimento leva tempo e não pode parecer travado.
+    expect(amb.interacao.informacoes[0]).toMatch(
+      new RegExp(`^\\nVaga #${String(id)} .*\\(1 de 1\\): abrindo o formulário no navegador`),
+    );
     expect(amb.curriculo.banco).toEqual([]);
   });
 
@@ -421,6 +425,9 @@ describe("aplicarVagas: conector, agente e registro de falhas (AC15 a AC18)", ()
     });
     expect(amb.interacao.informacoes.at(-1)).toBe(
       `vaga #${String(id)}: marcada como MANUAL (teto_agente)`,
+    );
+    expect(amb.interacao.informacoes).toContain(
+      "  sem conector para workday: o agente (Claude) preenche o formulário, o que pode levar alguns minutos…",
     );
   });
 

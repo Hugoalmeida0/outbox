@@ -3,6 +3,15 @@ import type { ValorLido } from "#aplicacao/portas/formulario-aberto.ts";
 import { classificarFormulario } from "#dominio/respostas/classificar-campo.ts";
 import type { Campo, TipoCampo } from "#dominio/respostas/campo.ts";
 import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
+import { melhorOpcao, nomesDoPais } from "#dominio/respostas/opcoes.ts";
+
+/**
+ * Nenhuma opção do campo corresponde ao valor. Não é falha do conector: o campo fica para o usuário
+ * completar na revisão, em vez de o agente assumir o formulário inteiro.
+ */
+export class ErroSemOpcao extends Error {
+  override readonly name = "ErroSemOpcao";
+}
 
 /** Campo lido do DOM, com o seletor usado para preenchê-lo. */
 export interface DescritorCampo {
@@ -225,47 +234,109 @@ export function paraCampos(descritores: readonly DescritorCampo[]): Campo[] {
   }));
 }
 
-/** Escolhe a opção que melhor casa com o valor (igualdade normalizada, depois contém). */
-export function melhorOpcao(opcoes: readonly string[], valor: string): string | null {
-  const alvo = normalizarTexto(valor);
-  if (alvo === "") return null;
-  return (
-    opcoes.find((o) => normalizarTexto(o) === alvo) ??
-    opcoes.find(
-      (o) => normalizarTexto(o).startsWith(alvo) || alvo.startsWith(normalizarTexto(o)),
-    ) ??
-    opcoes.find((o) => normalizarTexto(o).includes(alvo) || alvo.includes(normalizarTexto(o))) ??
-    null
-  );
+/** Autocompletes que consultam um serviço (cidade, por exemplo) levam mais de 1 s para listar opções. */
+const ESPERA_OPCOES_MS = 5000;
+/** Sem menu aberto depois disso, o campo não lista opções (texto livre): não adianta esperar mais. */
+const ESPERA_MENU_MS = 1000;
+
+/**
+ * Opções do menu deste campo, e não de outro menu aberto na página: o listbox apontado por
+ * `aria-controls` ou, sem ele, o contêiner mais próximo do campo que tem opções (react-select e afins
+ * renderizam o menu ao lado do input).
+ */
+async function opcoesDoCampo(pagina: Page, caixa: Locator): Promise<Locator> {
+  const controla = await caixa.getAttribute("aria-controls").catch(() => null);
+  if (controla) return pagina.locator(`[id="${controla}"]`).getByRole("option");
+  return caixa
+    .locator("xpath=ancestor::*[position() <= 5][.//*[@role='option']][1]")
+    .getByRole("option");
+}
+
+/**
+ * Espera as opções do menu aberto aparecerem e devolve os textos. Lista vazia com `menuAberto` quer dizer
+ * "nenhum resultado para o texto"; sem menu, o campo aceita texto livre.
+ */
+async function esperarOpcoes(
+  pagina: Page,
+  caixa: Locator,
+): Promise<{ opcoes: string[]; menuAberto: boolean }> {
+  const inicio = Date.now();
+  let menuAberto = false;
+  while (Date.now() - inicio < ESPERA_OPCOES_MS) {
+    const textos = await (await opcoesDoCampo(pagina, caixa)).allInnerTexts().catch(() => []);
+    const opcoes = textos.map((t) => t.replace(/\s+/g, " ").trim()).filter(Boolean);
+    if (opcoes.length > 0) return { opcoes, menuAberto: true };
+    menuAberto = (await caixa.getAttribute("aria-expanded").catch(() => null)) === "true";
+    if (!menuAberto && Date.now() - inicio >= ESPERA_MENU_MS) break;
+    await pagina.waitForTimeout(200);
+  }
+  return { opcoes: [], menuAberto };
+}
+
+/**
+ * Combobox com busca (react-select e afins): digita, espera as opções e clica na que casa. Tenta também o
+ * trecho antes da vírgula ("Cariacica, ES" vira "Cariacica") e o nome do país em outro idioma. Se o campo
+ * nunca lista opções, fica o texto digitado (texto livre), a menos que o componente o apague ao perder o
+ * foco. Nunca pressiona Enter: num campo dentro de <form>, Enter dispara o envio implícito do formulário.
+ */
+async function escolherNoCombobox(
+  pagina: Page,
+  campo: DescritorCampo,
+  valor: string,
+): Promise<void> {
+  const caixa = pagina.locator(campo.seletor).first();
+  const consultas = [
+    ...new Set([valor, valor.split(",")[0]?.trim() ?? "", ...nomesDoPais(valor)]),
+  ].filter(Boolean);
+  let listouOpcoes = false;
+  for (const [i, consulta] of consultas.entries()) {
+    // Entre consultas, fecha o menu: no react-select, clicar com o menu aberto o fecha, e a próxima
+    // consulta seria digitada sem menu.
+    if (i > 0) {
+      await caixa.fill("");
+      await caixa.blur();
+    }
+    await caixa.click();
+    await caixa.fill(consulta);
+    const { opcoes, menuAberto } = await esperarOpcoes(pagina, caixa);
+    const escolhida = melhorOpcao(opcoes, valor) ?? melhorOpcao(opcoes, consulta);
+    if (escolhida !== null) {
+      // Texto exato (com espaços flexíveis): "Cariacica, ..." não pode casar com "Porto de Cariacica, ...".
+      const palavras = escolhida.split(" ").map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      const exato = new RegExp(`^\\s*${palavras.join("\\s+")}\\s*$`);
+      const opcao = (await opcoesDoCampo(pagina, caixa)).filter({ hasText: exato });
+      await opcao.first().click();
+      return;
+    }
+    listouOpcoes ||= menuAberto;
+    if (!menuAberto) break;
+  }
+  const semOpcao = new ErroSemOpcao(`nenhuma opção corresponde a "${valor}" em ${campo.rotulo}`);
+  if (listouOpcoes) {
+    await caixa.fill("");
+    await caixa.blur();
+    throw semOpcao;
+  }
+  await caixa.fill(valor);
+  await caixa.blur();
+  if ((await caixa.inputValue().catch(() => "")).trim() === "") throw semOpcao;
 }
 
 const VERDADEIRO = /^(sim|yes|true|1|x|on)$/i;
 
 /**
- * Marca/desmarca uma opção de forma robusta: clique forçado, depois clique no label e, por fim, alteração
- * direta com eventos (para inputs escondidos atrás de estilos customizados).
+ * Marca/desmarca uma opção. Primeiro o clique nativo no próprio input: não depende de layout (nada por
+ * cima intercepta) e dispara o onChange de React e afins. Mudar `checked` direto não serve: o DOM diz
+ * marcado, mas o estado do formulário não muda e o próximo re-render desmarca. Depois, o clique do
+ * Playwright. Por fim, confirma: falha em vez de seguir com a opção errada.
  */
 async function definirMarcado(opcao: Locator, marcado: boolean): Promise<void> {
-  try {
-    await opcao.setChecked(marcado, { force: true, timeout: 3000 });
-    return;
-  } catch {
-    // Segue para as alternativas.
-  }
-  const label = opcao.locator("xpath=ancestor::label[1]");
-  if ((await label.count()) > 0 && (await opcao.isChecked()) !== marcado) {
-    await label
-      .first()
-      .click({ force: true, timeout: 3000 })
-      .catch(() => undefined);
-  }
+  if ((await opcao.isChecked()) === marcado) return;
+  await opcao.evaluate((el) => {
+    (el as HTMLInputElement).click();
+  });
   if ((await opcao.isChecked()) !== marcado) {
-    await opcao.evaluate((el, valor) => {
-      const input = el as HTMLInputElement;
-      input.checked = valor;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-    }, marcado);
+    await opcao.setChecked(marcado, { force: true, timeout: 3000 }).catch(() => undefined);
   }
   if ((await opcao.isChecked()) !== marcado) throw new Error("não foi possível alterar a opção");
 }
@@ -296,7 +367,7 @@ export async function preencherCampo(
       const escolhida = melhorOpcao(rotulos, valor);
       const indice = escolhida === null ? -1 : rotulos.indexOf(escolhida);
       const opcao = opcoes[indice];
-      if (!opcao) throw new Error(`opção "${valor}" não encontrada em ${campo.rotulo}`);
+      if (!opcao) throw new ErroSemOpcao(`opção "${valor}" não encontrada em ${campo.rotulo}`);
       await definirMarcado(opcao, true);
       return;
     }
@@ -312,25 +383,30 @@ export async function preencherCampo(
         .map((v) => v.trim())
         .filter(Boolean);
       const rotulos = await Promise.all(opcoes.map(rotuloDaOpcao));
-      for (const desejado of desejados) {
-        const escolhida = melhorOpcao(rotulos, desejado);
-        const opcao = escolhida === null ? undefined : opcoes[rotulos.indexOf(escolhida)];
+      // O valor inteiro primeiro: rótulos como "Site de emprego (ex: Indeed, Infojobs)" têm vírgulas.
+      const inteira = melhorOpcao(rotulos, valor);
+      const escolhidas = new Set(
+        inteira !== null && normalizarTexto(inteira) === normalizarTexto(valor)
+          ? [inteira]
+          : desejados.map((d) => melhorOpcao(rotulos, d)).filter((o) => o !== null),
+      );
+      if (escolhidas.size === 0)
+        throw new ErroSemOpcao(`nenhuma opção corresponde a "${valor}" em ${campo.rotulo}`);
+      for (const escolhida of escolhidas) {
+        const opcao = opcoes[rotulos.indexOf(escolhida)];
         if (opcao) await definirMarcado(opcao, true);
       }
       return;
     }
     case "select": {
       if (campo.combobox) {
-        // Nunca pressionar Enter: num campo dentro de <form>, Enter dispara o envio implícito do formulário.
-        const caixa = alvo.first();
-        await caixa.click();
-        await caixa.fill(valor);
-        const opcao = pagina.getByRole("option", { name: valor, exact: false }).first();
-        if (await opcao.isVisible({ timeout: 1500 }).catch(() => false)) await opcao.click();
-        else await caixa.blur();
+        await escolherNoCombobox(pagina, campo, valor);
         return;
       }
-      const escolhida = melhorOpcao(campo.opcoes, valor) ?? valor;
+      // Sem opção que case, `selectOption` só falharia depois do timeout: desiste na hora.
+      const escolhida = campo.opcoes.length > 0 ? melhorOpcao(campo.opcoes, valor) : valor;
+      if (escolhida === null)
+        throw new ErroSemOpcao(`opção "${valor}" não encontrada em ${campo.rotulo}`);
       await alvo.first().selectOption({ label: escolhida });
       return;
     }

@@ -9,6 +9,8 @@ export interface CtxPreenchimento {
   responderAoVivo(campos: readonly Campo[]): Promise<RespostaSugerida[]>;
   /** Pausa para o usuário resolver algo no navegador (login, CAPTCHA, verificação de e-mail). */
   aguardarUsuario(mensagem: string): Promise<void>;
+  /** Andamento para o usuário: o preenchimento leva de segundos a minutos e não pode parecer travado. */
+  informar(mensagem: string): void;
 }
 
 /** Conector determinístico de um ATS (Strategy, ADR-010). Nunca envia o formulário. */

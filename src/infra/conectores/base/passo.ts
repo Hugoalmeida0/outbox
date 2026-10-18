@@ -7,6 +7,8 @@ export interface ContextoPasso {
   readonly pagina: Page;
   readonly formulario: FormularioAberto;
   aguardarUsuario(mensagem: string): Promise<void>;
+  /** Campos que ficaram vazios (sem resposta ou com falha tolerada), para avisar antes da revisão. */
+  readonly naoPreenchidos: string[];
 }
 
 /** Pausa para o usuário enquanto houver CAPTCHA ou verificação de e-mail visível (nunca tenta resolver). */
