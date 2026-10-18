@@ -35,6 +35,7 @@ import type { IdVaga } from "#dominio/vagas/vaga.ts";
 import { ExecutorAgenteClaude } from "#infra/agente/executor-agente-claude.ts";
 import { ArmazemArtefatosFs } from "#infra/armazenamento/armazem-artefatos-fs.ts";
 import { ArmazemCurriculoYaml } from "#infra/armazenamento/armazem-curriculo-yaml.ts";
+import { CacheRespostasJson } from "#infra/armazenamento/cache-respostas-json.ts";
 import { RegistroFalhasFs } from "#infra/armazenamento/registro-falhas-fs.ts";
 import { abrirConexao } from "#infra/banco/conexao.ts";
 import { migrar } from "#infra/banco/migrador.ts";
@@ -183,6 +184,15 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     () => new ArmazemArtefatosFs(caminhos, () => curriculo().lerMaster().pessoal.nome),
   );
   const falhas = preguicoso("falhas", () => new RegistroFalhasFs(caminhos.falhasDir));
+  const cache = preguicoso(
+    "cache",
+    () =>
+      new CacheRespostasJson({
+        arquivo: join(caminhos.dadosDir, "cache-respostas.json"),
+        dependencias: [caminhos.master, caminhos.perfil],
+        relogio: relogio(),
+      }),
+  );
   const http = preguicoso("http", () => new ClienteHttpFetch());
   const leitor = preguicoso("leitor", () => new LeitorHeadless());
   const navegador = preguicoso(
@@ -294,6 +304,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
           relogio: relogio(),
           config: cfgAplicacao,
           cartaMaxPalavras: cfgAplicacao.cartaMaxPalavras,
+          cache: cache(),
         },
         entrada,
         sinal,
@@ -311,6 +322,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
           agente: agente(),
           registrador: registrador(),
           relogio: relogio(),
+          cache: cache(),
           interacao,
           config: cfgAplicacao,
         },

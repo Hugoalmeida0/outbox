@@ -19,11 +19,13 @@ import {
   resolverRegime,
   valorSalarioAtual,
 } from "#dominio/respostas/salario.ts";
+import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
 import { empresaAtual, valorDocumento, valorPadrao } from "#dominio/respostas/valor-codigo.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArquivoAnalise } from "../compartilhado/artefatos.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
+import type { CacheRespostas } from "../portas/cache-respostas.ts";
 import type { GeradorEstruturado } from "../portas/gerador-estruturado.ts";
 import type { RenderizadorDocumentos } from "../portas/renderizador-documentos.ts";
 
@@ -57,6 +59,8 @@ export interface DepsResponderCampos {
   readonly artefatos: Pick<ArmazemArtefatos, "caminho" | "lerTexto" | "pastaLlm">;
   readonly renderizador: RenderizadorDocumentos;
   readonly cartaMaxPalavras: number;
+  /** Sem cache, toda pergunta vai ao LLM. */
+  readonly cache?: CacheRespostas;
 }
 
 export interface ContextoResposta {
@@ -75,6 +79,15 @@ export interface SaidaResponderCampos {
 export function contatoDo(master: Master): Contato {
   const empresa = empresaAtual(master);
   return { ...master.pessoal, ...(empresa ? { empresaAtual: empresa } : {}) };
+}
+
+/**
+ * Chave do cache: rótulo, tipo, opções (sem ordem) e idioma normalizados. A mesma pergunta com outras
+ * opções é outra pergunta.
+ */
+function chaveCache(campo: Campo, idioma: string): string {
+  const opcoes = (campo.opcoes ?? []).map(normalizarTexto).sort();
+  return JSON.stringify([normalizarTexto(campo.rotulo), campo.tipo, opcoes, idioma]);
 }
 
 function base(
@@ -167,6 +180,7 @@ export async function responderCampos(
   const respostas = new Map<string, RespostaSugerida>();
   const paraLlm: { campo: Campo; categoria: Campo["categoria"] }[] = [];
 
+  const idioma = contexto.analise?.idioma === "pt" ? "pt" : "en";
   campos.forEach((campo, i) => {
     const classificacao = classificacoes[i] ?? { categoria: "pergunta" as const };
     // Anexos são preenchidos pelo conector (CV e carta) ou ficam para o usuário (outros).
@@ -185,10 +199,25 @@ export async function responderCampos(
     else paraLlm.push({ campo, categoria: classificacao.categoria });
   });
 
+  // Pergunta já respondida em outra vaga (mesmo rótulo, opções e idioma) não volta ao LLM.
+  const pendentes = paraLlm.filter(({ campo, categoria }) => {
+    if (categoria !== "pergunta" || !deps.cache) return true;
+    const valor = deps.cache.buscar(chaveCache(campo, idioma));
+    if (valor === null) return true;
+    respostas.set(campo.id, {
+      ...base(campo, categoria),
+      valor,
+      fonte: "gerada",
+      confianca: "alta",
+      especificaDaVaga: false,
+    });
+    return false;
+  });
+
   let carta: string | undefined;
   let pdfCarta: string | undefined;
-  if (paraLlm.length > 0) {
-    contexto.aoConsultarLlm?.(paraLlm.length);
+  if (pendentes.length > 0) {
+    contexto.aoConsultarLlm?.(pendentes.length);
     const banco = deps.curriculo.lerBanco();
     const idsBanco = new Set(banco.map((e) => e.id));
     const descricao = deps.artefatos.lerTexto(contexto.vaga.id, "descricao.md") ?? "";
@@ -198,11 +227,11 @@ export async function responderCampos(
         variaveis: {
           cargo: contexto.vaga.cargo ?? "a vaga",
           empresa: contexto.vaga.empresa ?? "a empresa",
-          idioma: contexto.analise?.idioma === "pt" ? "pt" : "en",
+          idioma,
           comoSoube: perfil.comoSoube,
           maxPalavras: String(deps.cartaMaxPalavras),
           campos: JSON.stringify(
-            paraLlm.map(({ campo, categoria }) => ({
+            pendentes.map(({ campo, categoria }) => ({
               campoId: campo.id,
               rotulo: campo.rotulo,
               tipo: campo.tipo,
@@ -228,7 +257,7 @@ export async function responderCampos(
       sinal,
     );
 
-    for (const { campo, categoria } of paraLlm) {
+    for (const { campo, categoria } of pendentes) {
       if (categoria === "salario") {
         const pedido = saida.salarios.find((s) => s.campoId === campo.id);
         const { regime, confianca } = resolverRegime(
@@ -259,13 +288,23 @@ export async function responderCampos(
       const resposta = saida.respostas.find((r) => r.campoId === campo.id);
       const fonteValida =
         resposta && /^banco:r-\d{4}$/.test(resposta.fonte) && idsBanco.has(resposta.fonte.slice(6));
+      const especificaDaVaga = categoria === "carta" ? true : (resposta?.especificaDaVaga ?? false);
       respostas.set(campo.id, {
         ...base(campo, categoria),
         valor: resposta?.valor ?? null,
         fonte: fonteValida ? resposta.fonte : "gerada",
         confianca: resposta ? resposta.confianca : "baixa",
-        especificaDaVaga: categoria === "carta" ? true : (resposta?.especificaDaVaga ?? false),
+        especificaDaVaga,
       });
+      if (
+        deps.cache &&
+        categoria === "pergunta" &&
+        resposta?.valor &&
+        resposta.confianca === "alta" &&
+        !especificaDaVaga
+      ) {
+        deps.cache.gravar(chaveCache(campo, idioma), resposta.valor);
+      }
       if (categoria === "carta" && resposta?.valor) {
         carta = resposta.valor;
         if (campo.tipo === "arquivo") {

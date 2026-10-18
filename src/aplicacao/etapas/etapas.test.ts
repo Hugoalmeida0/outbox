@@ -185,6 +185,40 @@ describe("responderCampos", () => {
     });
   });
 
+  it("cache: pergunta já respondida em outra vaga não volta ao LLM; só avisa quando há chamada", async () => {
+    const amb = criarAmbienteAplicacao();
+    const memoria = new Map<string, string>();
+    const cache = {
+      buscar: (k: string) => memoria.get(k) ?? null,
+      gravar: (k: string, v: string) => void memoria.set(k, v),
+    };
+    const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
+    const analise = { ...umaAnalise(), alertas: [] };
+    amb.gerador.sempre("responder-perguntas", {
+      respostas: [
+        { campoId: "q1", valor: "Produto", confianca: "alta" },
+        { campoId: "q2", valor: "Migração", confianca: "alta", especificaDaVaga: true },
+      ],
+      salarios: [],
+    });
+    const avisos: number[] = [];
+    const contexto = { vaga, analise, aoConsultarLlm: (n: number) => void avisos.push(n) };
+    await responderCampos({ ...amb.deps(), cache }, contexto, [pergunta, outra], sinal());
+    expect(avisos).toEqual([2]);
+    // Específica da vaga não entra no cache.
+    expect(memoria.size).toBe(1);
+
+    const segunda = await responderCampos(
+      { ...amb.deps(), cache },
+      contexto,
+      [{ ...pergunta, id: "outro-id" }],
+      sinal(),
+    );
+    expect(segunda.respostas).toMatchObject([{ campoId: "outro-id", valor: "Produto" }]);
+    expect(amb.gerador.pedidosDe("responder-perguntas")).toHaveLength(1);
+    expect(avisos).toEqual([2]);
+  });
+
   it("empresa atual por código, anexo desconhecido sem resposta e consentimento sem opção reconhecível vai ao LLM", async () => {
     const amb = criarAmbienteAplicacao({
       master: umMaster({
