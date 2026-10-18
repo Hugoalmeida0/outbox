@@ -9,6 +9,7 @@ import {
   type DescritorCampo,
 } from "#infra/conectores/base/campos.ts";
 import { melhorOpcao, nomesDoPais } from "#dominio/respostas/opcoes.ts";
+import { preencherLocalizacaoLever } from "#infra/conectores/lever/conector.ts";
 import { LeitorHeadless } from "#infra/navegador/leitor-headless.ts";
 import { aquecerNavegador } from "#testes/apoio/harness-conector.ts";
 
@@ -170,6 +171,84 @@ describe("lerValoresGenerico e lerDescritores", () => {
       const [anexo] = await lerDescritores(pagina);
       expect(anexo?.tipo).toBe("arquivo");
       expect(anexo?.rotulo).toBe("Envie o laudo médico (PcD)");
+    });
+  });
+});
+
+/**
+ * Imita o "Current location" da Lever: busca assíncrona com carregamento, lista que fica na tela até a
+ * próxima busca começar e `selectedLocation` gravado só no clique de uma sugestão.
+ */
+function paginaLocalizacaoLever(cidades: readonly string[]): string {
+  return `<input id="location-input" name="location"><input id="selected-location" type="hidden" name="selectedLocation">
+<div class="dropdown-container"><div class="dropdown-results"></div>
+<div class="dropdown-no-results" style="display:none">No location found</div>
+<div class="dropdown-loading-results" style="display:none">Loading</div></div>
+<script>
+  const cidades = ${JSON.stringify(cidades)};
+  const x = document.getElementById("location-input");
+  const res = document.querySelector(".dropdown-results");
+  const sem = document.querySelector(".dropdown-no-results");
+  const carregando = document.querySelector(".dropdown-loading-results");
+  let timer;
+  x.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      carregando.style.display = "flex";
+      setTimeout(() => {
+        carregando.style.display = "none";
+        const termo = x.value.split(",")[0].trim().toLowerCase();
+        const achadas = cidades.filter((c) => c.toLowerCase().startsWith(termo) && termo);
+        res.innerHTML = "";
+        for (const [i, c] of achadas.entries()) {
+          const d = document.createElement("div");
+          d.className = "dropdown-location"; d.id = "location-" + i; d.textContent = c;
+          d.onclick = () => { x.value = c; document.getElementById("selected-location").value = JSON.stringify({ name: c }); };
+          res.append(d);
+        }
+        sem.style.display = achadas.length ? "none" : "flex";
+      }, 400);
+    }, 250);
+  });
+</script>`;
+}
+
+describe("preencherLocalizacaoLever", () => {
+  it("escolhe a sugestão da cidade no estado certo", async () => {
+    await leitor.comPagina(async (pagina) => {
+      await pagina.setContent(
+        paginaLocalizacaoLever(["Cariacica, Espírito Santo, BRA", "Vitória, Espírito Santo, BRA"]),
+      );
+      await preencherLocalizacaoLever(pagina, "Cariacica, Espírito Santo, Brasil");
+      expect(await pagina.locator("#location-input").inputValue()).toBe(
+        "Cariacica, Espírito Santo, BRA",
+      );
+    });
+  });
+
+  it("sem a cidade, cai para a capital do estado, ignorando a lista da consulta anterior", async () => {
+    await leitor.comPagina(async (pagina) => {
+      await pagina.setContent(
+        paginaLocalizacaoLever([
+          "Vila Velha Errada, Bahia, BRA",
+          "Vitória, Vitória de Santo Antão, Pernambuco, BRA",
+          "Vitória, Espírito Santo, BRA",
+        ]),
+      );
+      await preencherLocalizacaoLever(pagina, "Vila Velha Errada, Espírito Santo, Brasil");
+      expect(await pagina.locator("#location-input").inputValue()).toBe(
+        "Vitória, Espírito Santo, BRA",
+      );
+    });
+  });
+
+  it("sem nenhuma sugestão, limpa o campo e lança ErroSemOpcao", async () => {
+    await leitor.comPagina(async (pagina) => {
+      await pagina.setContent(paginaLocalizacaoLever([]));
+      await expect(
+        preencherLocalizacaoLever(pagina, "Xyz, Espírito Santo, Brasil"),
+      ).rejects.toBeInstanceOf(ErroSemOpcao);
+      expect(await pagina.locator("#location-input").inputValue()).toBe("");
     });
   });
 });
