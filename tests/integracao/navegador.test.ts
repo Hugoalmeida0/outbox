@@ -59,6 +59,14 @@ describe("NavegadorOutbox (Chromium real, headless)", () => {
     expect(recente?.url()).toBe(urlPagina);
   });
 
+  it("prefere a aba da vaga a uma aba do usuário aberta depois (ex.: portal corporativo)", async () => {
+    const portal = await navegador.paginaNova();
+    await portal.goto(urlPagina.replace("127.0.0.1", "localhost").replace("/vaga", "/portal"));
+    expect((await navegador.paginaMaisRecente())?.url()).toContain("/portal");
+    expect((await navegador.paginaMaisRecente(["127.0.0.1"]))?.url()).toBe(urlPagina);
+    await portal.close();
+  });
+
   it("desconectar mantém o navegador aberto e uma nova CLI reconecta", async () => {
     await navegador.desconectar();
     const resposta = await fetch(`${navegador.endpointCdp}/json/version`);

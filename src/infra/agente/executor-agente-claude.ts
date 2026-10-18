@@ -57,7 +57,8 @@ type SaidaAgente = z.infer<typeof esquemaSaidaAgente>;
 
 export interface OpcoesExecutorAgente {
   readonly executar: ExecutarClaude;
-  readonly paginaMaisRecente: () => Promise<Page | null>;
+  /** Página da vaga: a mais recente entre as de `hosts`, ou a mais recente de todas. */
+  readonly paginaMaisRecente: (hosts: readonly string[]) => Promise<Page | null>;
   /** Garante o navegador do Outbox aberto (o Playwright MCP conecta-se a ele por CDP). */
   readonly garantirNavegador: () => Promise<unknown>;
   readonly endpointCdp: string;
@@ -168,7 +169,7 @@ export class ExecutorAgenteClaude implements ExecutorAgente {
         case "EASY_APPLY":
           return this.finalizar(entrada, { tipo: "easy_apply", passos }, saida);
         case "PRONTO_PARA_REVISAO": {
-          const pagina = await this.opcoes.paginaMaisRecente();
+          const pagina = await this.opcoes.paginaMaisRecente(entrada.hostsPermitidos);
           if (!pagina) return this.finalizar(entrada, { tipo: "sem_formulario", passos }, saida);
           const formulario = new FormularioPlaywright(pagina, {
             rota: "agente",

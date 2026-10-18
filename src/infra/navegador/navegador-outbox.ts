@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { Browser, Page } from "playwright";
 import { ErroNavegador } from "#aplicacao/portas/erros.ts";
 import type { NavegadorUsuario } from "#aplicacao/portas/navegador-usuario.ts";
+import { hostCasaPadrao } from "#dominio/vagas/motores.ts";
 
 export interface OpcoesNavegadorOutbox {
   readonly portaCdp: number;
@@ -129,13 +130,21 @@ export class NavegadorOutbox implements NavegadorUsuario {
     return contexto.newPage();
   }
 
-  /** Última página `http(s)` aberta no contexto padrão, ou `null`. */
-  async paginaMaisRecente(): Promise<Page | null> {
+  /**
+   * Última página `http(s)` do contexto padrão, preferindo as de `hosts` (padrões como `*.gupy.io`). A
+   * ordem das abas por CDP não é a de uso: sem o filtro, uma aba do usuário (a página inicial do Chrome,
+   * um portal aberto ao lado) pode ser tomada pela página da vaga.
+   */
+  async paginaMaisRecente(hosts: readonly string[] = []): Promise<Page | null> {
     const navegador = await this.garantir();
     const paginas = (navegador.contexts()[0]?.pages() ?? []).filter((p) =>
       /^https?:/.test(p.url()),
     );
-    return paginas.at(-1) ?? null;
+    const daVaga = paginas.filter((p) => {
+      const host = URL.canParse(p.url()) ? new URL(p.url()).hostname : "";
+      return hosts.some((padrao) => hostCasaPadrao(host, padrao));
+    });
+    return daVaga.at(-1) ?? paginas.at(-1) ?? null;
   }
 
   async abrirParaLogin(): Promise<void> {

@@ -254,7 +254,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     () =>
       new ExecutorAgenteClaude({
         executar: executarClaude,
-        paginaMaisRecente: () => navegador().paginaMaisRecente(),
+        paginaMaisRecente: (hosts) => navegador().paginaMaisRecente(hosts),
         garantirNavegador: () => navegador().garantir(),
         endpointCdp: navegador().endpointCdp,
         raiz: opcoes.raizCodigo ?? RAIZ,
@@ -341,7 +341,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     },
     criarServicoSegredos: ({ vagaId, hostsPermitidos }) =>
       new ServicoSegredos({
-        obterPagina: () => navegador().paginaMaisRecente(),
+        obterPagina: () => navegador().paginaMaisRecente(hostsPermitidos),
         cofre: cofre(),
         curriculo: curriculo(),
         artefatos: artefatos(),
