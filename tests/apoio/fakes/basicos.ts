@@ -1,6 +1,7 @@
-// Fakes simples de portas: relógio, registrador, notificador e interação roteirizada.
+// Fakes simples de portas: relógio, registrador, notificador, progresso e interação roteirizada.
 import type { Interacao, OpcaoEscolha, ResumoRevisao } from "#aplicacao/portas/interacao.ts";
 import type { Notificador } from "#aplicacao/portas/notificador.ts";
+import type { EventoPreparo, ProgressoPreparo } from "#aplicacao/portas/progresso-preparo.ts";
 import type { ContextoLog, Registrador } from "#aplicacao/portas/registrador.ts";
 import type { Relogio } from "#aplicacao/portas/relogio.ts";
 
@@ -56,6 +57,23 @@ export class NotificadorEspiao implements Notificador {
 
   notificar(titulo: string, mensagem: string): void {
     this.notificacoes.push({ titulo, mensagem });
+  }
+}
+
+export class ProgressoEspiao implements ProgressoPreparo {
+  readonly eventos: EventoPreparo[] = [];
+
+  emitir(evento: EventoPreparo): void {
+    this.eventos.push(evento);
+  }
+
+  /** Etapas e conclusões de uma vaga, em ordem, como `etapa` ou `STATUS`/`STATUS: erro`. */
+  daVaga(id: number): string[] {
+    return this.eventos.flatMap((e) => {
+      if (e.tipo === "inicio" || e.vaga.id !== id) return [];
+      if (e.tipo === "etapa") return [e.etapa];
+      return [e.erro === null ? e.vaga.status : `${e.vaga.status}: ${e.erro}`];
+    });
   }
 }
 

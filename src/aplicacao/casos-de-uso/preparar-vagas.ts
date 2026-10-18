@@ -36,6 +36,7 @@ import {
   ErroTimeoutLlm,
 } from "../portas/erros.ts";
 import type { Notificador } from "../portas/notificador.ts";
+import type { EtapaPreparo, ProgressoPreparo } from "../portas/progresso-preparo.ts";
 import type { Registrador } from "../portas/registrador.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
 import { garantirMasterGenerico, type DepsRenderizarMaster } from "./renderizar-master.ts";
@@ -77,6 +78,7 @@ export type DepsPrepararVagas = DepsResolverVaga &
     >;
     readonly catalogo: CatalogoConectores;
     readonly notificador: Notificador;
+    readonly progresso: ProgressoPreparo;
     readonly registrador: Registrador;
     readonly config: ConfigAplicacao;
   };
@@ -150,12 +152,22 @@ function deduplicarPorChave(deps: DepsPrepararVagas, id: IdVaga): boolean {
   });
 }
 
+/** Avisa a etapa com a vaga relida, para a interface mostrar empresa e cargo assim que forem extraídos. */
+function avisarEtapa(deps: DepsPrepararVagas, id: IdVaga, etapa: EtapaPreparo): void {
+  const vaga = deps.vagas.buscar(id);
+  if (vaga) deps.progresso.emitir({ tipo: "etapa", vaga, etapa });
+}
+
 async function processarVaga(
   deps: DepsPrepararVagas,
   original: Vaga,
   entrada: EntradaPrepararVagas,
   sinal: AbortSignal,
 ): Promise<void> {
+  const etapa = (nome: EtapaPreparo): void => {
+    avisarEtapa(deps, original.id, nome);
+  };
+  etapa("resolver");
   const resolvida = await resolverVaga(deps, original, sinal);
   if (resolvida.tipo === "duplicada") return;
   let { vaga, resolucao } = resolvida;
@@ -164,9 +176,13 @@ async function processarVaga(
   if (resolucao.rota === "manual") {
     // Easy Apply: gera o que for possível (currículo e carta) e deixa a vaga para o usuário.
     try {
+      etapa("extrair");
       const extraida = await extrairVaga(deps, vaga, url, sinal);
+      etapa("analisar");
       const analise = await analisarVaga(deps, vaga, extraida, sinal);
+      etapa("gerar_curriculo");
       await gerarCurriculo(deps, vaga, analise, sinal);
+      etapa("gerar_carta");
       await gerarCartaAvulsa(deps, { vaga: deps.vagas.buscar(vaga.id) ?? vaga, analise }, sinal);
     } catch (erro) {
       if (sinal.aborted || erro instanceof ErroLimiteUso) throw erro;
@@ -180,7 +196,9 @@ async function processarVaga(
     return;
   }
 
+  etapa("extrair");
   const extraida = await extrairVaga(deps, vaga, url, sinal);
+  etapa("analisar");
   let analise = await analisarVaga(deps, vaga, extraida, sinal);
   let destinoManual: MotivoDe<"MANUAL"> | null = null;
 
@@ -188,6 +206,7 @@ async function processarVaga(
     const como = analise.comoCandidatar;
     if (como?.tipo === "link") {
       const { canonica, motor } = canonizar(como.valor);
+      etapa("resolver");
       const proxima = await deps.resolvedor.resolver(canonica, motor, sinal);
       deps.vagas.atualizar(vaga.id, {
         motor: proxima.motor,
@@ -220,15 +239,18 @@ async function processarVaga(
   }
 
   analise = lerAnalise(deps.artefatos, vaga) ?? analise;
+  etapa("gerar_curriculo");
   await gerarCurriculo(deps, vaga, analise, sinal);
   vaga = deps.vagas.buscar(vaga.id) ?? vaga;
 
   if (destinoManual !== null) {
+    etapa("gerar_carta");
     await gerarCartaAvulsa(deps, { vaga, analise }, sinal);
     deps.vagas.transicionar(vaga.id, "MANUAL", { motivo: destinoManual });
     return;
   }
   if (resolucao.rota === "conector") {
+    etapa("responder_campos");
     const campos = await deps.catalogo.para(resolucao.motor)?.lerCampos?.(url, sinal);
     if (campos && campos.length > 0) {
       deps.artefatos.gravarJson(vaga.id, "campos.json", campos);
@@ -284,14 +306,22 @@ export async function prepararVagas(
   if (elegiveis.length > 0) {
     deps.curriculo.lerMaster();
     deps.curriculo.lerPerfil();
+    const paralelo = entrada.paralelo ?? deps.config.paralelo;
+    deps.progresso.emitir({
+      tipo: "inicio",
+      total: elegiveis.length,
+      paralelo: Math.min(paralelo, elegiveis.length),
+    });
     await garantirMasterGenerico(deps, sinal);
     try {
       await executarComLimite(
         elegiveis,
-        entrada.paralelo ?? deps.config.paralelo,
+        paralelo,
         async (vaga, s) => {
           try {
             await processarVaga(deps, vaga, entrada, s);
+            const final = deps.vagas.buscar(vaga.id) ?? vaga;
+            deps.progresso.emitir({ tipo: "concluida", vaga: final, erro: null });
           } catch (erro) {
             if (s.aborted || erro instanceof ErroLimiteUso) throw erro;
             const motivo = motivoDoErro(erro);
@@ -305,6 +335,8 @@ export async function prepararVagas(
               deps.vagas.transicionar(vaga.id, "ERRO_PREPARO", { motivo });
             }
             erros.push({ id: vaga.id, motivo, mensagem });
+            const final = deps.vagas.buscar(vaga.id) ?? vaga;
+            deps.progresso.emitir({ tipo: "concluida", vaga: final, erro: mensagem });
           }
         },
         sinal,

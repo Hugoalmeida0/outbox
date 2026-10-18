@@ -18,6 +18,7 @@ import {
 import {
   InteracaoRoteirizada,
   NotificadorEspiao,
+  ProgressoEspiao,
   RegistradorMemoria,
   RelogioFixo,
 } from "./fakes/basicos.ts";
@@ -47,6 +48,7 @@ export interface AmbienteAplicacao {
   readonly catalogo: CatalogoConectoresFake;
   readonly agente: ExecutorAgenteFake;
   readonly notificador: NotificadorEspiao;
+  readonly progresso: ProgressoEspiao;
   readonly registrador: RegistradorMemoria;
   readonly relogio: RelogioFixo;
   interacao: InteracaoRoteirizada;
@@ -79,6 +81,7 @@ export function criarAmbienteAplicacao(
     catalogo: opcoes.catalogo ?? new CatalogoConectoresFake(),
     agente: opcoes.agente ?? new ExecutorAgenteFake(),
     notificador: new NotificadorEspiao(),
+    progresso: new ProgressoEspiao(),
     registrador: new RegistradorMemoria(),
     relogio,
     interacao: new InteracaoRoteirizada(),
@@ -95,6 +98,7 @@ export function criarAmbienteAplicacao(
       catalogo: ambiente.catalogo,
       agente: ambiente.agente,
       notificador: ambiente.notificador,
+      progresso: ambiente.progresso,
       registrador: ambiente.registrador,
       relogio: ambiente.relogio,
       interacao: ambiente.interacao,

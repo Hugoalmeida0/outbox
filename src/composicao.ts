@@ -28,6 +28,7 @@ import {
 import { renderizarMaster } from "#aplicacao/casos-de-uso/renderizar-master.ts";
 import type { ConfigAplicacao } from "#aplicacao/compartilhado/config.ts";
 import type { Interacao } from "#aplicacao/portas/interacao.ts";
+import type { ProgressoPreparo } from "#aplicacao/portas/progresso-preparo.ts";
 import { listaPii } from "#dominio/falhas/pii.ts";
 import type { Status } from "#dominio/vagas/status.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
@@ -84,7 +85,11 @@ export interface CasosDeUso {
     sinal: AbortSignal,
   ): Promise<SaidaImportarCurriculo>;
   adicionarVagas(urls: readonly string[]): ItemAdicao[];
-  prepararVagas(entrada: EntradaPrepararVagas, sinal: AbortSignal): Promise<ResumoPreparo>;
+  prepararVagas(
+    entrada: EntradaPrepararVagas,
+    progresso: ProgressoPreparo,
+    sinal: AbortSignal,
+  ): Promise<ResumoPreparo>;
   aplicarVagas(
     entrada: EntradaAplicarVagas,
     interacao: Interacao,
@@ -269,7 +274,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     importarCurriculo: (entrada, sinal) =>
       importarCurriculo({ curriculo: curriculo(), gerador: gerador() }, entrada, sinal),
     adicionarVagas: (urls) => adicionarVagas({ vagas: vagas() }, { urls }),
-    prepararVagas: (entrada, sinal) =>
+    prepararVagas: (entrada, progresso, sinal) =>
       prepararVagas(
         {
           vagas: vagas(),
@@ -281,6 +286,7 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
           renderizador: renderizador(),
           catalogo: catalogo(),
           notificador: notificador(),
+          progresso,
           registrador: registrador(),
           relogio: relogio(),
           config: cfgAplicacao,

@@ -131,6 +131,24 @@ describe("prepararVagas", () => {
     ]);
   });
 
+  it("informa o início, as etapas e a conclusão de cada vaga, com empresa e cargo assim que extraídos", async () => {
+    const { amb } = ambienteComConector();
+    const vaga = amb.inserirVaga(URL_GH);
+    await prepararVagas(amb.deps(), { forcar: false, reavaliar: false }, sinal());
+    expect(amb.progresso.eventos[0]).toEqual({ tipo: "inicio", total: 1, paralelo: 1 });
+    expect(amb.progresso.daVaga(vaga.id)).toEqual([
+      "resolver",
+      "extrair",
+      "analisar",
+      "gerar_curriculo",
+      "responder_campos",
+      "PRONTA",
+    ]);
+    const etapas = amb.progresso.eventos.filter((e) => e.tipo === "etapa");
+    expect(etapas[0]?.vaga.empresa).toBeNull();
+    expect(etapas.at(-1)?.vaga).toMatchObject({ empresa: "Empresa X", status: "NOVA" });
+  });
+
   it("nunca envia documentos, salário, diversidade nem endereço ao LLM (AC11)", async () => {
     const { amb } = ambienteComConector();
     amb.inserirVaga(URL_GH);
@@ -313,6 +331,14 @@ describe("prepararVagas", () => {
     expect(
       amb.artefatos.lerJson(issue.id, "analise.json", esquemaArquivoAnalise)?.destinoEmail,
     ).toBe("vagas@acme.com");
+    expect(amb.progresso.daVaga(easy.id)).toEqual([
+      "resolver",
+      "extrair",
+      "analisar",
+      "gerar_curriculo",
+      "gerar_carta",
+      "MANUAL",
+    ]);
     expect(amb.artefatos.lerTexto(easy.id, "carta.md")).toBeTruthy();
     expect(amb.artefatos.existe(issue.id, "carta.md")).toBe(true);
     expect(
@@ -413,6 +439,12 @@ describe("prepararVagas", () => {
       "agregador_exige_login",
       "extracao_falhou",
     ]);
+    expect(amb.progresso.eventos[0]).toEqual({ tipo: "inicio", total: 3, paralelo: 2 });
+    expect(amb.progresso.daVaga(b.id)).toEqual([
+      "resolver",
+      "extrair",
+      "ERRO_PREPARO: página fora do ar",
+    ]);
 
     amb.vagas.atualizar(b.id, { tentativasPreparo: 3 });
     const segundo = await prepararVagas(amb.deps(), { forcar: false, reavaliar: false }, sinal());
@@ -455,6 +487,7 @@ describe("prepararVagas", () => {
     );
     expect(resumo.interrompido).toBe("cancelado");
     expect(amb.vagas.buscar(vaga.id)).toMatchObject({ status: "NOVA", tentativasPreparo: 0 });
+    expect(amb.progresso.eventos.filter((e) => e.tipo === "concluida")).toEqual([]);
     expect(amb.notificador.notificacoes).toEqual([]);
   });
 
@@ -465,6 +498,7 @@ describe("prepararVagas", () => {
     ).toMatchObject({ processadas: 0 });
     expect(amb.renderizador.curriculos).toEqual([]);
     expect(amb.notificador.notificacoes).toEqual([]);
+    expect(amb.progresso.eventos).toEqual([]);
   });
 
   it("mapeia erros em motivos", () => {
