@@ -106,6 +106,7 @@ describe("aplicarVagas: revisão e envio", () => {
       rotulo: "Por que você quer trabalhar aqui?",
       valor: "Admiro o produto.",
       nova: true,
+      vaziaNaPagina: false,
     });
     expect(amb.curriculo.banco).toMatchObject([
       {
@@ -133,6 +134,21 @@ describe("aplicarVagas: revisão e envio", () => {
       new RegExp(`^\\nVaga #${String(id)} .*\\(1 de 1\\): abrindo o formulário no navegador`),
     );
     expect(amb.curriculo.banco).toEqual([]);
+  });
+
+  it("resposta planejada cujo campo está vazio na página aparece como vazia na revisão", async () => {
+    const { amb, formulario } = criar();
+    formulario.valores = [
+      { rotulo: "First Name", valor: "Ana", ehArquivo: false },
+      { rotulo: "Por que você quer trabalhar aqui?", valor: " ", ehArquivo: false },
+    ];
+    await prontas(amb);
+    const interacao = roteiro(amb, "pular");
+    await aplicarVagas(amb.deps(), { simular: true }, sinal());
+    expect(interacao.resumos[0]?.respostas).toEqual([
+      expect.objectContaining({ rotulo: "First Name", vaziaNaPagina: false }),
+      expect.objectContaining({ rotulo: "Por que você quer trabalhar aqui?", vaziaNaPagina: true }),
+    ]);
   });
 
   it("pular, manual, ver o PDF e sair respeitam a escolha e fecham a aba", async () => {
@@ -458,6 +474,7 @@ describe("aplicarVagas: conector, agente e registro de falhas (AC15 a AC18)", ()
       rotulo: "Conte um desafio técnico",
       valor: "Migrei o monólito.",
       nova: true,
+      vaziaNaPagina: false,
     });
   });
 

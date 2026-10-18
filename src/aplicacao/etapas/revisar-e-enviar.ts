@@ -42,13 +42,26 @@ function acharValor(
   return valores.find((v) => !v.ehArquivo && normalizarTexto(v.rotulo) === alvo);
 }
 
-function montarResumo(
+/** Checkbox respondido com "Não" fica desmarcado de propósito: vazio na página não é falha. */
+function esperaValor(resposta: RespostaSugerida): boolean {
+  if (!resposta.valor) return false;
+  return !(
+    resposta.tipoCampo === "checkbox" && /^(nao|no|false)$/.test(normalizarTexto(resposta.valor))
+  );
+}
+
+/**
+ * Monta a tela de revisão conferindo a página: uma resposta planejada cujo campo está vazio no formulário
+ * aparece como vazia, em vez de parecer preenchida.
+ */
+async function montarResumo(
   deps: DepsRevisarEEnviar,
   vaga: Vaga,
   formulario: FormularioAberto,
   pacote: PacoteCandidatura,
   perguntasNaHora: readonly { rotulo: string; valor: string }[],
-): ResumoRevisao {
+): Promise<ResumoRevisao> {
+  const valores = await formulario.lerValores().catch(() => []);
   const analise = lerAnalise(deps.artefatos, vaga);
   const gaps = deps.vagas.listarGapsAbertos([vaga.id]).map((g) => g.termo);
   return {
@@ -68,6 +81,7 @@ function montarResumo(
         rotulo: r.rotulo,
         valor: r.valor ?? "(sem resposta)",
         nova: r.fonte === "gerada" || r.confianca === "baixa",
+        vaziaNaPagina: esperaValor(r) && acharValor(valores, r)?.valor.trim() === "",
       })),
       ...perguntasNaHora.map((p) => ({ rotulo: p.rotulo, valor: p.valor, nova: true })),
     ],
@@ -91,7 +105,7 @@ export async function revisarEEnviar(
   try {
     await formulario.capturarTela(deps.artefatos.caminho(vaga.id, "antes-envio.png"));
     deps.interacao.exibirResumoRevisao(
-      montarResumo(deps, vaga, formulario, pacote, perguntasNaHora),
+      await montarResumo(deps, vaga, formulario, pacote, perguntasNaHora),
     );
 
     for (;;) {

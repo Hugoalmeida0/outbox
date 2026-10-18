@@ -14,6 +14,8 @@ export interface ResumoRevisao {
     readonly rotulo: string;
     readonly valor: string;
     readonly nova: boolean;
+    /** Havia resposta, mas o campo está vazio na página (o preenchimento falhou ou foi pulado). */
+    readonly vaziaNaPagina?: boolean;
   }[];
   readonly cartaInicio?: string;
   readonly caminhoPdf: string;
