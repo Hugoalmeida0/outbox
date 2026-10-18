@@ -383,6 +383,20 @@ describe("consentimento e ajustes vistos em formulários reais", () => {
     expect(tipo("In terms of English, how fluent are you?")).toBe("pergunta");
   });
 
+  it("anexo só recebe o CV quando é reconhecido como currículo", () => {
+    expect(classificarCampo({ rotulo: "Resume/CV ATTACH RESUME/CV", tipo: "arquivo" })).toBe(
+      "curriculo",
+    );
+    expect(classificarCampo({ rotulo: "", nome: "resume", tipo: "arquivo" })).toBe("curriculo");
+    expect(
+      classificarCampo({
+        rotulo: "Envie o laudo médico (PcD)",
+        nome: "cards[a][field11]",
+        tipo: "arquivo",
+      }),
+    ).toBe("anexo");
+  });
+
   it("sem consentimento de diversidade, responde 'prefiro não informar' mesmo com o dado no perfil", () => {
     const opcoes = ["Parda", "Branca", "Prefiro não informar"];
     expect(respostaDiversidade("raca", opcoes, { raca: "parda" }).valor).toBe("Parda");

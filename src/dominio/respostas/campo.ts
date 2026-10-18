@@ -19,6 +19,8 @@ export const CATEGORIAS_CAMPO = [
   "documento",
   "curriculo",
   "carta",
+  /** Anexo que não é currículo nem carta (laudo, portfólio, documento): nunca recebe o CV. */
+  "anexo",
   "salario",
   "salario_atual",
   "diversidade",

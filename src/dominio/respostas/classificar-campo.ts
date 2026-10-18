@@ -153,6 +153,9 @@ function tipoConsentimento(texto: string): TipoConsentimento | null {
   return CONSENTIMENTO.test(texto) ? "tratamentoDados" : null;
 }
 
+/** Anexo que recebe o currículo: o rótulo ou o nome falam em resume, CV ou currículo. */
+const ANEXO_CURRICULO = /\bresume\b|\bcv\b|curriculo|curriculum/;
+
 function normalizarRotulo(texto: string): string {
   return texto
     .normalize("NFD")
@@ -168,9 +171,9 @@ function normalizarRotulo(texto: string): string {
 export function classificarCampoDetalhado(campo: DescricaoCampo): Classificacao {
   if (campo.tipo === "arquivo") {
     const rotulo = normalizarRotulo(`${campo.rotulo} ${campo.nome ?? ""}`);
-    return /cover letter|carta|motivation/.test(rotulo)
-      ? { categoria: "carta" }
-      : { categoria: "curriculo" };
+    if (/cover letter|carta|motivation/.test(rotulo)) return { categoria: "carta" };
+    // Só o anexo reconhecido recebe o CV: um laudo PcD ou um portfólio nunca recebe o currículo.
+    return ANEXO_CURRICULO.test(rotulo) ? { categoria: "curriculo" } : { categoria: "anexo" };
   }
   if (campo.tipo === "checkbox" || campo.tipo === "radio" || campo.tipo === "select") {
     const tipo = tipoConsentimento(normalizarRotulo(`${campo.rotulo} ${campo.nome ?? ""}`));

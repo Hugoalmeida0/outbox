@@ -114,6 +114,12 @@ async function preencherEtapa(
   for (const [i, campo] of campos.entries()) {
     const descritor = descritores[i];
     if (!descritor) continue;
+    if (campo.tipo === "arquivo" && campo.categoria === "anexo") {
+      // Anexo que não é CV nem carta (laudo, portfólio): nunca recebe o currículo.
+      if (campo.obrigatorio)
+        contexto.naoPreenchidos.push(`${campo.rotulo || campo.id} (anexo que você precisa enviar)`);
+      continue;
+    }
     const valor =
       campo.tipo === "arquivo"
         ? campo.categoria === "carta"

@@ -125,6 +125,7 @@ function respostaPorCodigo(
     case "salario_atual":
       return r(valorSalarioAtual(perfil.salario.atual, campo.tipo === "numero"));
     case "curriculo":
+    case "anexo":
       return null;
     case "salario":
     case "carta":
@@ -165,7 +166,12 @@ export async function responderCampos(
 
   campos.forEach((campo, i) => {
     const classificacao = classificacoes[i] ?? { categoria: "pergunta" as const };
-    if (campo.tipo === "arquivo" && classificacao.categoria === "curriculo") return;
+    // Anexos são preenchidos pelo conector (CV e carta) ou ficam para o usuário (outros).
+    if (
+      campo.tipo === "arquivo" &&
+      (classificacao.categoria === "curriculo" || classificacao.categoria === "anexo")
+    )
+      return;
     const porCodigo = respostaPorCodigo(campo, classificacao, perfil, contato);
     // Consentimento sem opção afirmativa/negativa reconhecível vira pergunta, em vez de ficar vazio.
     const consentimentoIndefinido =
