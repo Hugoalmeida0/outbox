@@ -1,5 +1,6 @@
 import { montarDocumento, paraTexto } from "#dominio/curriculo/documento.ts";
 import { encaixarEmUmaPagina, todasAsSkills } from "#dominio/curriculo/encaixe.ts";
+import { aplicarNuncaListar } from "#dominio/curriculo/nunca-listar.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
 import type { RenderizadorDocumentos } from "../portas/renderizador-documentos.ts";
@@ -18,7 +19,7 @@ export async function renderizarMaster(
   deps: DepsRenderizarMaster,
   sinal: AbortSignal,
 ): Promise<{ pdf: string; paginas: number }> {
-  const master = deps.curriculo.lerMaster();
+  const master = aplicarNuncaListar(deps.curriculo.lerMaster());
   const pdf = deps.artefatos.caminhoMaster("pdf");
   const encaixe = await encaixarEmUmaPagina(
     montarDocumento(master, null, master.idioma),

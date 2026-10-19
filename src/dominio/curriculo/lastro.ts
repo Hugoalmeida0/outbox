@@ -2,19 +2,39 @@ import { contemTermo, normalizarTexto } from "../compartilhado/texto.ts";
 import type { AnaliseVaga } from "../analise/analise-vaga.ts";
 import type { CurriculoGerado } from "./curriculo-gerado.ts";
 import type { Master } from "./master.ts";
+import { numerosDe } from "./numeros.ts";
 
-export type RegraLastro = "R1" | "R2" | "R3" | "R4" | "R5" | "R6";
+export type RegraLastro =
+  | "R1"
+  | "R2"
+  | "R3"
+  | "R4"
+  | "R5"
+  | "R6"
+  | "R7"
+  | "R8"
+  | "R9"
+  | "R10"
+  | "R11";
 
 export interface Violacao {
   readonly regra: RegraLastro;
   readonly detalhe: string;
 }
 
-const NUMERO = /\d+(?:[.,]\d+)*%?/g;
+// R7: placeholders que sobraram. `TODO` e `XX` diferenciam maiúsculas (em português "todo" é palavra comum).
+const PLACEHOLDERS: readonly RegExp[] = [/\[QUANTIFICAR\]/, /\bTODO\b/, /\bXX\b/, /\blorem\b/i];
 
-function numeros(texto: string): string[] {
-  return (texto.match(NUMERO) ?? []).map((n) => n.replace(/[.,%]/g, ""));
-}
+// R8: primeira pessoa explícita no início do bullet ("Eu fiz", "I built").
+const PRIMEIRA_PESSOA = /^\s*(eu|i)\s/i;
+
+// R10: dados que não pertencem ao currículo (CPF, CEP, data de nascimento, estado civil).
+const PADROES_PROIBIDOS: readonly { readonly regex: RegExp; readonly nome: string }[] = [
+  { regex: /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/, nome: "CPF" },
+  { regex: /\b\d{5}-\d{3}\b/, nome: "CEP" },
+  { regex: /data de nascimento|date of birth|nascid[oa] em/i, nome: "data de nascimento" },
+  { regex: /estado civil|marital status|\bsolteir[oa]\b|\bcasad[oa]\b/i, nome: "estado civil" },
+];
 
 /** Termos normalizados de skills (nome e aliases) e certificações do master. */
 function vocabularioMaster(master: Master): Set<string> {
@@ -27,16 +47,34 @@ function vocabularioMaster(master: Master): Set<string> {
   return termos;
 }
 
-/** Todo o texto factual do master, normalizado (lastro de título e resumo). */
-function textoMaster(master: Master): string {
-  return normalizarTexto(
-    [
-      master.pessoal.titulo,
-      master.resumo,
-      ...master.experiencias.flatMap((e) => [e.cargo, ...e.bullets.map((b) => b.texto)]),
-      ...master.projetos.flatMap((p) => [p.nome, p.descricao, ...p.bullets.map((b) => b.texto)]),
-    ].join(" "),
-  );
+/** Todo o texto factual do master, sem normalizar (lastro de título e resumo). */
+function textoFactualMaster(master: Master): string {
+  return [
+    master.pessoal.titulo,
+    master.resumo,
+    ...master.experiencias.flatMap((e) => [e.cargo, ...e.bullets.map((b) => b.texto)]),
+    ...master.projetos.flatMap((p) => [p.nome, p.descricao, ...p.bullets.map((b) => b.texto)]),
+  ].join(" ");
+}
+
+/** Texto escrito pelo LLM (título, resumo ou bullet): placeholders, dados proibidos e termos `nuncaListar`. */
+function violacoesDeTexto(texto: string, onde: string, proibidos: readonly string[]): Violacao[] {
+  const violacoes: Violacao[] = [];
+  for (const placeholder of PLACEHOLDERS) {
+    if (placeholder.test(texto)) {
+      violacoes.push({ regra: "R7", detalhe: `placeholder ${placeholder.source} em ${onde}` });
+    }
+  }
+  for (const { regex, nome } of PADROES_PROIBIDOS) {
+    if (regex.test(texto)) violacoes.push({ regra: "R10", detalhe: `${nome} em ${onde}` });
+  }
+  const normalizado = normalizarTexto(texto);
+  for (const termo of proibidos) {
+    if (contemTermo(normalizado, termo)) {
+      violacoes.push({ regra: "R11", detalhe: `termo "${termo}" não pode ser listado (${onde})` });
+    }
+  }
+  return violacoes;
 }
 
 /**
@@ -61,6 +99,7 @@ export function validarLastro(gerado: CurriculoGerado, master: Master, analise: 
   }
 
   const vocabulario = vocabularioMaster(master);
+  const proibidos = (master.nuncaListar ?? []).map(normalizarTexto).filter((t) => t.length > 0);
   const keywordsConcretas = analise.keywords
     .filter((k) => k.tipo === "tecnologia" || k.tipo === "certificacao")
     .map((k) => normalizarTexto(k.termo))
@@ -93,10 +132,15 @@ export function validarLastro(gerado: CurriculoGerado, master: Master, analise: 
       }
       const textoOrigem = bullet.origem.map((o) => origemValida.get(o) ?? "").join(" ");
       // R4: nenhum número novo.
-      const numerosOrigem = new Set(numeros(textoOrigem));
-      for (const n of numeros(bullet.texto)) {
+      const numerosOrigem = new Set(numerosDe(textoOrigem));
+      for (const n of numerosDe(bullet.texto)) {
         if (!numerosOrigem.has(n)) violacoes.push({ regra: "R4", detalhe: `número "${n}" sem lastro em ${onde}` });
       }
+      // R8: sem primeira pessoa explícita; R7, R10 e R11: placeholders, dados proibidos e nuncaListar.
+      if (PRIMEIRA_PESSOA.test(bullet.texto)) {
+        violacoes.push({ regra: "R8", detalhe: `primeira pessoa explícita em ${onde}` });
+      }
+      violacoes.push(...violacoesDeTexto(bullet.texto, onde, proibidos));
       // R5: tecnologias e certificações só se existirem no master ou na origem.
       checarKeywords(bullet.texto, normalizarTexto(textoOrigem), onde);
     }
@@ -133,9 +177,20 @@ export function validarLastro(gerado: CurriculoGerado, master: Master, analise: 
   }
 
   // R5 em título e resumo: lastro é qualquer texto factual do master.
-  const lastroGeral = textoMaster(master);
-  checarKeywords(gerado.titulo, lastroGeral, "título");
-  checarKeywords(gerado.resumo, lastroGeral, "resumo");
+  const factual = textoFactualMaster(master);
+  const lastroGeral = normalizarTexto(factual);
+  const numerosMaster = new Set(numerosDe(factual));
+  for (const [texto, onde] of [
+    [gerado.titulo, "título"],
+    [gerado.resumo, "resumo"],
+  ] as const) {
+    checarKeywords(texto, lastroGeral, onde);
+    // R9: número no título ou no resumo precisa constar do texto factual do master.
+    for (const n of numerosDe(texto)) {
+      if (!numerosMaster.has(n)) violacoes.push({ regra: "R9", detalhe: `número "${n}" sem lastro em ${onde}` });
+    }
+    violacoes.push(...violacoesDeTexto(texto, onde, proibidos));
+  }
 
   return violacoes;
 }

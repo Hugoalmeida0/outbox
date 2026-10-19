@@ -6,6 +6,7 @@ import { montarDocumento, paraTexto } from "#dominio/curriculo/documento.ts";
 import { encaixarEmUmaPagina, skillsAderentes } from "#dominio/curriculo/encaixe.ts";
 import { validarLastro, type Violacao } from "#dominio/curriculo/lastro.ts";
 import type { IdiomaCurriculo } from "#dominio/curriculo/master.ts";
+import { aplicarNuncaListar, paraPrompt } from "#dominio/curriculo/nunca-listar.ts";
 import { keywordsPerdidas, scoreAts } from "#dominio/curriculo/score-ats.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import {
@@ -63,7 +64,7 @@ export async function gerarCurriculo(
   analise: ArquivoAnalise,
   sinal: AbortSignal,
 ): Promise<SaidaGerarCurriculo> {
-  const master = deps.curriculo.lerMaster();
+  const master = aplicarNuncaListar(deps.curriculo.lerMaster());
   const idioma: IdiomaCurriculo = analise.idioma === "pt" ? "pt" : "en";
   const descricao =
     deps.artefatos.lerTexto(vaga.id, "descricao.md") ?? `${vaga.cargo ?? ""} ${vaga.empresa ?? ""}`;
@@ -84,7 +85,7 @@ export async function gerarCurriculo(
             keywords: analise.keywords,
             senioridade: analise.senioridade,
           }),
-          master: JSON.stringify(master),
+          master: JSON.stringify(paraPrompt(master)),
         },
         conteudoNaoConfiavel: { descricao },
         schema: esquemaCurriculoGerado,

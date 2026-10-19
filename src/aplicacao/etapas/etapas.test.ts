@@ -88,6 +88,33 @@ describe("gerarCurriculo", () => {
     ]);
   });
 
+  it("nuncaListar: o prompt não recebe o campo nem a skill, e o PDF não a lista", async () => {
+    const amb = criarAmbienteAplicacao({ master: umMaster({ nuncaListar: ["aws"] }) });
+    const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
+    amb.gerador.sempre("tailoring", umCurriculoGerado({ skills: ["typescript", "nodejs"] }));
+    await gerarCurriculo(amb.deps(), vaga, { ...umaAnalise(), alertas: [] }, sinal());
+    const enviado = JSON.parse(String(amb.gerador.pedidosDe("tailoring")[0]?.variaveis.master)) as {
+      nuncaListar?: unknown;
+      skills: { id: string }[];
+    };
+    expect(enviado).not.toHaveProperty("nuncaListar");
+    expect(enviado.skills.map((s) => s.id)).not.toContain("aws");
+    const doc = amb.renderizador.curriculos.at(-1)?.doc;
+    const competencias = doc?.secoes.find((x) => x.tipo === "competencias");
+    expect(
+      competencias?.tipo === "competencias" && competencias.grupos.flatMap((g) => g.itens),
+    ).not.toContain("AWS");
+  });
+
+  it("texto gerado com termo nuncaListar vira violação de lastro e cai no master genérico", async () => {
+    const amb = criarAmbienteAplicacao({ master: umMaster({ nuncaListar: ["Node.js"] }) });
+    const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
+    amb.gerador.sempre("tailoring", umCurriculoGerado());
+    const saida = await gerarCurriculo(amb.deps(), vaga, { ...umaAnalise(), alertas: [] }, sinal());
+    expect(saida.camaleaoFalhou).toBe(true);
+    expect(amb.gerador.pedidosDe("tailoring")).toHaveLength(2);
+  });
+
   it("score ATS abaixo do genérico: refaz 1x pedindo as keywords perdidas e fica com a melhor", async () => {
     const amb = criarAmbienteAplicacao();
     const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
