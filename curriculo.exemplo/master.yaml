@@ -11,6 +11,7 @@ pessoal:
   cidade: São Paulo
   uf: SP
   pais: Brasil
+  modalidade: Remoto ou híbrido em SP # opcional: aparece na linha de contato do currículo
   linkedin: https://www.linkedin.com/in/ana-exemplo
   github: https://github.com/ana-exemplo
 
@@ -18,7 +19,18 @@ resumo: >-
   Desenvolvedora full stack com 6 anos de experiência em TypeScript, Node.js e React, construindo
   APIs e produtos digitais em fintechs e e-commerce.
 
+# Termos que nunca aparecem no currículo gerado (nome ou id de skill). Opcional.
+# nuncaListar: [PHP]
+
 # Ids em kebab-case. Os bullets são citados pelo currículo gerado (campo `origem`).
+#
+# prioridadeCorte (opcional, inteiro de 1 a 10; em experiência, bullet, projeto e certificação):
+# define o que sai primeiro quando o currículo não cabe em 1 página. O MENOR valor corta primeiro e
+# valores >= 9 são protegidos (só saem se nada abaixo resolver). Sem o campo, o valor implícito é:
+#   1 = experiência antiga sem aderência à vaga, 3 = bullet de projeto além do 2º,
+#   4 = bullet de menor aderência (a experiência atual nunca fica com menos de 4 bullets),
+#   10 = experiência com aderência à vaga (protegida).
+# A experiência atual (fim: null) nunca é removida, qualquer que seja o valor.
 experiencias:
   - id: exp-fintech-aurora
     empresa: Fintech Aurora
@@ -26,6 +38,7 @@ experiencias:
     inicio: 2022-03 # AAAA-MM
     fim: null # null = emprego atual
     local: Remoto
+    contexto: Plataforma de pagamentos com milhões de transações por mês. # opcional: 1 linha sob o cargo
     bullets:
       - id: exp-fintech-aurora-b1
         texto: Liderei a migração de 12 serviços Node.js para TypeScript, reduzindo incidentes em 40%.
@@ -70,6 +83,7 @@ certificacoes:
     nome: AWS Certified Cloud Practitioner
     emissor: Amazon Web Services
     ano: 2023
+    mes: 5 # opcional (1 a 12): com mês o currículo mostra mai/2023; sem mês, só o ano
 
 # categoria: linguagem, framework, ferramenta, cloud, banco, pratica ou soft
 # origem: master (declarada por você) ou aprendido (confirmada numa rodada de gaps do `aplicar`)

@@ -7,6 +7,12 @@ export const esquemaId = z
 
 const anoMes = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "use AAAA-MM");
 
+/**
+ * Prioridade de corte (1 a 10) usada ao encaixar o currículo em 1 página: o menor valor corta primeiro e
+ * valores a partir de 9 são protegidos (só saem se nada abaixo resolver). Ausente = valor implícito.
+ */
+export const esquemaPrioridadeCorte = z.number().int().min(1).max(10);
+
 export const IDIOMAS_CURRICULO = ["pt", "en"] as const;
 export const esquemaIdiomaCurriculo = z.enum(IDIOMAS_CURRICULO);
 export type IdiomaCurriculo = z.infer<typeof esquemaIdiomaCurriculo>;
@@ -33,6 +39,7 @@ export const esquemaPessoal = z.object({
   cidade: z.string().min(1),
   uf: z.string().min(1).optional(),
   pais: z.string().min(1),
+  modalidade: z.string().min(1).optional(),
   linkedin: z.string().min(1).optional(),
   github: z.string().min(1).optional(),
   portfolio: z.string().min(1).optional(),
@@ -43,6 +50,7 @@ export const esquemaBulletExperiencia = z.object({
   id: esquemaId,
   texto: z.string().min(1),
   skills: z.array(esquemaId).default([]),
+  prioridadeCorte: esquemaPrioridadeCorte.optional(),
 });
 
 export const esquemaExperiencia = z.object({
@@ -52,6 +60,8 @@ export const esquemaExperiencia = z.object({
   inicio: anoMes,
   fim: anoMes.nullable(),
   local: z.string().min(1).optional(),
+  contexto: z.string().min(1).optional(),
+  prioridadeCorte: esquemaPrioridadeCorte.optional(),
   bullets: z.array(esquemaBulletExperiencia).min(1),
 });
 export type Experiencia = z.infer<typeof esquemaExperiencia>;
@@ -61,6 +71,7 @@ export const esquemaProjeto = z.object({
   nome: z.string().min(1),
   descricao: z.string().min(1),
   url: z.string().min(1).optional(),
+  prioridadeCorte: esquemaPrioridadeCorte.optional(),
   skills: z.array(esquemaId).default([]),
   bullets: z.array(z.object({ id: esquemaId, texto: z.string().min(1) })).default([]),
 });
@@ -81,6 +92,8 @@ export const esquemaCertificacao = z.object({
   nome: z.string().min(1),
   emissor: z.string().min(1),
   ano: z.number().int(),
+  mes: z.number().int().min(1).max(12).optional(),
+  prioridadeCorte: esquemaPrioridadeCorte.optional(),
   url: z.string().min(1).optional(),
 });
 export type Certificacao = z.infer<typeof esquemaCertificacao>;
@@ -115,6 +128,8 @@ const esquemaMasterBase = z.object({
   certificacoes: z.array(esquemaCertificacao).default([]),
   skills: z.array(esquemaSkill).default([]),
   idiomas: z.array(esquemaIdiomaFalado).default([]),
+  /** Termos (nomes ou ids de skill) que nunca aparecem no currículo gerado nem chegam ao prompt. */
+  nuncaListar: z.array(z.string().min(1)).optional(),
 });
 
 /** Coleta todos os ids declarados no master, na ordem em que aparecem. */

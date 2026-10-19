@@ -114,6 +114,28 @@ Códigos de saída: `0` sucesso, `1` erro de execução, `2` uso inválido, `130
 O primeiro Ctrl+C encerra de forma ordenada; o segundo força a saída. Dois `preparar` (ou `aplicar`)
 simultâneos não rodam: o segundo sai com código 2.
 
+## Currículo em 1 página
+
+O PDF sai em A4, uma coluna e texto selecionável, no formato que os ATS parseiam. Quando o conteúdo
+não cabe em 1 página, o Outbox reduz a fonte (de 9,5 pt até 9,0 pt), corta itens e só então reduz até
+o piso de 8,8 pt. Margens abaixo de 12 mm e fonte abaixo de 8,8 pt nunca são usadas: se ainda assim
+passar de 1 página, o PDF sai longo e a vaga recebe o alerta `pdf_mais_de_2_paginas`.
+
+Você controla o que sai primeiro com `prioridadeCorte` (inteiro de 1 a 10) no `curriculo/master.yaml`,
+em experiência, bullet, projeto ou certificação. **O menor valor corta primeiro**; valores de 9 a 10
+são protegidos e só saem se nada abaixo resolver. Sem o campo, o valor implícito é:
+
+| Valor | Item                                                                              |
+| ----- | --------------------------------------------------------------------------------- |
+| 1     | Experiência não atual sem nenhuma skill ligada às keywords da vaga                |
+| 3     | Bullet de projeto além do 2º                                                      |
+| 4     | Bullet de menor aderência (a experiência atual nunca fica com menos de 4 bullets) |
+| 10    | Experiência não atual com aderência à vaga (protegida)                            |
+
+Empates saem pela menor aderência e, depois, pelo item mais antigo. A experiência atual (`fim: null`)
+nunca é removida. Uma experiência cortada perde primeiro os bullets (fica só a linha do cargo) e depois
+é removida. `nuncaListar` impede que termos (nomes ou ids de skill) apareçam no currículo gerado.
+
 ## Privacidade e segurança
 
 - `curriculo/`, `dados/` e `config.yaml` ficam **fora do git**. Não versione esses diretórios.
