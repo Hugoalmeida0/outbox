@@ -38,8 +38,8 @@ function css(b: number): string {
   .sub { margin-top: ${pt(0.25 * b)}; }
   b { font-weight: bold; }
   ul { list-style: none; margin: 0; padding: 0 0 0 9pt; }
-  li { position: relative; margin: 0; }
-  li::before { content: "•"; position: absolute; left: -9pt; }
+  li { margin: 0; }
+  li::before { content: "•"; display: inline-block; width: 9pt; margin-left: -9pt; }
 `;
 }
 

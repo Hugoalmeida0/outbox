@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@napi-rs/canvas": "1.0.10",
     "@types/cross-spawn": "6.0.6",
     "@types/node": "26.6.5",
     "@types/node-notifier": "8.0.5",
