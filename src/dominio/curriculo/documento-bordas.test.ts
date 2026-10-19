@@ -37,18 +37,22 @@ describe("montarDocumento: bordas", () => {
     });
     const doc = montarDocumento(master, gerado, "en");
     const projetos = doc.secoes.find((s) => s.tipo === "projetos");
-    expect(projetos?.tipo === "projetos" && projetos.itens).toEqual([
+    expect(projetos?.tipo === "projetos" && projetos.itens).toMatchObject([
       { nome: "Site Pessoal", url: "https://ana.dev", bullets: ["Built in React."] },
     ]);
-    const listas = doc.secoes.flatMap((s) => (s.tipo === "lista" ? [s.itens] : []));
-    expect(listas).toContainEqual(["Arquitetura — FIAP (MBA), 2024–present"]);
-    expect(listas).toContainEqual(["Portuguese — Native", expect.stringMatching(/^Klingon — /)]);
-    expect(doc.secoes.map((s) => s.titulo)).not.toContain("Certifications");
+    expect(projetos?.tipo === "projetos" && projetos.itens[0]).not.toHaveProperty("descricao");
+    const formacao = doc.secoes.find((s) => s.tipo === "formacao");
+    expect(formacao?.tipo === "formacao" && formacao.itens).toEqual([
+      { curso: "Arquitetura", detalhe: "FIAP (MBA) · 2024 – present" },
+    ]);
+    const idiomas = doc.secoes.flatMap((s) => (s.tipo === "competencias" ? [s.idiomas] : []));
+    expect(idiomas[0]?.itens).toEqual(["Portuguese (Native)", "Klingon (Basic)"]);
+    expect(doc.secoes.map((s) => s.titulo)).not.toContain("CERTIFICATIONS & AWARDS");
     const competencias = doc.secoes.find((s) => s.tipo === "competencias");
     expect(competencias?.tipo === "competencias" && competencias.grupos.flatMap((g) => g.itens)).toEqual(["React"]);
 
     const texto = paraTexto(doc);
-    expect(texto).toContain("Site Pessoal (https://ana.dev)");
+    expect(texto).toContain("Site Pessoal · ana.dev");
     expect(texto).not.toContain("Portfólio.");
   });
 
@@ -63,17 +67,39 @@ describe("montarDocumento: bordas", () => {
 
   it("texto da experiência sem local e projeto do master genérico com descrição", () => {
     const texto = paraTexto(montarDocumento(umMaster(), null, "pt"));
-    expect(texto).toContain("Desenvolvedora Pleno — Loja Horizonte (jan/2019 – fev/2022)");
-    expect(texto).toContain("Aplicativo pessoal de controle de gastos.");
+    expect(texto).toContain("Loja Horizonte\nDesenvolvedora Pleno · jan/2019 – fev/2022");
+    expect(texto).toContain("Gestor de Finanças — Aplicativo pessoal de controle de gastos.");
   });
 });
 
 describe("formatação", () => {
   it("período com mês fora da tabela e contato sem UF", () => {
     expect(formatarPeriodo("2020-13", null, "pt")).toBe("13/2020 – atual");
+    expect(linhaContato({ cidade: "Lisboa", email: "a@x.com", telefone: "1" })).toEqual([
+      "Lisboa",
+      "a@x.com",
+      "1",
+    ]);
+  });
+
+  it("contato: cidade, UF, país, modalidade, e-mail, telefone e LinkedIn em texto puro", () => {
     expect(
-      linhaContato({ cidade: "Lisboa", email: "a@x.com", telefone: "1", portfolio: "https://a.dev" }),
-    ).toEqual(["Lisboa", "a@x.com", "1", "https://a.dev"]);
+      linhaContato({
+        cidade: "Vitória",
+        uf: "ES",
+        pais: "Brasil",
+        modalidade: "Remoto ou híbrido no ES",
+        email: "a@x.com",
+        telefone: "1",
+        linkedin: "https://www.linkedin.com/in/ana/",
+      }),
+    ).toEqual([
+      "Vitória, ES, Brasil",
+      "Remoto ou híbrido no ES",
+      "a@x.com",
+      "1",
+      "linkedin.com/in/ana",
+    ]);
   });
 
   it("nome de arquivo sem nome aproveitável cai para Curriculo", () => {
