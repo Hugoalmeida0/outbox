@@ -131,11 +131,24 @@ describe("ArmazemArtefatosFs", () => {
 
   it("resolve caminhos na pasta da vaga com nomes de PDF do candidato", () => {
     expect(artefatos.caminho(id, "pdf-curriculo")).toMatch(
-      /dados[\\/]vagas[\\/]00042[\\/]Ana_Silva_CV\.pdf$/,
+      /dados[\\/]vagas[\\/]00042[\\/]Ana-Silva-Curriculo.pdf$/,
     );
-    expect(artefatos.caminho(id, "pdf-carta")).toMatch(/Ana_Silva_Carta\.pdf$/);
-    expect(artefatos.caminhoMaster("pdf")).toMatch(/dados[\\/]master[\\/]Ana_Silva_CV\.pdf$/);
+    expect(artefatos.caminho(id, "pdf-carta")).toMatch(/Ana-Silva-Carta.pdf$/);
+    expect(artefatos.caminhoMaster("pdf")).toMatch(/dados[\\/]master[\\/]Ana-Silva-Curriculo.pdf$/);
     expect(artefatos.pastaLlm(id)).toMatch(/00042[\\/]llm$/);
+  });
+
+  it("inclui a empresa da vaga no nome dos PDFs da vaga, mas não no do master", () => {
+    const comEmpresa = new ArmazemArtefatosFs(
+      caminhos,
+      () => "Ana Exemplo da Silva",
+      () => "Fintech Aurora",
+    );
+    expect(comEmpresa.caminho(id, "pdf-curriculo")).toMatch(
+      /00042[\\/]Ana-Silva-Curriculo-Fintech-Aurora\.pdf$/,
+    );
+    expect(comEmpresa.caminho(id, "pdf-carta")).toMatch(/Ana-Silva-Carta-Fintech-Aurora\.pdf$/);
+    expect(comEmpresa.caminhoMaster("pdf")).toMatch(/master[\\/]Ana-Silva-Curriculo\.pdf$/);
   });
 
   it("grava e lê JSON e texto de forma atômica, validando ao ler", () => {

@@ -94,14 +94,14 @@ export class ArmazemArtefatosMemoria implements ArmazemArtefatos {
   caminho(id: number, nome: NomeArtefato): string {
     const arquivo =
       nome === "pdf-curriculo"
-        ? "Ana_Silva_CV.pdf"
+        ? "Ana-Silva-Curriculo.pdf"
         : nome === "pdf-carta"
-          ? "Ana_Silva_Carta.pdf"
+          ? "Ana-Silva-Carta.pdf"
           : nome;
     return `/dados/vagas/${String(id).padStart(5, "0")}/${arquivo}`;
   }
   caminhoMaster(tipo: "pdf" | "texto"): string {
-    return tipo === "pdf" ? "/dados/master/Ana_Silva_CV.pdf" : "/dados/master/master.txt";
+    return tipo === "pdf" ? "/dados/master/Ana-Silva-Curriculo.pdf" : "/dados/master/master.txt";
   }
   gravarJson(id: number, nome: NomeArtefato, dados: unknown): void {
     this.arquivos.set(this.chave(id, nome), JSON.stringify(dados));

@@ -27,7 +27,7 @@ afterAll(async () => {
 describe("RenderizadorPdfPlaywright", () => {
   it("gera PDF A4 de coluna única com texto extraível e títulos no idioma", async () => {
     const master = umMaster();
-    const destino = join(pasta, "Ana_Silva_CV.pdf");
+    const destino = join(pasta, "Ana-Silva-Curriculo.pdf");
     const { paginas } = await renderizador.renderizarCurriculo(
       montarDocumento(master, null, "pt"),
       destino,

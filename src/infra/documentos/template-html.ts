@@ -107,7 +107,7 @@ function documento(idioma: string, titulo: string, corpo: string, base: number):
 export function htmlCurriculo(doc: DocumentoCurriculo): string {
   return documento(
     doc.idioma,
-    doc.nome,
+    `${doc.nome} — ${doc.idioma === "en" ? "Resume" : "Currículo"}`,
     cabecalho(doc.nome, doc.contato, doc.titulo) + doc.secoes.map(secao).join("\n"),
     doc.tamanhoBase,
   );
@@ -116,7 +116,7 @@ export function htmlCurriculo(doc: DocumentoCurriculo): string {
 export function htmlCarta(doc: DocumentoCarta): string {
   return documento(
     doc.idioma,
-    doc.nome,
+    `${doc.nome} — ${doc.idioma === "en" ? "Cover letter" : "Carta"}`,
     cabecalho(doc.nome, doc.contato) +
       doc.paragrafos.map((p) => `<p class="sub">${e(p)}</p>`).join("\n"),
     TAMANHO_BASE_CARTA,

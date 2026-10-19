@@ -167,11 +167,12 @@ describe("formatação", () => {
   });
 
   it.each([
-    ["Ana Exemplo da Silva", "CV", "Ana_Silva_CV.pdf"],
-    ["José Ávila", "Carta", "Jose_Avila_Carta.pdf"],
-    ["Madonna", "CV", "Madonna_CV.pdf"],
-  ] as const)("nome de arquivo para %s", (nome, tipo, esperado) => {
-    expect(nomeArquivo(nome, tipo)).toBe(esperado);
+    ["Ana Exemplo da Silva", "Curriculo", undefined, "Ana-Silva-Curriculo.pdf"],
+    ["Ana Exemplo da Silva", "Curriculo", "Fintech Aurora", "Ana-Silva-Curriculo-Fintech-Aurora.pdf"],
+    ["José Ávila", "Carta", "Itaú S.A.", "Jose-Avila-Carta-Itau-S-A.pdf"],
+    ["Madonna", "Curriculo", "Acme", "Madonna-Curriculo-Acme.pdf"],
+  ] as const)("nome de arquivo para %s (%s, empresa %s)", (nome, tipo, empresa, esperado) => {
+    expect(nomeArquivo(nome, tipo, empresa)).toBe(esperado);
   });
 
   it("monta a carta em parágrafos com o cabeçalho do contato", () => {

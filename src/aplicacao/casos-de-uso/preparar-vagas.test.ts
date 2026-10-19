@@ -99,8 +99,8 @@ describe("prepararVagas", () => {
     expect(final?.atsDepois).toBeGreaterThanOrEqual(final?.atsAntes ?? 0);
     expect(final?.chaveDedup).toBe("empresa x|desenvolvedora senior|remoto");
     expect(amb.renderizador.curriculos.map((c) => c.destino)).toEqual([
-      "/dados/master/Ana_Silva_CV.pdf",
-      "/dados/vagas/00001/Ana_Silva_CV.pdf",
+      "/dados/master/Ana-Silva-Curriculo.pdf",
+      "/dados/vagas/00001/Ana-Silva-Curriculo.pdf",
     ]);
     expect(amb.renderizador.cartas).toHaveLength(1);
 

@@ -134,14 +134,14 @@ describe("comandos", () => {
     const { container } = containerDuble({
       abrirNavegador: () => Promise.resolve(),
       renderizarMaster: () =>
-        Promise.resolve({ pdf: "/proj/dados/master/Ana_Silva_CV.pdf", paginas: 3 }),
+        Promise.resolve({ pdf: "/proj/dados/master/Ana-Silva-Curriculo.pdf", paginas: 3 }),
     });
     const { ctx, saida } = contexto(container);
     await comandoNavegador(ctx);
     await comandoRenderizarMaster(ctx);
     expect(saida.join("\n")).toMatch(/perfil em dados[\\/]navegador/);
     expect(saida.join("\n")).toMatch(
-      /PDF do master: dados[\\/]master[\\/]Ana_Silva_CV\.pdf \(3 página\(s\)\)/,
+      /PDF do master: dados[\\/]master[\\/]Ana-Silva-Curriculo.pdf \(3 página\(s\)\)/,
     );
     expect(saida.join("\n")).toContain("passou de 2 páginas");
   });

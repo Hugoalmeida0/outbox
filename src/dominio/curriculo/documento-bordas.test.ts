@@ -103,7 +103,7 @@ describe("formatação", () => {
   });
 
   it("nome de arquivo sem nome aproveitável cai para Curriculo", () => {
-    expect(nomeArquivo("***", "CV")).toBe("Curriculo_CV.pdf");
-    expect(nomeArquivo("Ana", "Carta")).toBe("Ana_Carta.pdf");
+    expect(nomeArquivo("***", "Curriculo")).toBe("Curriculo.pdf");
+    expect(nomeArquivo("Ana", "Carta")).toBe("Ana-Carta.pdf");
   });
 });

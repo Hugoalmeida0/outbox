@@ -365,7 +365,7 @@ describe("responderCampos", () => {
     );
     expect(saida).toMatchObject({
       carta: "Prezados, quero a vaga.",
-      pdfCarta: "/dados/vagas/00001/Ana_Silva_Carta.pdf",
+      pdfCarta: "/dados/vagas/00001/Ana-Silva-Carta.pdf",
     });
     expect(amb.renderizador.cartas).toHaveLength(1);
 
@@ -510,12 +510,12 @@ describe("montarPacote", () => {
     const pacote = montarPacote({ ...amb.deps(), gupyAnexoPorCandidatura: false }, vaga);
     expect(pacote).toMatchObject({
       idioma: "en",
-      pdfCurriculo: "/dados/master/Ana_Silva_CV.pdf",
-      pdfCarta: "/dados/vagas/00001/Ana_Silva_Carta.pdf",
+      pdfCurriculo: "/dados/master/Ana-Silva-Curriculo.pdf",
+      pdfCarta: "/dados/vagas/00001/Ana-Silva-Carta.pdf",
     });
     expect(pacote.carta).toBeUndefined();
     expect(montarPacote({ ...amb.deps(), gupyAnexoPorCandidatura: true }, vaga).pdfCurriculo).toBe(
-      "/dados/vagas/00001/Ana_Silva_CV.pdf",
+      "/dados/vagas/00001/Ana-Silva-Curriculo.pdf",
     );
   });
 });

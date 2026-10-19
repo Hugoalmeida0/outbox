@@ -13,11 +13,20 @@ import { isoLocal } from "../sistema/relogio-sistema.ts";
 export class ArmazemArtefatosFs implements ArmazemArtefatos {
   private readonly caminhos: Caminhos;
   private readonly obterNome: () => string;
+  private readonly obterEmpresa: (id: IdVaga) => string | undefined;
 
-  /** `obterNome` devolve o nome do candidato (para `Nome_Sobrenome_CV.pdf`), lido sob demanda. */
-  constructor(caminhos: Caminhos, obterNome: () => string) {
+  /**
+   * `obterNome` devolve o nome do candidato (para `Nome-Sobrenome-Curriculo.pdf`), lido sob demanda;
+   * `obterEmpresa` devolve a empresa da vaga, que entra no nome dos PDFs da vaga.
+   */
+  constructor(
+    caminhos: Caminhos,
+    obterNome: () => string,
+    obterEmpresa: (id: IdVaga) => string | undefined = () => undefined,
+  ) {
     this.caminhos = caminhos;
     this.obterNome = obterNome;
+    this.obterEmpresa = obterEmpresa;
   }
 
   private pasta(id: IdVaga): string {
@@ -27,9 +36,9 @@ export class ArmazemArtefatosFs implements ArmazemArtefatos {
   caminho(id: IdVaga, nome: NomeArtefato): string {
     const arquivo =
       nome === "pdf-curriculo"
-        ? nomeArquivo(this.obterNome(), "CV")
+        ? nomeArquivo(this.obterNome(), "Curriculo", this.obterEmpresa(id))
         : nome === "pdf-carta"
-          ? nomeArquivo(this.obterNome(), "Carta")
+          ? nomeArquivo(this.obterNome(), "Carta", this.obterEmpresa(id))
           : nome;
     const pasta = this.pasta(id);
     const destino = resolve(pasta, arquivo);
@@ -41,7 +50,7 @@ export class ArmazemArtefatosFs implements ArmazemArtefatos {
   caminhoMaster(tipo: "pdf" | "texto"): string {
     return join(
       this.caminhos.masterDir,
-      tipo === "pdf" ? nomeArquivo(this.obterNome(), "CV") : "master.txt",
+      tipo === "pdf" ? nomeArquivo(this.obterNome(), "Curriculo") : "master.txt",
     );
   }
 

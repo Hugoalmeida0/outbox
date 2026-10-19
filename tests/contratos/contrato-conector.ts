@@ -87,7 +87,9 @@ export function descreverContratoConector(config: ConfiguracaoContrato): void {
 
       expect(await cliquesEnvio(pagina)).toBe(0);
       const valores = await formulario.lerValores();
-      expect(valores.some((v) => v.ehArquivo && v.valor.endsWith("Ana_Silva_CV.pdf"))).toBe(true);
+      expect(valores.some((v) => v.ehArquivo && v.valor.endsWith("Ana-Silva-Curriculo.pdf"))).toBe(
+        true,
+      );
 
       const campos = paraCampos(await lerDescritores(pagina, config.definicao.ignorar ?? []));
       const vazios = campos

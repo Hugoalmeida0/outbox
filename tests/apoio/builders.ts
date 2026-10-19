@@ -272,7 +272,7 @@ export function umPacote(override: Partial<PacoteCandidatura> = {}): PacoteCandi
   return {
     vagaId: 1,
     idioma: "pt",
-    pdfCurriculo: "C:/tmp/Ana_Silva_CV.pdf",
+    pdfCurriculo: "C:/tmp/Ana-Silva-Curriculo.pdf",
     respostas: [],
     contato: { ...master.pessoal },
     ...override,

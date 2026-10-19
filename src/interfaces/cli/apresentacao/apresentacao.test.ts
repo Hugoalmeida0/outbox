@@ -238,7 +238,7 @@ describe("resumos de preparo e aplicação", () => {
             { rotulo: "Empresa atual", valor: "Acme", nova: true, vaziaNaPagina: true },
           ],
           cartaInicio: "Prezados,\n\nQuero a vaga.",
-          caminhoPdf: "C:/dados/vagas/00012/Ana_Silva_CV.pdf",
+          caminhoPdf: "C:/dados/vagas/00012/Ana-Silva-Curriculo.pdf",
         }),
       ),
     ).toBe(
@@ -259,7 +259,7 @@ describe("resumos de preparo e aplicação", () => {
         "  Prezados,",
         "  ",
         "  Quero a vaga.",
-        "PDF: C:/dados/vagas/00012/Ana_Silva_CV.pdf",
+        "PDF: C:/dados/vagas/00012/Ana-Silva-Curriculo.pdf",
         "Edite o que quiser direto no navegador antes de escolher.",
       ].join("\n"),
     );

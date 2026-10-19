@@ -122,7 +122,7 @@ export function respostaPlausivel(campo: Campo): RespostaSugerida {
 }
 
 /** PDF mínimo válido num diretório temporário. */
-export function pdfDeTeste(nome = "Ana_Silva_CV.pdf"): string {
+export function pdfDeTeste(nome = "Ana-Silva-Curriculo.pdf"): string {
   const pasta = mkdtempSync(join(tmpdir(), "outbox-pdf-teste-"));
   const caminho = join(pasta, nome);
   writeFileSync(

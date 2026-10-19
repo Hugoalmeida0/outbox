@@ -134,7 +134,7 @@ describe("renderizarMaster e abrirNavegador", () => {
     const amb = criarAmbienteAplicacao();
     const deps = amb.deps();
     expect(await renderizarMaster(deps, sinal)).toEqual({
-      pdf: "/dados/master/Ana_Silva_CV.pdf",
+      pdf: "/dados/master/Ana-Silva-Curriculo.pdf",
       paginas: 1,
     });
     expect(amb.artefatos.textoMaster).toContain("Ana Exemplo da Silva");

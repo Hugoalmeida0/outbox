@@ -17,7 +17,7 @@ import { prepararVagas } from "./preparar-vagas.ts";
 import { aplicarVagas } from "./aplicar-vagas.ts";
 
 const URL_GH = "https://job-boards.greenhouse.io/acme/jobs/1";
-const PDF_1 = "/dados/vagas/00001/Ana_Silva_CV.pdf";
+const PDF_1 = "/dados/vagas/00001/Ana-Silva-Curriculo.pdf";
 const sinal = () => new AbortController().signal;
 
 const CAMPOS: Campo[] = [
@@ -36,7 +36,7 @@ function criar(opcoes: { campos?: Campo[] | null; agente?: ExecutorAgenteFake } 
     valores: [
       { rotulo: "First Name", valor: "Ana", ehArquivo: false },
       { rotulo: "Por que você quer trabalhar aqui?", valor: "Admiro o produto.", ehArquivo: false },
-      { rotulo: "Resume/CV", valor: "Ana_Silva_CV.pdf", ehArquivo: true },
+      { rotulo: "Resume/CV", valor: "Ana-Silva-Curriculo.pdf", ehArquivo: true },
     ],
   });
   const conector = new ConectorFake("greenhouse", formulario);

@@ -181,7 +181,12 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
   const vagas = preguicoso("vagas", () => new RepositorioVagasSqlite(db(), relogio()));
   const artefatos = preguicoso(
     "artefatos",
-    () => new ArmazemArtefatosFs(caminhos, () => curriculo().lerMaster().pessoal.nome),
+    () =>
+      new ArmazemArtefatosFs(
+        caminhos,
+        () => curriculo().lerMaster().pessoal.nome,
+        (id) => vagas().buscar(id)?.empresa ?? undefined,
+      ),
   );
   const falhas = preguicoso("falhas", () => new RegistroFalhasFs(caminhos.falhasDir));
   const cache = preguicoso(

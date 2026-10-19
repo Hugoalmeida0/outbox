@@ -256,7 +256,7 @@ describe("catálogo e comportamentos comuns", () => {
     expect(await pagina?.locator("#esc").inputValue()).toBe("Superior incompleto");
     const valores = await formulario.lerValores();
     expect(valores.find((v) => v.rotulo.startsWith("Envie o laudo"))?.valor).toBe("");
-    expect(valores.find((v) => v.rotulo === "Resume/CV")?.valor).toBe("Ana_Silva_CV.pdf");
+    expect(valores.find((v) => v.rotulo === "Resume/CV")?.valor).toBe("Ana-Silva-Curriculo.pdf");
     expect(informacoes.join("\n")).toMatch(
       /Envie o laudo médico \(PcD\) \(anexo que você precisa enviar\)/,
     );
