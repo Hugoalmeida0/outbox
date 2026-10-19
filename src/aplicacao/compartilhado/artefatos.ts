@@ -23,7 +23,7 @@ export type ArquivoAnalise = z.infer<typeof esquemaArquivoAnalise>;
 /** `campos.json`: campos do formulário lidos no preparo. */
 export const esquemaArquivoCampos = z.array(esquemaCampo);
 
-export const ALERTA_PDF_LONGO = "pdf_mais_de_2_paginas";
+export const ALERTA_PDF_LONGO = "pdf_mais_de_1_pagina";
 export const ALERTA_ATS_CAIU =
   "score ATS do currículo ajustado ficou abaixo do currículo genérico (veja as keywords no PDF)";
 export const ALERTA_CAMALEAO_FALHOU =

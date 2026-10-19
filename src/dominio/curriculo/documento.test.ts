@@ -143,9 +143,16 @@ describe("montarDocumento: layout de 1 página", () => {
       {
         inicio: "2022-03",
         atual: true,
+        skills: ["typescript", "nodejs", "postgresql", "aws"],
         bullets: [{ skills: ["typescript", "nodejs"] }, { skills: ["postgresql", "aws"] }],
       },
-      { inicio: "2019-01", atual: false, prioridadeCorte: 2, bullets: [{ skills: ["react"], prioridadeCorte: 7 }] },
+      {
+        inicio: "2019-01",
+        atual: false,
+        prioridadeCorte: 2,
+        skills: ["react"],
+        bullets: [{ skills: ["react"], prioridadeCorte: 7 }],
+      },
     ]);
   });
 });

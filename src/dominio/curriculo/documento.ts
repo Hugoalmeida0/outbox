@@ -18,6 +18,8 @@ export interface CorteExperiencia {
   readonly inicio: string;
   readonly atual: boolean;
   readonly prioridadeCorte?: number;
+  /** Skills de todos os bullets originais da experiência (não muda quando bullets são cortados). */
+  readonly skills: readonly string[];
   /** Paralelo a `bullets` do item. */
   readonly bullets: readonly MetaBulletCorte[];
 }
@@ -299,6 +301,7 @@ export function montarDocumento(
       corte: {
         inicio: exp.inicio,
         atual: exp.fim === null,
+        skills: [...new Set(exp.bullets.flatMap((b) => b.skills))],
         ...(exp.prioridadeCorte !== undefined ? { prioridadeCorte: exp.prioridadeCorte } : {}),
         bullets: meta,
       },

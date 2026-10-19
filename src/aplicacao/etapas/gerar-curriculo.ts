@@ -3,8 +3,9 @@ import {
   type CurriculoGerado,
 } from "#dominio/curriculo/curriculo-gerado.ts";
 import { montarDocumento, paraTexto } from "#dominio/curriculo/documento.ts";
+import { encaixarEmUmaPagina, skillsAderentes } from "#dominio/curriculo/encaixe.ts";
 import { validarLastro, type Violacao } from "#dominio/curriculo/lastro.ts";
-import type { IdiomaCurriculo, Master } from "#dominio/curriculo/master.ts";
+import type { IdiomaCurriculo } from "#dominio/curriculo/master.ts";
 import { keywordsPerdidas, scoreAts } from "#dominio/curriculo/score-ats.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import {
@@ -16,6 +17,7 @@ import {
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
 import type { GeradorEstruturado } from "../portas/gerador-estruturado.ts";
+import type { Registrador } from "../portas/registrador.ts";
 import type { Relogio } from "../portas/relogio.ts";
 import type { RenderizadorDocumentos } from "../portas/renderizador-documentos.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
@@ -37,6 +39,7 @@ export interface DepsGerarCurriculo {
   readonly renderizador: RenderizadorDocumentos;
   readonly vagas: Pick<RepositorioVagas, "atualizar">;
   readonly relogio: Relogio;
+  readonly registrador: Pick<Registrador, "informar" | "avisar">;
 }
 
 export interface SaidaGerarCurriculo {
@@ -44,16 +47,6 @@ export interface SaidaGerarCurriculo {
   readonly camaleaoFalhou: boolean;
   readonly atsAntes: number | null;
   readonly atsDepois: number | null;
-}
-
-/** Anos de experiência somados (meses de todas as experiências, até hoje para a atual). */
-export function anosDeExperiencia(master: Master, hoje: string): number {
-  const meses = master.experiencias.reduce((total, e) => {
-    const [ai, mi] = e.inicio.split("-").map(Number);
-    const [af, mf] = (e.fim ?? hoje.slice(0, 7)).split("-").map(Number);
-    return total + Math.max(0, ((af ?? 0) - (ai ?? 0)) * 12 + ((mf ?? 0) - (mi ?? 0)));
-  }, 0);
-  return meses / 12;
 }
 
 function descreverViolacoes(violacoes: readonly Violacao[]): string {
@@ -74,8 +67,7 @@ export async function gerarCurriculo(
   const idioma: IdiomaCurriculo = analise.idioma === "pt" ? "pt" : "en";
   const descricao =
     deps.artefatos.lerTexto(vaga.id, "descricao.md") ?? `${vaga.cargo ?? ""} ${vaga.empresa ?? ""}`;
-  const metaPaginas =
-    anosDeExperiencia(master, deps.relogio.hoje()) < 5 ? "1 página" : "no máximo 2 páginas";
+  const metaPaginas = "1 página";
 
   const pedir = (correcoes: string, keywordsFaltantes = "nenhuma"): Promise<CurriculoGerado> =>
     deps.gerador.gerar(
@@ -131,13 +123,28 @@ export async function gerarCurriculo(
     }
   }
 
-  const documento = montarDocumento(master, gerado, gerado ? idioma : master.idioma);
-  const { paginas } = await deps.renderizador.renderizarCurriculo(
-    documento,
-    deps.artefatos.caminho(vaga.id, "pdf-curriculo"),
-    sinal,
+  const destino = deps.artefatos.caminho(vaga.id, "pdf-curriculo");
+  const encaixe = await encaixarEmUmaPagina(
+    montarDocumento(master, gerado, gerado ? idioma : master.idioma),
+    skillsAderentes(master, analise.keywords),
+    (doc) => deps.renderizador.renderizarCurriculo(doc, destino, sinal),
   );
-  const texto = paraTexto(documento);
+  const { paginas } = encaixe;
+  const contexto = {
+    tamanhoBase: encaixe.tamanhoBase,
+    cortes: encaixe.cortes,
+    paginas,
+    sobrou: encaixe.sobrou,
+  };
+  if (encaixe.coube) {
+    deps.registrador.informar(`vaga #${String(vaga.id)}: currículo em 1 página`, contexto);
+  } else {
+    deps.registrador.avisar(
+      `vaga #${String(vaga.id)}: currículo com ${String(paginas)} páginas mesmo no piso de fonte`,
+      contexto,
+    );
+  }
+  const texto = paraTexto(encaixe.documento);
   deps.artefatos.gravarTexto(vaga.id, "curriculo.txt", texto);
   deps.artefatos.gravarJson(vaga.id, "curriculo.json", gerado);
 
@@ -155,7 +162,7 @@ export async function gerarCurriculo(
       ...atual.alertas.filter(
         (a) => a !== ALERTA_PDF_LONGO && a !== ALERTA_CAMALEAO_FALHOU && a !== ALERTA_ATS_CAIU,
       ),
-      ...(paginas > 2 ? [ALERTA_PDF_LONGO] : []),
+      ...(paginas > 1 ? [ALERTA_PDF_LONGO] : []),
       ...(camaleaoFalhou ? [ALERTA_CAMALEAO_FALHOU] : []),
       ...(atsCaiu ? [ALERTA_ATS_CAIU] : []),
     ],

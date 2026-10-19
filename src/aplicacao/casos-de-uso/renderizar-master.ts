@@ -1,4 +1,5 @@
 import { montarDocumento, paraTexto } from "#dominio/curriculo/documento.ts";
+import { encaixarEmUmaPagina, todasAsSkills } from "#dominio/curriculo/encaixe.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
 import type { RenderizadorDocumentos } from "../portas/renderizador-documentos.ts";
@@ -18,11 +19,14 @@ export async function renderizarMaster(
   sinal: AbortSignal,
 ): Promise<{ pdf: string; paginas: number }> {
   const master = deps.curriculo.lerMaster();
-  const documento = montarDocumento(master, null, master.idioma);
   const pdf = deps.artefatos.caminhoMaster("pdf");
-  const { paginas } = await deps.renderizador.renderizarCurriculo(documento, pdf, sinal);
-  deps.artefatos.gravarTextoMaster(paraTexto(documento));
-  return { pdf, paginas };
+  const encaixe = await encaixarEmUmaPagina(
+    montarDocumento(master, null, master.idioma),
+    todasAsSkills(master),
+    (doc) => deps.renderizador.renderizarCurriculo(doc, pdf, sinal),
+  );
+  deps.artefatos.gravarTextoMaster(paraTexto(encaixe.documento));
+  return { pdf, paginas: encaixe.paginas };
 }
 
 /** Regera o master genérico quando nunca foi gerado ou quando o master mudou depois. */

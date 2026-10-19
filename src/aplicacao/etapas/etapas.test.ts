@@ -11,7 +11,7 @@ import {
   ALERTA_PDF_LONGO,
   esquemaArquivoAnalise,
 } from "../compartilhado/artefatos.ts";
-import { anosDeExperiencia, gerarCurriculo } from "./gerar-curriculo.ts";
+import { gerarCurriculo } from "./gerar-curriculo.ts";
 import { montarPacote } from "./montar-pacote.ts";
 import { resolverVaga } from "./resolver-vaga.ts";
 import { gerarCartaAvulsa, responderCampos, salvarRespostas } from "./responder-campos.ts";
@@ -27,7 +27,7 @@ function vagaPronta(amb: AmbienteAplicacao, url: string, extra: Partial<Vaga> = 
 }
 
 describe("gerarCurriculo", () => {
-  it("em inglês, sem descrição salva e com pouca experiência pede 1 página; 2ª tentativa válida é aceita", async () => {
+  it("em inglês, sem descrição salva, pede 1 página; 2ª tentativa válida é aceita", async () => {
     const amb = criarAmbienteAplicacao({
       master: umMaster({
         experiencias: [{ ...umMaster().experiencias[0]!, inicio: "2024-01", fim: null }],
@@ -67,7 +67,7 @@ describe("gerarCurriculo", () => {
     expect(amb.vagas.buscar(vaga.id)?.camaleaoFalhou).toBeNull();
   });
 
-  it("PDF com mais de 2 páginas gera alerta na análise", async () => {
+  it("PDF que não cabe em 1 página gera alerta na análise, fica no piso de fonte e registra o que sobrou", async () => {
     const amb = criarAmbienteAplicacao();
     const vaga = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/1");
     amb.artefatos.gravarJson(vaga.id, "analise.json", { ...umaAnalise(), alertas: ["anterior"] });
@@ -76,9 +76,12 @@ describe("gerarCurriculo", () => {
     amb.renderizador.paginas = 3;
     const saida = await gerarCurriculo(amb.deps(), vaga, { ...umaAnalise(), alertas: [] }, sinal());
     expect(saida.paginas).toBe(3);
-    expect(amb.gerador.pedidosDe("tailoring")[0]?.variaveis.metaPaginas).toBe(
-      "no máximo 2 páginas",
-    );
+    expect(amb.gerador.pedidosDe("tailoring")[0]?.variaveis.metaPaginas).toBe("1 página");
+    const renders = amb.renderizador.curriculos;
+    expect(renders[0]?.doc.tamanhoBase).toBe(9.5);
+    expect(renders.at(-1)?.doc.tamanhoBase).toBe(8.8);
+    expect(Math.min(...renders.map((r) => r.doc.tamanhoBase))).toBe(8.8);
+    expect(amb.registrador.entradas.some((e) => e.nivel === "avisar")).toBe(true);
     expect(amb.artefatos.lerJson(vaga.id, "analise.json", esquemaArquivoAnalise)?.alertas).toEqual([
       "anterior",
       ALERTA_PDF_LONGO,
@@ -132,10 +135,6 @@ describe("gerarCurriculo", () => {
     expect(
       amb.artefatos.lerJson(vaga.id, "analise.json", esquemaArquivoAnalise)?.alertas,
     ).toContain(ALERTA_ATS_CAIU);
-  });
-
-  it("soma os meses de experiência até hoje para a atual", () => {
-    expect(anosDeExperiencia(umMaster(), "2026-03-10")).toBeCloseTo((48 + 37) / 12);
   });
 });
 
