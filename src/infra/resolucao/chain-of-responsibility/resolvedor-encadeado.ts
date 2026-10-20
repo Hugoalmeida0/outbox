@@ -9,9 +9,9 @@ import {
   type Motor,
 } from "#dominio/vagas/motores.ts";
 import type { UrlCanonica } from "#dominio/vagas/vaga.ts";
-import type { LeitorHeadless } from "../navegador/leitor-headless.ts";
-import { resolverNoAgregador } from "./agregadores.ts";
-import { detectarAtsNoHtml } from "./detectar-ats.ts";
+import type { LeitorHeadless } from "#infra/navegador/leitor-headless.ts";
+import { resolverNoAgregador } from "../agregadores.ts";
+import { detectarAtsNoHtml } from "../detectar-ats.ts";
 
 const PROFUNDIDADE_MAXIMA = 2;
 

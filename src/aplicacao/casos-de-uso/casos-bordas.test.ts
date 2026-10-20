@@ -1,6 +1,7 @@
 // Caminhos menos comuns de preparar e aplicar que mudam o status final da vaga.
 import { describe, expect, it } from "vitest";
 import { ErroExtracao } from "../portas/erros.ts";
+import { transicionarVaga } from "#aplicacao/compartilhado/transicionar-vaga.ts";
 import { umaAnalise, umCurriculoGerado } from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao, type AmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { InteracaoRoteirizada } from "#testes/apoio/fakes/basicos.ts";
@@ -124,8 +125,8 @@ describe("preparar: erros e reavaliação", () => {
       }),
     );
     await preparar(amb);
-    amb.vagas.transicionar(duplicada.id, "NOVA");
-    amb.vagas.transicionar(duplicada.id, "DESCARTADA", {
+    transicionarVaga(amb.vagas, duplicada.id, "NOVA");
+    transicionarVaga(amb.vagas, duplicada.id, "DESCARTADA", {
       motivo: "duplicada_antiga",
       duplicadaDe: baixa.id,
     });

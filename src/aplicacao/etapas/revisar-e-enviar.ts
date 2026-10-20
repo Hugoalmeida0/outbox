@@ -1,7 +1,9 @@
 import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
 import { aplicarAprendizado, type RespostaFinal } from "#dominio/respostas/aprendizado.ts";
 import type { PacoteCandidatura, RespostaSugerida } from "#dominio/respostas/pacote.ts";
+import { marcarAnexoManual } from "#dominio/vagas/atualizacoes.ts";
 import type { RespostaEnviada, Vaga } from "#dominio/vagas/vaga.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import type { ArmazemArtefatos } from "../portas/armazem-artefatos.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
 import type { FormularioAberto, ValorLido } from "../portas/formulario-aberto.ts";
@@ -13,7 +15,12 @@ import { lerAnalise } from "./analisar-vaga.ts";
 export interface DepsRevisarEEnviar {
   readonly vagas: Pick<
     RepositorioVagas,
-    "registrarRespostasEnviadas" | "atualizar" | "transicionar" | "listarGapsAbertos"
+    | "registrarRespostasEnviadas"
+    | "atualizar"
+    | "transacao"
+    | "buscar"
+    | "gravarTransicao"
+    | "listarGapsAbertos"
   >;
   readonly curriculo: Pick<ArmazemCurriculo, "lerBanco" | "gravarBanco">;
   readonly artefatos: Pick<ArmazemArtefatos, "caminho" | "lerJson">;
@@ -115,10 +122,10 @@ export async function revisarEEnviar(
           await deps.interacao.abrirArquivo(pacote.pdfCurriculo);
           continue;
         case "pular":
-          deps.vagas.transicionar(vaga.id, "PULADA");
+          transicionarVaga(deps.vagas, vaga.id, "PULADA");
           return "pulada";
         case "manual":
-          deps.vagas.transicionar(vaga.id, "MANUAL", { motivo: "escolha_usuario" });
+          transicionarVaga(deps.vagas, vaga.id, "MANUAL", { motivo: "escolha_usuario" });
           return "manual";
         case "sair":
           return "sair";
@@ -171,7 +178,7 @@ async function enviar(
   const anexos = valores.filter((v) => v.ehArquivo && v.valor.trim() !== "");
   const anexoManual = anexos.length > 0 && !anexos.some((v) => v.valor.includes(nomePdf));
   deps.vagas.registrarRespostasEnviadas(vaga.id, enviadas);
-  if (anexoManual) deps.vagas.atualizar(vaga.id, { anexoManual: true });
+  if (anexoManual) deps.vagas.atualizar(vaga.id, marcarAnexoManual());
 
   if (simular) {
     deps.interacao.informar("simulação: nada enviado (a vaga continua PRONTA)");
@@ -196,7 +203,7 @@ async function enviar(
     .capturarTela(deps.artefatos.caminho(vaga.id, "confirmacao.png"))
     .catch(() => undefined);
   const status = desfecho === "pendente_teste" ? "PENDENTE_TESTE" : "ENVIADA";
-  deps.vagas.transicionar(vaga.id, status);
+  transicionarVaga(deps.vagas, vaga.id, status);
 
   const banco = deps.curriculo.lerBanco();
   const novo = aplicarAprendizado(

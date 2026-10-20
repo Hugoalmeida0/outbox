@@ -1,7 +1,7 @@
 import { esquemaAnaliseVaga } from "#dominio/analise/analise-vaga.ts";
 import { lerChaveGapIdioma } from "#dominio/analise/idiomas.ts";
 import { gapsDaAnalise, sanearAnalise } from "#dominio/analise/validar-analise.ts";
-import { chaveDedup } from "#dominio/vagas/chave.ts";
+import { registrarAnalise } from "#dominio/vagas/atualizacoes.ts";
 import type { VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
 import { esquemaArquivoAnalise, type ArquivoAnalise } from "../compartilhado/artefatos.ts";
@@ -71,9 +71,6 @@ export async function analisarVaga(
   const analise: ArquivoAnalise = { ...sanearAnalise(bruta, master), alertas: [] };
   deps.artefatos.gravarJson(vaga.id, "analise.json", analise);
   deps.vagas.inserirGaps(vaga.id, gapsDaAnalise(analise, negados));
-  deps.vagas.atualizar(vaga.id, {
-    idioma: analise.idioma,
-    chaveDedup: chaveDedup(extraida.empresa, extraida.cargo, extraida.localidade),
-  });
+  deps.vagas.atualizar(vaga.id, registrarAnalise(analise.idioma, extraida));
   return analise;
 }

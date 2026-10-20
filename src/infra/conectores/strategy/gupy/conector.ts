@@ -1,7 +1,7 @@
 import { esquemaVagaExtraida, type VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
 import { extrairJsonLd } from "#infra/extracao/json-ld.ts";
 import { htmlParaTexto } from "#infra/extracao/html-texto.ts";
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
 
 const BOTAO_CANDIDATAR = /candidatar-se|quero me candidatar|candidate-se|apply/i;
 

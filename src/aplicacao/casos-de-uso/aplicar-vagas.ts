@@ -3,6 +3,7 @@ import type { Campo } from "#dominio/respostas/campo.ts";
 import type { RespostaSugerida } from "#dominio/respostas/pacote.ts";
 import type { IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
 import type { ConfigAplicacao } from "../compartilhado/config.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import { lerAnalise } from "../etapas/analisar-vaga.ts";
 import { montarPacote, type DepsMontarPacote } from "../etapas/montar-pacote.ts";
 import {
@@ -40,7 +41,8 @@ export type DepsAplicarVagas = Omit<DepsRodadaGaps, "paralelo"> &
       | "termosConfirmados"
       | "buscar"
       | "atualizar"
-      | "transicionar"
+      | "transacao"
+      | "gravarTransicao"
       | "registrarRespostasEnviadas"
     >;
     readonly curriculo: Pick<
@@ -211,7 +213,7 @@ async function aplicarUma(
     sinal,
   );
   if (resultado.tipo === "manual") {
-    deps.vagas.transicionar(vaga.id, "MANUAL", { motivo: resultado.motivo });
+    transicionarVaga(deps.vagas, vaga.id, "MANUAL", { motivo: resultado.motivo });
     deps.interacao.informar(`vaga #${String(vaga.id)}: marcada como MANUAL (${resultado.motivo})`);
     return "manual_automatica";
   }

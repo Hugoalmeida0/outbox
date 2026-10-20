@@ -1,12 +1,14 @@
+import { registrarResolucao } from "#dominio/vagas/atualizacoes.ts";
 import { decidirDeduplicacaoUrl } from "#dominio/vagas/deduplicacao.ts";
 import type { Vaga } from "#dominio/vagas/vaga.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
 import type { Resolucao, ResolvedorVagas } from "../portas/resolvedor-vagas.ts";
 
 export interface DepsResolverVaga {
   readonly vagas: Pick<
     RepositorioVagas,
-    "transacao" | "buscarPorUrlCanonica" | "atualizar" | "transicionar" | "buscar"
+    "transacao" | "buscarPorUrlCanonica" | "atualizar" | "gravarTransicao" | "buscar"
   >;
   readonly resolvedor: ResolvedorVagas;
 }
@@ -31,14 +33,14 @@ export async function resolverVaga(
       if (existente && existente.id !== vaga.id) {
         const acao = decidirDeduplicacaoUrl(existente);
         if (acao.tipo === "ignorar_na_fila") {
-          deps.vagas.transicionar(vaga.id, "DUPLICADA", {
+          transicionarVaga(deps.vagas, vaga.id, "DUPLICADA", {
             motivo: "mesma_vaga_na_fila",
             duplicadaDe: existente.id,
           });
           return { tipo: "duplicada" };
         }
         if (acao.tipo === "criar_duplicada") {
-          deps.vagas.transicionar(vaga.id, "DUPLICADA", {
+          transicionarVaga(deps.vagas, vaga.id, "DUPLICADA", {
             motivo: "url_ja_enviada",
             duplicadaDe: existente.id,
           });
@@ -46,12 +48,15 @@ export async function resolverVaga(
         }
       }
     }
-    deps.vagas.atualizar(vaga.id, {
-      motor: resolucao.motor,
-      urlResolvida: resolucao.urlResolvida,
-      urlCanonica: resolucao.canonica,
-      rota: resolucao.rota,
-    });
+    deps.vagas.atualizar(
+      vaga.id,
+      registrarResolucao({
+        motor: resolucao.motor,
+        urlResolvida: resolucao.urlResolvida,
+        urlCanonica: resolucao.canonica,
+        rota: resolucao.rota,
+      }),
+    );
     return { tipo: "resolvida", vaga: deps.vagas.buscar(vaga.id) ?? vaga, resolucao };
   });
 }

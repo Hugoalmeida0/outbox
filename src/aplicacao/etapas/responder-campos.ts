@@ -173,27 +173,25 @@ function foraDasOpcoes(campo: Campo, resposta: RespostaSugerida): boolean {
   return melhorOpcao(campo.opcoes, resposta.valor) === null;
 }
 
-/**
- * Responde os campos de um formulário. Padrão, documentos, diversidade e consentimento saem por código; o
- * salário é calculado pela tabela do perfil (o LLM só identifica regime, período e moeda); perguntas e
- * carta vão numa única chamada ao LLM, que nunca recebe documentos, salário, diversidade nem endereço.
- */
-export async function responderCampos(
-  deps: DepsResponderCampos,
-  contexto: ContextoResposta,
+type Idioma = "pt" | "en";
+type SaidaLlm = z.infer<typeof esquemaRespostasLlm>;
+
+interface CampoPendente {
+  readonly campo: Campo;
+  readonly categoria: Campo["categoria"];
+}
+
+/** Responde por código o que for determinístico e devolve o que fica para o LLM. */
+function separarPorCodigo(
   campos: readonly Campo[],
-  sinal: AbortSignal,
-): Promise<SaidaResponderCampos> {
-  const master = deps.curriculo.lerMaster();
-  const perfil = deps.curriculo.lerPerfil();
-  const contato = contatoDo(master);
+  perfil: Perfil,
+  contato: Contato,
+  respostas: Map<string, RespostaSugerida>,
+): CampoPendente[] {
   const classificacoes = classificarFormulario(
     campos.map((c) => ({ rotulo: c.rotulo, nome: c.id, tipo: c.tipo })),
   );
-  const respostas = new Map<string, RespostaSugerida>();
-  const paraLlm: { campo: Campo; categoria: Campo["categoria"] }[] = [];
-
-  const idioma = contexto.analise?.idioma === "pt" ? "pt" : "en";
+  const paraLlm: CampoPendente[] = [];
   campos.forEach((campo, i) => {
     const classificacao = classificacoes[i] ?? { categoria: "pergunta" as const };
     // Anexos são preenchidos pelo conector (CV e carta) ou ficam para o usuário (outros).
@@ -211,11 +209,19 @@ export async function responderCampos(
     else if (porCodigo) paraLlm.push({ campo, categoria: "pergunta" });
     else paraLlm.push({ campo, categoria: classificacao.categoria });
   });
+  return paraLlm;
+}
 
-  // Pergunta já respondida em outra vaga (mesmo rótulo, opções e idioma) não volta ao LLM.
-  const pendentes = paraLlm.filter(({ campo, categoria }) => {
-    if (categoria !== "pergunta" || !deps.cache) return true;
-    const valor = deps.cache.buscar(chaveCache(campo, idioma));
+/** Pergunta já respondida em outra vaga (mesmo rótulo, opções e idioma) não volta ao LLM. */
+function responderDoCache(
+  cache: CacheRespostas | undefined,
+  paraLlm: readonly CampoPendente[],
+  idioma: Idioma,
+  respostas: Map<string, RespostaSugerida>,
+): CampoPendente[] {
+  return paraLlm.filter(({ campo, categoria }) => {
+    if (categoria !== "pergunta" || !cache) return true;
+    const valor = cache.buscar(chaveCache(campo, idioma));
     if (valor === null) return true;
     respostas.set(campo.id, {
       ...base(campo, categoria),
@@ -226,119 +232,202 @@ export async function responderCampos(
     });
     return false;
   });
+}
 
-  let carta: string | undefined;
-  let pdfCarta: string | undefined;
-  if (pendentes.length > 0) {
-    contexto.aoConsultarLlm?.(pendentes.length);
-    const banco = deps.curriculo.lerBanco();
-    const idsBanco = new Set(banco.map((e) => e.id));
-    const descricao = deps.artefatos.lerTexto(contexto.vaga.id, "descricao.md") ?? "";
-    const saida = await deps.gerador.gerar(
-      {
-        tarefa: "responder-perguntas",
-        variaveis: {
-          cargo: contexto.vaga.cargo ?? "a vaga",
-          empresa: contexto.vaga.empresa ?? "a empresa",
-          idioma,
-          comoSoube: perfil.comoSoube,
-          maxPalavras: String(deps.cartaMaxPalavras),
-          campos: JSON.stringify(
-            pendentes.map(({ campo, categoria }) => ({
-              campoId: campo.id,
-              rotulo: campo.rotulo,
-              tipo: campo.tipo,
-              categoria,
-              ...(campo.opcoes ? { opcoes: campo.opcoes } : {}),
-            })),
-          ),
-          banco: JSON.stringify(banco),
-          analise: JSON.stringify(
-            contexto.analise
-              ? { requisitos: contexto.analise.requisitos, regime: contexto.analise.regime }
-              : {},
-          ),
-          preferencias: JSON.stringify(perfil.preferencias),
-          disponibilidade: JSON.stringify(perfil.disponibilidade),
-          autorizacao: JSON.stringify(perfil.autorizacaoTrabalho),
-          master: JSON.stringify(master),
-        },
-        conteudoNaoConfiavel: { descricao },
-        schema: esquemaRespostasLlm,
-        pastaLog: deps.artefatos.pastaLlm(contexto.vaga.id),
+interface DadosConsulta {
+  readonly master: Master;
+  readonly perfil: Perfil;
+  readonly banco: unknown;
+  readonly idioma: Idioma;
+}
+
+/** Uma única chamada ao LLM com os pendentes. */
+function consultarLlm(
+  deps: DepsResponderCampos,
+  contexto: ContextoResposta,
+  pendentes: readonly CampoPendente[],
+  dados: DadosConsulta,
+  sinal: AbortSignal,
+): Promise<SaidaLlm> {
+  const { master, perfil, banco, idioma } = dados;
+  const descricao = deps.artefatos.lerTexto(contexto.vaga.id, "descricao.md") ?? "";
+  return deps.gerador.gerar(
+    {
+      tarefa: "responder-perguntas",
+      variaveis: {
+        cargo: contexto.vaga.cargo ?? "a vaga",
+        empresa: contexto.vaga.empresa ?? "a empresa",
+        idioma,
+        comoSoube: perfil.comoSoube,
+        maxPalavras: String(deps.cartaMaxPalavras),
+        campos: JSON.stringify(
+          pendentes.map(({ campo, categoria }) => ({
+            campoId: campo.id,
+            rotulo: campo.rotulo,
+            tipo: campo.tipo,
+            categoria,
+            ...(campo.opcoes ? { opcoes: campo.opcoes } : {}),
+          })),
+        ),
+        banco: JSON.stringify(banco),
+        analise: JSON.stringify(
+          contexto.analise
+            ? { requisitos: contexto.analise.requisitos, regime: contexto.analise.regime }
+            : {},
+        ),
+        preferencias: JSON.stringify(perfil.preferencias),
+        disponibilidade: JSON.stringify(perfil.disponibilidade),
+        autorizacao: JSON.stringify(perfil.autorizacaoTrabalho),
+        master: JSON.stringify(master),
       },
-      sinal,
-    );
+      conteudoNaoConfiavel: { descricao },
+      schema: esquemaRespostasLlm,
+      pastaLog: deps.artefatos.pastaLlm(contexto.vaga.id),
+    },
+    sinal,
+  );
+}
 
-    for (const { campo, categoria } of pendentes) {
-      if (categoria === "salario") {
-        const pedido = saida.salarios.find((s) => s.campoId === campo.id);
-        const { regime, confianca } = resolverRegime(
-          pedido?.regime ?? contexto.analise?.regime ?? "nao_informado",
-          perfil.preferencias.regimes,
-        );
-        const valor = calcularSalario(
-          {
-            regime,
-            periodo: pedido?.periodo ?? "mensal",
-            moeda: pedido?.moeda ?? (regime === "contractor" ? "USD" : "BRL"),
-          },
-          perfil.salario,
-        );
-        const texto =
-          campo.opcoes && campo.opcoes.length > 0
-            ? escolherFaixa(campo.opcoes, valor)
-            : String(valor);
-        respostas.set(campo.id, {
-          ...base(campo, "salario"),
-          valor: texto,
-          fonte: "codigo",
-          confianca: pedido && texto !== null ? confianca : "baixa",
-          especificaDaVaga: false,
-        });
-        continue;
-      }
-      const resposta = saida.respostas.find((r) => r.campoId === campo.id);
-      const fonteValida =
-        resposta && /^banco:r-\d{4}$/.test(resposta.fonte) && idsBanco.has(resposta.fonte.slice(6));
-      const especificaDaVaga = categoria === "carta" ? true : (resposta?.especificaDaVaga ?? false);
-      respostas.set(campo.id, {
-        ...base(campo, categoria),
-        valor: resposta?.valor ?? null,
-        fonte: fonteValida ? resposta.fonte : "gerada",
-        confianca: resposta ? resposta.confianca : "baixa",
-        especificaDaVaga,
-      });
-      if (
-        deps.cache &&
-        categoria === "pergunta" &&
-        resposta?.valor &&
-        resposta.confianca === "alta" &&
-        !especificaDaVaga
-      ) {
-        deps.cache.gravar(chaveCache(campo, idioma), resposta.valor);
-      }
-      if (categoria === "carta" && resposta?.valor) {
-        carta = resposta.valor;
-        if (campo.tipo === "arquivo") {
-          pdfCarta = deps.artefatos.caminho(contexto.vaga.id, "pdf-carta");
-          await deps.renderizador.renderizarCarta(
-            montarCarta(contato, carta, contexto.analise?.idioma === "pt" ? "pt" : "en"),
-            pdfCarta,
-            sinal,
-          );
-        }
-      }
-    }
+/** Salário pela tabela do perfil: o LLM só identifica regime, período e moeda. */
+function respostaSalario(
+  campo: Campo,
+  pedido: SaidaLlm["salarios"][number] | undefined,
+  contexto: ContextoResposta,
+  perfil: Perfil,
+): RespostaSugerida {
+  const { regime, confianca } = resolverRegime(
+    pedido?.regime ?? contexto.analise?.regime ?? "nao_informado",
+    perfil.preferencias.regimes,
+  );
+  const valor = calcularSalario(
+    {
+      regime,
+      periodo: pedido?.periodo ?? "mensal",
+      moeda: pedido?.moeda ?? (regime === "contractor" ? "USD" : "BRL"),
+    },
+    perfil.salario,
+  );
+  const texto =
+    campo.opcoes && campo.opcoes.length > 0 ? escolherFaixa(campo.opcoes, valor) : String(valor);
+  return {
+    ...base(campo, "salario"),
+    valor: texto,
+    fonte: "codigo",
+    confianca: pedido && texto !== null ? confianca : "baixa",
+    especificaDaVaga: false,
+  };
+}
+
+/** Resposta do LLM; a fonte `banco:r-NNNN` só vale se a entrada existir no banco. */
+function respostaGerada(
+  campo: Campo,
+  categoria: Campo["categoria"],
+  resposta: SaidaLlm["respostas"][number] | undefined,
+  idsBanco: ReadonlySet<string>,
+): RespostaSugerida {
+  const fonteValida =
+    resposta && /^banco:r-\d{4}$/.test(resposta.fonte) && idsBanco.has(resposta.fonte.slice(6));
+  return {
+    ...base(campo, categoria),
+    valor: resposta?.valor ?? null,
+    fonte: fonteValida ? resposta.fonte : "gerada",
+    confianca: resposta ? resposta.confianca : "baixa",
+    especificaDaVaga: categoria === "carta" ? true : (resposta?.especificaDaVaga ?? false),
+  };
+}
+
+/** Valor para o cache: só pergunta genérica respondida com confiança alta. */
+function valorParaCache(categoria: Campo["categoria"], resposta: RespostaSugerida): string | null {
+  if (categoria !== "pergunta" || resposta.confianca !== "alta" || resposta.especificaDaVaga) {
+    return null;
   }
+  return resposta.valor || null;
+}
+
+/**
+ * Responde os campos de um formulário. Padrão, documentos, diversidade e consentimento saem por código; o
+ * salário é calculado pela tabela do perfil (o LLM só identifica regime, período e moeda); perguntas e
+ * carta vão numa única chamada ao LLM, que nunca recebe documentos, salário, diversidade nem endereço.
+ */
+export async function responderCampos(
+  deps: DepsResponderCampos,
+  contexto: ContextoResposta,
+  campos: readonly Campo[],
+  sinal: AbortSignal,
+): Promise<SaidaResponderCampos> {
+  const master = deps.curriculo.lerMaster();
+  const perfil = deps.curriculo.lerPerfil();
+  const contato = contatoDo(master);
+  const idioma: Idioma = contexto.analise?.idioma === "pt" ? "pt" : "en";
+  const respostas = new Map<string, RespostaSugerida>();
+
+  const paraLlm = separarPorCodigo(campos, perfil, contato, respostas);
+  const pendentes = responderDoCache(deps.cache, paraLlm, idioma, respostas);
+  const cartas =
+    pendentes.length > 0
+      ? await responderPeloLlm(
+          deps,
+          contexto,
+          pendentes,
+          { master, perfil, idioma },
+          respostas,
+          sinal,
+        )
+      : {};
   return {
     respostas: campos.flatMap((c) => {
       const r = respostas.get(c.id);
       return r ? [r] : [];
     }),
-    ...(carta ? { carta } : {}),
-    ...(pdfCarta ? { pdfCarta } : {}),
+    ...cartas,
   };
+}
+
+/** Consulta o LLM, grava as respostas e o cache, e renderiza a carta quando o campo é arquivo. */
+async function responderPeloLlm(
+  deps: DepsResponderCampos,
+  contexto: ContextoResposta,
+  pendentes: readonly CampoPendente[],
+  dados: Omit<DadosConsulta, "banco">,
+  respostas: Map<string, RespostaSugerida>,
+  sinal: AbortSignal,
+): Promise<Pick<SaidaResponderCampos, "carta" | "pdfCarta">> {
+  const { master, perfil, idioma } = dados;
+  contexto.aoConsultarLlm?.(pendentes.length);
+  const banco = deps.curriculo.lerBanco();
+  const idsBanco = new Set(banco.map((e) => e.id));
+  const saida = await consultarLlm(deps, contexto, pendentes, { ...dados, banco }, sinal);
+
+  let carta: string | undefined;
+  let pdfCarta: string | undefined;
+  for (const { campo, categoria } of pendentes) {
+    if (categoria === "salario") {
+      const pedido = saida.salarios.find((s) => s.campoId === campo.id);
+      respostas.set(campo.id, respostaSalario(campo, pedido, contexto, perfil));
+      continue;
+    }
+    const resposta = respostaGerada(
+      campo,
+      categoria,
+      saida.respostas.find((r) => r.campoId === campo.id),
+      idsBanco,
+    );
+    respostas.set(campo.id, resposta);
+    const paraCache = valorParaCache(categoria, resposta);
+    if (paraCache !== null) deps.cache?.gravar(chaveCache(campo, idioma), paraCache);
+    if (categoria === "carta" && resposta.valor) {
+      carta = resposta.valor;
+      if (campo.tipo === "arquivo") {
+        pdfCarta = deps.artefatos.caminho(contexto.vaga.id, "pdf-carta");
+        await deps.renderizador.renderizarCarta(
+          montarCarta(contatoDo(master), carta, idioma),
+          pdfCarta,
+          sinal,
+        );
+      }
+    }
+  }
+  return { ...(carta ? { carta } : {}), ...(pdfCarta ? { pdfCarta } : {}) };
 }
 
 /** Carta para vagas MANUAL (Easy Apply, e-mail): uma resposta a um campo de carta sintético. */

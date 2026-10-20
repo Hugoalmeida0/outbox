@@ -2,8 +2,10 @@ import { calcularAderencia, recalcularComGaps } from "#dominio/analise/aderencia
 import { lerChaveGapIdioma, nivelAtende, nivelNoMaster } from "#dominio/analise/idiomas.ts";
 import { paraKebab } from "#dominio/compartilhado/texto.ts";
 import { NIVEIS_IDIOMA, type NivelIdioma } from "#dominio/curriculo/master.ts";
+import { registrarAderencia } from "#dominio/vagas/atualizacoes.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
 import { executarComLimite } from "../compartilhado/concorrencia.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import type { ArmazemCurriculo } from "../portas/armazem-curriculo.ts";
 import type { Interacao } from "../portas/interacao.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
@@ -18,7 +20,8 @@ export type DepsRodadaGaps = DepsGerarCurriculo & {
     | "termosConfirmados"
     | "buscar"
     | "atualizar"
-    | "transicionar"
+    | "transacao"
+    | "gravarTransicao"
   >;
   readonly curriculo: Pick<
     ArmazemCurriculo,
@@ -173,9 +176,9 @@ export async function rodadaGaps(
         perfil.documentos.dataNascimento,
         deps.relogio.hoje(),
       );
-      deps.vagas.atualizar(id, { aderencia: r.score });
+      deps.vagas.atualizar(id, registrarAderencia(r.score));
       await gerarCurriculo(deps, vaga, analise, s);
-      deps.vagas.transicionar(id, "PRONTA");
+      transicionarVaga(deps.vagas, id, "PRONTA");
       refeitas.push(id);
     },
     sinal,

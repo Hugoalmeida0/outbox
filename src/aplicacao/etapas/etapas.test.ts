@@ -1,9 +1,10 @@
 // Etapas isoladas (fakes de porta e SQLite :memory:): caminhos que os casos de uso não exercitam sozinhos.
 import { describe, expect, it } from "vitest";
+import { transicionarVaga } from "#aplicacao/compartilhado/transicionar-vaga.ts";
 import type { Campo } from "#dominio/respostas/campo.ts";
 import { esquemaRespostasSalvas } from "#dominio/respostas/pacote.ts";
-import type { IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
-import { umaAnalise, umCurriculoGerado, umMaster } from "#testes/apoio/builders.ts";
+import type { CamposAtualizaveisVaga, IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
+import { umaAnalise, umCurriculoGerado, umMaster, umaAtualizacao } from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao, type AmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { InteracaoRoteirizada } from "#testes/apoio/fakes/basicos.ts";
 import {
@@ -19,10 +20,13 @@ import { rodadaGaps } from "./rodada-gaps.ts";
 
 const sinal = () => new AbortController().signal;
 
-function vagaPronta(amb: AmbienteAplicacao, url: string, extra: Partial<Vaga> = {}): Vaga {
+function vagaPronta(amb: AmbienteAplicacao, url: string, extra: CamposAtualizaveisVaga = {}): Vaga {
   const vaga = amb.inserirVaga(url);
-  amb.vagas.atualizar(vaga.id, { empresa: "Acme", cargo: "Dev", idioma: "pt", ...extra });
-  amb.vagas.transicionar(vaga.id, "PRONTA");
+  amb.vagas.atualizar(
+    vaga.id,
+    umaAtualizacao({ empresa: "Acme", cargo: "Dev", idioma: "pt", ...extra }),
+  );
+  transicionarVaga(amb.vagas, vaga.id, "PRONTA");
   return amb.vagas.buscar(vaga.id) ?? vaga;
 }
 
@@ -465,7 +469,7 @@ describe("resolverVaga", () => {
       amb,
       "https://jobs.lever.co/acme/0f8e4c7a-1111-2222-3333-444455556666",
     );
-    amb.vagas.transicionar(enviada.id, "ENVIADA");
+    transicionarVaga(amb.vagas, enviada.id, "ENVIADA");
     const viaLinkedin = amb.inserirVaga("https://www.linkedin.com/jobs/view/1");
     amb.resolvedor.definir(viaLinkedin.urlCanonica, {
       motor: "lever",
@@ -484,7 +488,7 @@ describe("resolverVaga", () => {
       amb,
       "https://jobs.ashbyhq.com/acme/0f8e4c7a-1111-2222-3333-444455556666",
     );
-    amb.vagas.transicionar(descartada.id, "PULADA");
+    transicionarVaga(amb.vagas, descartada.id, "PULADA");
     const outra = amb.inserirVaga("https://www.linkedin.com/jobs/view/2");
     amb.resolvedor.definir(outra.urlCanonica, {
       motor: "ashby",
@@ -540,7 +544,7 @@ describe("rodadaGaps", () => {
     const b = vagaPronta(amb, "https://job-boards.greenhouse.io/acme/jobs/2");
     for (const v of [a, b])
       amb.vagas.inserirGaps(v.id, [{ termo: "Docker", termoNormalizado: "docker" }]);
-    amb.vagas.transicionar(b.id, "PULADA");
+    transicionarVaga(amb.vagas, b.id, "PULADA");
     amb.interacao = new InteracaoRoteirizada([true, 2, "   "]);
     const refeitas = await rodadaGaps({ ...amb.deps(), paralelo: 1 }, [a.id, b.id], sinal());
     expect(amb.interacao.perguntas[0]).toBe("A vaga pede Docker (2 vagas). Você tem?");

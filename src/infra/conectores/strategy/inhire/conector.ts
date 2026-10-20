@@ -1,4 +1,4 @@
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
 
 const BOTAO_CANDIDATAR = /candidatar-se|candidatar|quero me candidatar|aplicar|apply/i;
 

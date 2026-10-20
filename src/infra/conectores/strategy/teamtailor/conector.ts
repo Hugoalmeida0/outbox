@@ -1,4 +1,4 @@
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
 
 const CAMPO_VISIVEL = "input[name='candidate[email]'], input[name='candidate[first_name]']";
 const BOTAO_CANDIDATAR =

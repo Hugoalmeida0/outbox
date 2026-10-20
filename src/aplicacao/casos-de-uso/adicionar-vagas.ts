@@ -1,8 +1,10 @@
 import { ErroValidacao } from "#dominio/compartilhado/erros.ts";
+import { reiniciarTentativasPreparo } from "#dominio/vagas/atualizacoes.ts";
 import { decidirDeduplicacaoUrl } from "#dominio/vagas/deduplicacao.ts";
 import { canonizar } from "#dominio/vagas/motores.ts";
 import type { Status } from "#dominio/vagas/status.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
 
 export type ResultadoAdicao =
@@ -19,7 +21,7 @@ export interface ItemAdicao {
 export interface DepsAdicionarVagas {
   readonly vagas: Pick<
     RepositorioVagas,
-    "transacao" | "buscarPorUrlCanonica" | "inserir" | "transicionar" | "atualizar"
+    "transacao" | "buscarPorUrlCanonica" | "inserir" | "buscar" | "gravarTransicao" | "atualizar"
   >;
 }
 
@@ -66,8 +68,8 @@ export function adicionarVagas(
           return { url, resultado: "duplicada", id: vaga.id };
         }
         case "reabrir":
-          deps.vagas.transicionar(acao.id, "NOVA");
-          deps.vagas.atualizar(acao.id, { tentativasPreparo: 0 });
+          transicionarVaga(deps.vagas, acao.id, "NOVA");
+          deps.vagas.atualizar(acao.id, reiniciarTentativasPreparo());
           return { url, resultado: "reaberta", id: acao.id };
         case "ignorar_status":
           return { url, resultado: "ignorada", id: acao.id, status: acao.status };

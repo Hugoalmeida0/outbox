@@ -1,7 +1,11 @@
 import type { CatalogoConectores } from "#aplicacao/portas/catalogo-conectores.ts";
 import type { ConectorAts } from "#aplicacao/portas/conector-ats.ts";
 import type { Motor } from "#dominio/vagas/motores.ts";
-import { criarConector, type DefinicaoConector, type DepsConector } from "./conector-formulario.ts";
+import {
+  criarConector,
+  type DefinicaoConector,
+  type DepsConector,
+} from "#infra/conectores/base/conector-formulario.ts";
 
 /** Catálogo de conectores por motor (Registry): instancia cada conector sob demanda. */
 export class CatalogoConectoresPlaywright implements CatalogoConectores {

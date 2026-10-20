@@ -40,8 +40,8 @@ import { RegistroFalhasFs } from "#infra/armazenamento/registro-falhas-fs.ts";
 import { abrirConexao } from "#infra/banco/conexao.ts";
 import { migrar } from "#infra/banco/migrador.ts";
 import { RepositorioVagasSqlite } from "#infra/banco/repositorio-vagas-sqlite.ts";
-import { CatalogoConectoresPlaywright } from "#infra/conectores/base/catalogo.ts";
-import { DEFINICOES_V1 } from "#infra/conectores/definicoes.ts";
+import { CatalogoConectoresPlaywright } from "#infra/conectores/registry/catalogo.ts";
+import { DEFINICOES_V1 } from "#infra/conectores/registry/definicoes.ts";
 import { carregarConfig } from "#infra/config/carregar-config.ts";
 import type { Config } from "#infra/config/esquema-config.ts";
 import { CofreCredenciaisJson } from "#infra/credenciais/cofre-credenciais-json.ts";
@@ -61,7 +61,7 @@ import {
   eloGithub,
   eloPortalGupy,
   ResolvedorEncadeado,
-} from "#infra/resolucao/resolvedor-encadeado.ts";
+} from "#infra/resolucao/chain-of-responsibility/resolvedor-encadeado.ts";
 import { criarCaminhos, RAIZ, type Caminhos } from "#infra/sistema/caminhos.ts";
 import { ClienteHttpFetch } from "#infra/sistema/cliente-http.ts";
 import { RelogioSistema } from "#infra/sistema/relogio-sistema.ts";
@@ -135,13 +135,11 @@ export function configAplicacao(config: Config): ConfigAplicacao {
   };
 }
 
-export function criarContainer(opcoes: OpcoesContainer = {}): Container {
-  const caminhos = criarCaminhos(opcoes.raiz ?? RAIZ, opcoes.raizCodigo ?? RAIZ);
-  const config = opcoes.config ?? carregarConfig(caminhos.config);
-  const criados = new Set<string>();
+type Preguicoso = <T>(nome: string, criar: () => T) => () => T;
 
-  /** Getter preguiçoso: a implementação só é criada no primeiro acesso. */
-  function preguicoso<T>(nome: string, criar: () => T): () => T {
+/** Getter preguiçoso: a implementação só é criada no primeiro acesso, e o nome entra em `criados`. */
+function criarPreguicoso(criados: Set<string>): Preguicoso {
+  return <T>(nome: string, criar: () => T): (() => T) => {
     let instancia: { valor: T } | null = null;
     return () => {
       if (!instancia) {
@@ -150,8 +148,11 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
       }
       return instancia.valor;
     };
-  }
+  };
+}
 
+/** Relógio, currículo, log e persistência local (banco, artefatos, falhas e cache). */
+function criarLocais(caminhos: Caminhos, opcoes: OpcoesContainer, preguicoso: Preguicoso) {
   const relogio = preguicoso("relogio", () => new RelogioSistema());
   const curriculo = preguicoso("curriculo", () => new ArmazemCurriculoYaml(caminhos, relogio()));
   const registrador = preguicoso(
@@ -198,6 +199,14 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
         relogio: relogio(),
       }),
   );
+  return { relogio, curriculo, registrador, db, vagas, artefatos, falhas, cache };
+}
+
+type Locais = ReturnType<typeof criarLocais>;
+
+/** HTTP, navegadores, cofre, conectores e resolução de vagas. */
+function criarWeb(caminhos: Caminhos, config: Config, locais: Locais, preguicoso: Preguicoso) {
+  const { curriculo, registrador, relogio } = locais;
   const http = preguicoso("http", () => new ClienteHttpFetch());
   const leitor = preguicoso("leitor", () => new LeitorHeadless());
   const navegador = preguicoso(
@@ -250,6 +259,20 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
       }),
   );
   const renderizador = preguicoso("renderizador", () => new RenderizadorPdfPlaywright(leitor()));
+  return { http, leitor, navegador, cofre, catalogo, resolvedor, extrator, renderizador };
+}
+
+type Web = ReturnType<typeof criarWeb>;
+
+/** LLM (gerador estruturado e agente) e notificações. */
+function criarAssistentes(
+  caminhos: Caminhos,
+  config: Config,
+  opcoes: OpcoesContainer,
+  dependencias: Locais & Web,
+  preguicoso: Preguicoso,
+) {
+  const { artefatos, navegador, registrador } = dependencias;
   const gerador = preguicoso("gerador", () => {
     // Pasta vazia como cwd: o claude não carrega CLAUDE.md, skills nem MCPs do repositório.
     const cwd = join(caminhos.tmpDir, "llm-cwd");
@@ -286,10 +309,16 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     "notificador",
     () => new NotificadorWindows(config.notificacao.toast, registrador()),
   );
+  return { gerador, agente, notificador };
+}
 
-  const cfgAplicacao = configAplicacao(config);
+type Implementacoes = Locais & Web & ReturnType<typeof criarAssistentes>;
 
-  const casos: CasosDeUso = {
+/** Liga cada caso de uso às implementações (instanciadas só quando o caso de uso roda). */
+function criarCasos(impl: Implementacoes, cfgAplicacao: ConfigAplicacao): CasosDeUso {
+  const { vagas, curriculo, artefatos, falhas, gerador, renderizador, catalogo, registrador } =
+    impl;
+  return {
     importarCurriculo: (entrada, sinal) =>
       importarCurriculo({ curriculo: curriculo(), gerador: gerador() }, entrada, sinal),
     adicionarVagas: (urls) => adicionarVagas({ vagas: vagas() }, { urls }),
@@ -300,17 +329,17 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
           curriculo: curriculo(),
           artefatos: artefatos(),
           gerador: gerador(),
-          resolvedor: resolvedor(),
-          extrator: extrator(),
+          resolvedor: impl.resolvedor(),
+          extrator: impl.extrator(),
           renderizador: renderizador(),
           catalogo: catalogo(),
-          notificador: notificador(),
+          notificador: impl.notificador(),
           progresso,
           registrador: registrador(),
-          relogio: relogio(),
+          relogio: impl.relogio(),
           config: cfgAplicacao,
           cartaMaxPalavras: cfgAplicacao.cartaMaxPalavras,
-          cache: cache(),
+          cache: impl.cache(),
         },
         entrada,
         sinal,
@@ -325,10 +354,10 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
           gerador: gerador(),
           renderizador: renderizador(),
           catalogo: catalogo(),
-          agente: agente(),
+          agente: impl.agente(),
           registrador: registrador(),
-          relogio: relogio(),
-          cache: cache(),
+          relogio: impl.relogio(),
+          cache: impl.cache(),
           interacao,
           config: cfgAplicacao,
         },
@@ -345,14 +374,30 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
         { curriculo: curriculo(), artefatos: artefatos(), renderizador: renderizador() },
         sinal,
       ),
-    abrirNavegador: () => abrirNavegador({ navegador: navegador() }),
+    abrirNavegador: () => abrirNavegador({ navegador: impl.navegador() }),
   };
+}
+
+export function criarContainer(opcoes: OpcoesContainer = {}): Container {
+  const caminhos = criarCaminhos(opcoes.raiz ?? RAIZ, opcoes.raizCodigo ?? RAIZ);
+  const config = opcoes.config ?? carregarConfig(caminhos.config);
+  const criados = new Set<string>();
+  const preguicoso = criarPreguicoso(criados);
+
+  const locais = criarLocais(caminhos, opcoes, preguicoso);
+  const web = criarWeb(caminhos, config, locais, preguicoso);
+  const impl: Implementacoes = {
+    ...locais,
+    ...web,
+    ...criarAssistentes(caminhos, config, opcoes, { ...locais, ...web }, preguicoso),
+  };
+  const { registrador, navegador, leitor, db } = impl;
 
   let encerrado = false;
   return {
     caminhos,
     config,
-    casos,
+    casos: criarCasos(impl, configAplicacao(config)),
     adquirirTrava: (comando) => adquirirTrava(caminhos.travasDir, comando),
     registrarErro: (mensagem, erro) => {
       registrador().erro(mensagem, { erro });
@@ -360,9 +405,9 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     criarServicoSegredos: ({ vagaId, hostsPermitidos }) =>
       new ServicoSegredos({
         obterPagina: () => navegador().paginaMaisRecente(hostsPermitidos),
-        cofre: cofre(),
-        curriculo: curriculo(),
-        artefatos: artefatos(),
+        cofre: impl.cofre(),
+        curriculo: impl.curriculo(),
+        artefatos: impl.artefatos(),
         hostsPermitidos,
         vagaId,
         registrador: registrador(),

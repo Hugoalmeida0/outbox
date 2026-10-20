@@ -6,7 +6,7 @@ import type {
   FormularioAberto,
   ValorLido,
 } from "#aplicacao/portas/formulario-aberto.ts";
-import { lerValoresGenerico } from "./campos.ts";
+import { lerValoresGenerico } from "./descritores.ts";
 
 export interface RegrasConfirmacao {
   /** Texto exibido após o envio bem-sucedido. */

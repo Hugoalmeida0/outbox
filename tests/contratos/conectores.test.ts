@@ -1,15 +1,15 @@
 // Executa a suíte de contrato para os 8 conectores da v1.
 import { readFileSync } from "node:fs";
 import { describe, expect, it, afterAll, beforeAll } from "vitest";
-import { definicaoAshby } from "#infra/conectores/ashby/conector.ts";
-import { definicaoGreenhouse } from "#infra/conectores/greenhouse/conector.ts";
-import { definicaoGupy } from "#infra/conectores/gupy/conector.ts";
-import { definicaoInhire } from "#infra/conectores/inhire/conector.ts";
-import { definicaoLever } from "#infra/conectores/lever/conector.ts";
-import { definicaoSmartRecruiters } from "#infra/conectores/smartrecruiters/conector.ts";
-import { definicaoTeamtailor } from "#infra/conectores/teamtailor/conector.ts";
-import { definicaoWorkable } from "#infra/conectores/workable/conector.ts";
-import { DEFINICOES_V1 } from "#infra/conectores/definicoes.ts";
+import { definicaoAshby } from "#infra/conectores/strategy/ashby/conector.ts";
+import { definicaoGreenhouse } from "#infra/conectores/strategy/greenhouse/conector.ts";
+import { definicaoGupy } from "#infra/conectores/strategy/gupy/conector.ts";
+import { definicaoInhire } from "#infra/conectores/strategy/inhire/conector.ts";
+import { definicaoLever } from "#infra/conectores/strategy/lever/conector.ts";
+import { definicaoSmartRecruiters } from "#infra/conectores/strategy/smartrecruiters/conector.ts";
+import { definicaoTeamtailor } from "#infra/conectores/strategy/teamtailor/conector.ts";
+import { definicaoWorkable } from "#infra/conectores/strategy/workable/conector.ts";
+import { DEFINICOES_V1 } from "#infra/conectores/registry/definicoes.ts";
 import { criarConector } from "#infra/conectores/base/conector-formulario.ts";
 import { ErroFalhaConector } from "#aplicacao/portas/erros.ts";
 import { MOTORES_COM_CONECTOR_V1 } from "#dominio/vagas/motores.ts";

@@ -11,6 +11,8 @@ documento do repositório.
 - Texto para humanos (mensagens, documentação, comentários, nomes de teste) em PT-BR com acentuação.
 - Exceções impostas por ferramentas: scripts npm `test` e `lint`, campos do `package.json`,
   `README.md`, tipos do Conventional Commits, métodos HTTP, palavras-chave SQL e APIs de bibliotecas.
+- Pastas nomeadas por design pattern ficam em inglês (`strategy/`, `registry/`,
+  `chain-of-responsibility/`, `state-machine/`; ADR-0022).
 
 ## 2. Nomenclatura
 

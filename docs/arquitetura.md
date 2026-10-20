@@ -74,7 +74,7 @@ logs, tmp, travas) e `config.yaml`.
 
 | Contexto    | Conceitos                                                                        | Arquivos principais                                                                                                                       |
 | ----------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `vagas`     | Vaga, Status, Motivo, Etapa, Motor, UrlCanonica, ChaveDedup                      | `status.ts`, `transicoes.ts`, `motores.ts`, `chave.ts`, `deduplicacao.ts`                                                                 |
+| `vagas`     | Vaga, Status, Motivo, Etapa, Motor, UrlCanonica, ChaveDedup                      | `status.ts`, `state-machine/transicoes.ts`, `atualizacoes.ts`, `motores.ts`, `chave.ts`, `deduplicacao.ts`                                |
 | `curriculo` | Master, CurriculoGerado, DocumentoCurriculo, lastro, score ATS                   | `master.ts`, `documento.ts`, `lastro.ts`, `score-ats.ts`, `nome-arquivo.ts`                                                               |
 | `analise`   | AnaliseVaga, Requisito, Keyword, Aderência, GrupoAfirmativo                      | `analise-vaga.ts`, `aderencia.ts`, `grupos.ts`, `validar-analise.ts`                                                                      |
 | `respostas` | Perfil, Campo, classificação, salário, diversidade, consentimento, banco, pacote | `perfil.ts`, `classificar-campo.ts`, `valor-codigo.ts`, `salario.ts`, `diversidade.ts`, `consentimento.ts`, `aprendizado.ts`, `pacote.ts` |
@@ -142,7 +142,8 @@ demais.
 
 `criarConector(definicao, deps)` implementa o fluxo comum (abrir, ler campos, preencher, etapas, envio
 pelo botão visível, confirmação, pausa em bloqueio) e cada ATS entra como uma `DefinicaoConector`
-declarativa em `infra/conectores/<motor>/conector.ts`, registrada em `definicoes.ts`. Regras comuns
+declarativa em `infra/conectores/strategy/<motor>/conector.ts`, registrada em `registry/definicoes.ts`
+(pastas por pattern, ADR-0022). Regras comuns
 (ADR-0017):
 
 - Nunca pressionar Enter (combobox fecha com `blur`): Enter dispara o envio implícito do formulário.

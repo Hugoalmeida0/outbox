@@ -1,5 +1,5 @@
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
-import { comSufixo } from "../base/util.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
+import { comSufixo } from "#infra/conectores/base/util.ts";
 
 /**
  * Workable (apply.workable.com). Estrutura observada em 2026-10-10: formulário em /apply/, campos com

@@ -8,7 +8,7 @@ import {
   eloGithub,
   eloPortalGupy,
   ResolvedorEncadeado,
-} from "#infra/resolucao/resolvedor-encadeado.ts";
+} from "#infra/resolucao/chain-of-responsibility/resolvedor-encadeado.ts";
 import { destinoDeRedirecionamento } from "#infra/resolucao/agregadores.ts";
 import { detectarAtsNoHtml } from "#infra/resolucao/detectar-ats.ts";
 import { extrairJsonLd } from "#infra/extracao/json-ld.ts";

@@ -16,7 +16,7 @@ do usuário, que a política do projeto não permite fazer sem confirmação hum
 
 ## O que foi implementado sem o spike
 
-- Conector `src/infra/conectores/inhire/conector.ts` (versão 1.0.0): SPA por empresa; abre o formulário
+- Conector `src/infra/conectores/strategy/inhire/conector.ts` (versão 1.0.0): SPA por empresa; abre o formulário
   direto ou pelo botão "Candidatar-se"; até 4 etapas; envio e confirmação por texto.
 - Autenticação `tenant`: quando a página pede conta, o e-mail vem do master e a senha é gerada e guardada
   em `dados/credenciais.json` (uma por tenant), preenchida sem passar pelo LLM; a confirmação de e-mail

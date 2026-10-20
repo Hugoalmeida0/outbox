@@ -1,15 +1,15 @@
 // Preenchimento genérico de campos sobre páginas sintéticas que imitam os comportamentos reais do
 // Greenhouse: autocomplete que demora a listar opções, países em outro idioma e checkbox controlado.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { preencherCampo } from "#infra/conectores/base/campos.ts";
 import {
-  ErroSemOpcao,
   lerDescritores,
   lerValoresGenerico,
-  preencherCampo,
   type DescritorCampo,
-} from "#infra/conectores/base/campos.ts";
+} from "#infra/conectores/base/descritores.ts";
+import { ErroSemOpcao } from "#infra/conectores/base/erro-sem-opcao.ts";
 import { melhorOpcao, nomesDoPais } from "#dominio/respostas/opcoes.ts";
-import { preencherLocalizacaoLever } from "#infra/conectores/lever/conector.ts";
+import { preencherLocalizacaoLever } from "#infra/conectores/strategy/lever/conector.ts";
 import { LeitorHeadless } from "#infra/navegador/leitor-headless.ts";
 import { aquecerNavegador } from "#testes/apoio/harness-conector.ts";
 

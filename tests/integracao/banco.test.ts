@@ -1,4 +1,6 @@
 import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
+import { transicionarVaga } from "#aplicacao/compartilhado/transicionar-vaga.ts";
+import { umaAtualizacao } from "#testes/apoio/builders.ts";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -81,8 +83,8 @@ describe("RepositorioVagasSqlite", () => {
     );
     expect(repo.buscarPorUrlCanonica(a.urlCanonica)?.id).toBe(b.id);
     expect(repo.buscarPorUrlCanonica("https://nada" as UrlCanonica)).toBeNull();
-    repo.atualizar(a.id, { chaveDedup: "x|y|" as ChaveDedup });
-    repo.atualizar(b.id, { chaveDedup: "x|y|" as ChaveDedup });
+    repo.atualizar(a.id, umaAtualizacao({ chaveDedup: "x|y|" as ChaveDedup }));
+    repo.atualizar(b.id, umaAtualizacao({ chaveDedup: "x|y|" as ChaveDedup }));
     expect(repo.buscarPorChave("x|y|" as ChaveDedup, a.id).map((v) => v.id)).toEqual([b.id]);
   });
 
@@ -90,8 +92,11 @@ describe("RepositorioVagasSqlite", () => {
     const repo = criarRepositorioMemoria();
     const a = repo.inserir(nova(1));
     const b = repo.inserir(nova(2));
-    repo.atualizar(a.id, { anexoManual: true, empresa: "Acme", aderencia: 80, urlResolvida: null });
-    repo.atualizar(a.id, {});
+    repo.atualizar(
+      a.id,
+      umaAtualizacao({ anexoManual: true, empresa: "Acme", aderencia: 80, urlResolvida: null }),
+    );
+    repo.atualizar(a.id, umaAtualizacao({}));
     expect(repo.buscar(a.id)).toMatchObject({ anexoManual: true, empresa: "Acme", aderencia: 80 });
     expect(repo.listarPorStatus(["NOVA"]).map((v) => v.id)).toEqual([a.id, b.id]);
     expect(repo.listarPorStatus(["NOVA"], { ids: [b.id] }).map((v) => v.id)).toEqual([b.id]);
@@ -103,11 +108,11 @@ describe("RepositorioVagasSqlite", () => {
     const relogio = new RelogioFixo("2026-10-10T10:00:00Z");
     const repo = criarRepositorioMemoria(relogio);
     const v = repo.inserir(nova(1));
-    repo.transicionar(v.id, "PRONTA");
-    repo.transicionar(v.id, "ENVIADA");
+    transicionarVaga(repo, v.id, "PRONTA");
+    transicionarVaga(repo, v.id, "ENVIADA");
     const enviadaEm = repo.buscar(v.id)?.enviadaEm;
     relogio.avancar(60_000);
-    repo.transicionar(v.id, "EM_PROCESSO", { etapa: "tecnica", nota: "entrevista marcada" });
+    transicionarVaga(repo, v.id, "EM_PROCESSO", { etapa: "tecnica", nota: "entrevista marcada" });
     expect(repo.buscar(v.id)).toMatchObject({ status: "EM_PROCESSO", etapa: "tecnica", enviadaEm });
     expect(repo.listarEventos(v.id).map((e) => e.paraStatus)).toEqual([
       "NOVA",
@@ -119,21 +124,21 @@ describe("RepositorioVagasSqlite", () => {
       etapa: "tecnica",
       nota: "entrevista marcada",
     });
-    expect(() => repo.transicionar(v.id, "PRONTA")).toThrow(ErroTransicaoInvalida);
-    expect(() => repo.transicionar(999 as IdVaga, "PRONTA")).toThrow(ErroInfra);
+    expect(() => transicionarVaga(repo, v.id, "PRONTA")).toThrow(ErroTransicaoInvalida);
+    expect(() => transicionarVaga(repo, 999 as IdVaga, "PRONTA")).toThrow(ErroInfra);
   });
 
   it("guarda motivo e duplicada_de", () => {
     const repo = criarRepositorioMemoria();
     const a = repo.inserir(nova(1));
     const b = repo.inserir(nova(2));
-    repo.transicionar(b.id, "DESCARTADA", { motivo: "duplicada_antiga", duplicadaDe: a.id });
+    transicionarVaga(repo, b.id, "DESCARTADA", { motivo: "duplicada_antiga", duplicadaDe: a.id });
     expect(repo.buscar(b.id)).toMatchObject({
       status: "DESCARTADA",
       motivo: "duplicada_antiga",
       duplicadaDe: a.id,
     });
-    repo.transicionar(b.id, "NOVA");
+    transicionarVaga(repo, b.id, "NOVA");
     expect(repo.buscar(b.id)).toMatchObject({ status: "NOVA", motivo: null, duplicadaDe: a.id });
   });
 
@@ -203,12 +208,12 @@ describe("RepositorioVagasSqlite", () => {
     const v = repoA.inserir(nova(1));
 
     repoA.transacao(() => {
-      repoA.transicionar(v.id, "PRONTA");
-      expect(() => repoB.transicionar(v.id, "DESCARTADA", { motivo: "manual" })).toThrow(
+      transicionarVaga(repoA, v.id, "PRONTA");
+      expect(() => transicionarVaga(repoB, v.id, "DESCARTADA", { motivo: "manual" })).toThrow(
         /locked|busy/i,
       );
     });
-    repoB.transicionar(v.id, "DESCARTADA", { motivo: "manual" });
+    transicionarVaga(repoB, v.id, "DESCARTADA", { motivo: "manual" });
     expect(repoA.buscar(v.id)?.status).toBe("DESCARTADA");
     expect(repoA.listarEventos(v.id).map((e) => e.paraStatus)).toEqual([
       "NOVA",

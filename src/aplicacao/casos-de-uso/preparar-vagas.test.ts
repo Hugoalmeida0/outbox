@@ -10,7 +10,7 @@ import {
   ErroResolucao,
 } from "../portas/erros.ts";
 import { esquemaArquivoAnalise } from "../compartilhado/artefatos.ts";
-import { umaAnalise, umCurriculoGerado } from "#testes/apoio/builders.ts";
+import { umaAnalise, umCurriculoGerado, umaAtualizacao } from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao, type AmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { CatalogoConectoresFake, ConectorFake } from "#testes/apoio/fakes/formularios.ts";
 import { motivoDoErro, prepararVagas } from "./preparar-vagas.ts";
@@ -446,7 +446,7 @@ describe("prepararVagas", () => {
       "ERRO_PREPARO: página fora do ar",
     ]);
 
-    amb.vagas.atualizar(b.id, { tentativasPreparo: 3 });
+    amb.vagas.atualizar(b.id, umaAtualizacao({ tentativasPreparo: 3 }));
     const segundo = await prepararVagas(amb.deps(), { forcar: false, reavaliar: false }, sinal());
     expect(segundo.processadas).toBe(1);
   });
@@ -454,7 +454,7 @@ describe("prepararVagas", () => {
   it("vaga encerrada vira DESCARTADA vaga_encerrada, sem erro, tentativa nem aderência antiga", async () => {
     const { amb } = ambienteComConector(null);
     const vaga = amb.inserirVaga(URL_GH);
-    amb.vagas.atualizar(vaga.id, { aderencia: 100 });
+    amb.vagas.atualizar(vaga.id, umaAtualizacao({ aderencia: 100 }));
     amb.extrator.definir(URL_GH, {
       estruturada: null,
       textoPagina: "Sorry, we couldn't find anything",

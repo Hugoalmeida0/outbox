@@ -1,7 +1,8 @@
 import { ErroTransicaoInvalida, ErroUsuario } from "#dominio/compartilhado/erros.ts";
 import type { Etapa, Status } from "#dominio/vagas/status.ts";
-import { TRANSICOES_VALIDAS } from "#dominio/vagas/transicoes.ts";
+import { TRANSICOES_VALIDAS } from "#dominio/vagas/state-machine/transicoes.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
 
 export const STATUS_DE_RETORNO = ["EM_PROCESSO", "OFERTA", "RECUSADA", "ENVIADA"] as const;
@@ -19,7 +20,7 @@ export interface EntradaRegistrarRetorno {
  * MANUAL (aplicadas por conta própria) ou PENDENTE_TESTE (teste concluído).
  */
 export function registrarRetorno(
-  deps: { readonly vagas: Pick<RepositorioVagas, "buscar" | "transicionar"> },
+  deps: { readonly vagas: Pick<RepositorioVagas, "transacao" | "buscar" | "gravarTransicao"> },
   entrada: EntradaRegistrarRetorno,
 ): void {
   const vaga = deps.vagas.buscar(entrada.id);
@@ -36,7 +37,7 @@ export function registrarRetorno(
       "ENVIADA só vale a partir de MANUAL ou PENDENTE_TESTE",
     );
   }
-  deps.vagas.transicionar(entrada.id, entrada.status, {
+  transicionarVaga(deps.vagas, entrada.id, entrada.status, {
     ...(entrada.etapa ? { etapa: entrada.etapa } : {}),
     ...(entrada.nota ? { nota: entrada.nota } : {}),
   });

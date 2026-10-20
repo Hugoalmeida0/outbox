@@ -4,7 +4,7 @@ import type { Campo, TipoCampo } from "#dominio/respostas/campo.ts";
 import type { VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
 import { decodificarEntidades, htmlParaTexto } from "#infra/extracao/html-texto.ts";
 import type { ClienteHttp } from "#infra/sistema/cliente-http.ts";
-import { dataCurta } from "../base/util.ts";
+import { dataCurta } from "#infra/conectores/base/util.ts";
 
 const esquemaCampoApi = z.object({
   name: z.string(),

@@ -9,7 +9,8 @@ ranking dali indica qual ATS vale um conector. Nenhum caso de uso muda ao adicio
 Em `src/dominio/vagas/motores.ts`:
 
 - Adicione o motor a `PADROES_MOTOR` (padrões de host) para `detectarMotor` reconhecê-lo.
-- Se as URLs têm um formato canônico (id da vaga), acrescente o caso em `canonicaPorMotor`.
+- Se as URLs têm um formato canônico (id da vaga), declare a função `canonica` na mesma entrada de
+  `PADROES_MOTOR`; `canonizar` não muda.
 - Adicione o motor a `MOTORES_COM_CONECTOR_V1` (a rota passa a ser `conector`).
 - Cubra a canonização em `motores.test.ts`.
 
@@ -26,7 +27,7 @@ de confirmação, se possível, ou escreva uma fixture mínima com o texto de co
 
 ## 3. Escreva a definição
 
-Crie `src/infra/conectores/<motor>/conector.ts` exportando uma `DefinicaoConector`
+Crie `src/infra/conectores/strategy/<motor>/conector.ts` exportando uma `DefinicaoConector`
 (`src/infra/conectores/base/conector-formulario.ts`). O fluxo comum (abrir, ler campos, preencher,
 etapas, envio, confirmação, pausa em CAPTCHA) já está em `criarConector`; a definição declara só o que
 muda:
@@ -50,7 +51,7 @@ consentimento obrigatório e nunca contornar CAPTCHA. Toda ação já tem timeou
 
 ## 4. Registre no catálogo
 
-Adicione a definição a `DEFINICOES_V1` em `src/infra/conectores/definicoes.ts`. O teste "há exatamente
+Adicione a definição a `DEFINICOES_V1` em `src/infra/conectores/registry/definicoes.ts`. O teste "há exatamente
 uma definição para cada motor da v1" garante a correspondência com o domínio.
 
 ## 5. Passe na suíte de contrato

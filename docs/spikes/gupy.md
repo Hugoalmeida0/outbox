@@ -19,7 +19,7 @@ isso não foi feito de forma autônoma.
 
 ## O que foi implementado sem o spike
 
-- Conector `src/infra/conectores/gupy/conector.ts` (versão 1.0.0): autenticação `global` (login manual
+- Conector `src/infra/conectores/strategy/gupy/conector.ts` (versão 1.0.0): autenticação `global` (login manual
   uma vez em `outbox navegador`), botão "Candidatar-se", até 8 etapas com botão de avançar, envio por
   "Finalizar/Enviar/Concluir candidatura" e confirmação por texto. A etapa de testes depois do envio
   vira **PENDENTE_TESTE** (os testes nunca são automatizados).

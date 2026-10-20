@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
-import { comSufixo, dataCurta, nomeDoSlug } from "../base/util.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
+import { comSufixo, dataCurta, nomeDoSlug } from "#infra/conectores/base/util.ts";
 
 const esquemaQuadroAshby = z.object({
   jobs: z.array(

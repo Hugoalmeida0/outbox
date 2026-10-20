@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { transicionarVaga } from "#aplicacao/compartilhado/transicionar-vaga.ts";
 import { ErroTransicaoInvalida, ErroUsuario, ErroValidacao } from "#dominio/compartilhado/erros.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
-import { umMaster } from "#testes/apoio/builders.ts";
+import { umMaster, umaAtualizacao } from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { ArmazemCurriculoMemoria } from "#testes/apoio/fakes/armazens.ts";
 import { GeradorEstruturadoRoteirizado } from "#testes/apoio/fakes/llm.ts";
@@ -97,8 +98,8 @@ describe("adicionarVagas (AC3)", () => {
     });
     expect(repetida).toMatchObject({ resultado: "ja_na_fila", id: 1 });
 
-    amb.vagas.transicionar(1 as IdVaga, "PRONTA");
-    amb.vagas.transicionar(1 as IdVaga, "ENVIADA");
+    transicionarVaga(amb.vagas, 1 as IdVaga, "PRONTA");
+    transicionarVaga(amb.vagas, 1 as IdVaga, "ENVIADA");
     const [dup] = adicionarVagas(deps, {
       urls: ["https://jobs.lever.co/acme/0f8e4c7a-1111-2222-3333-444455556666"],
     });
@@ -110,16 +111,16 @@ describe("adicionarVagas (AC3)", () => {
     });
 
     const [outra] = adicionarVagas(deps, { urls: ["https://boards.greenhouse.io/acme/jobs/9"] });
-    amb.vagas.transicionar(outra!.id!, "PRONTA");
-    amb.vagas.transicionar(outra!.id!, "PULADA");
-    amb.vagas.atualizar(outra!.id!, { tentativasPreparo: 2 });
+    transicionarVaga(amb.vagas, outra!.id!, "PRONTA");
+    transicionarVaga(amb.vagas, outra!.id!, "PULADA");
+    amb.vagas.atualizar(outra!.id!, umaAtualizacao({ tentativasPreparo: 2 }));
     expect(
       adicionarVagas(deps, { urls: ["https://job-boards.greenhouse.io/acme/jobs/9"] })[0],
     ).toMatchObject({ resultado: "reaberta" });
     expect(amb.vagas.buscar(outra!.id!)).toMatchObject({ status: "NOVA", tentativasPreparo: 0 });
 
     const [manual] = adicionarVagas(deps, { urls: ["https://www.linkedin.com/jobs/view/1"] });
-    amb.vagas.transicionar(manual!.id!, "MANUAL", { motivo: "easy_apply" });
+    transicionarVaga(amb.vagas, manual!.id!, "MANUAL", { motivo: "easy_apply" });
     expect(
       adicionarVagas(deps, { urls: ["https://www.linkedin.com/jobs/view/1/"] })[0],
     ).toMatchObject({ resultado: "ignorada", status: "MANUAL" });
@@ -162,7 +163,7 @@ describe("listarStatus, registrarRetorno e listarFalhas (AC21)", () => {
     const a = amb.inserirVaga("https://github.com/backend-br/vagas/issues/1");
     const b = amb.inserirVaga("https://empresa.gupy.io/jobs/2");
     amb.inserirVaga("https://empresa.gupy.io/jobs/3");
-    amb.vagas.transicionar(a.id, "MANUAL", { motivo: "candidatura_por_email" });
+    transicionarVaga(amb.vagas, a.id, "MANUAL", { motivo: "candidatura_por_email" });
     amb.artefatos.gravarJson(a.id, "analise.json", {
       idioma: "pt",
       senioridade: "nao_informada",
@@ -174,8 +175,8 @@ describe("listarStatus, registrarRetorno e listarFalhas (AC21)", () => {
       alertas: [],
       destinoEmail: "vagas@acme.com",
     });
-    amb.vagas.transicionar(b.id, "PRONTA");
-    amb.vagas.transicionar(b.id, "PENDENTE_TESTE");
+    transicionarVaga(amb.vagas, b.id, "PRONTA");
+    transicionarVaga(amb.vagas, b.id, "PENDENTE_TESTE");
     const dados = listarStatus(amb.deps(), {});
     expect(dados.contagens).toMatchObject({ MANUAL: 1, PENDENTE_TESTE: 1, NOVA: 1, ENVIADA: 0 });
     expect(dados.linhas).toHaveLength(3);
@@ -187,8 +188,8 @@ describe("listarStatus, registrarRetorno e listarFalhas (AC21)", () => {
   it("registra retornos válidos e recusa os inválidos", () => {
     const amb = criarAmbienteAplicacao();
     const v = amb.inserirVaga("https://empresa.gupy.io/jobs/2");
-    amb.vagas.transicionar(v.id, "PRONTA");
-    amb.vagas.transicionar(v.id, "PENDENTE_TESTE");
+    transicionarVaga(amb.vagas, v.id, "PRONTA");
+    transicionarVaga(amb.vagas, v.id, "PENDENTE_TESTE");
     registrarRetorno({ vagas: amb.vagas }, { id: v.id, status: "ENVIADA" });
     registrarRetorno(
       { vagas: amb.vagas },

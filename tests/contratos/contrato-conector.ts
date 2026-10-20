@@ -6,7 +6,7 @@ import {
   criarConector,
   type DefinicaoConector,
 } from "#infra/conectores/base/conector-formulario.ts";
-import { lerDescritores, paraCampos } from "#infra/conectores/base/campos.ts";
+import { lerDescritores, paraCampos } from "#infra/conectores/base/descritores.ts";
 import type { ClienteHttp } from "#infra/sistema/cliente-http.ts";
 import type { MapaFixtures } from "#testes/apoio/fixtures.ts";
 import { umPacote } from "#testes/apoio/builders.ts";

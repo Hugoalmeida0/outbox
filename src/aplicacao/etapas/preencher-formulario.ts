@@ -74,7 +74,7 @@ type ExecucaoAgente =
  */
 async function executarAgente(
   deps: DepsPreencherFormulario,
-  entrada: Parameters<ExecutorAgente["preencher"]>[0],
+  entrada: EntradaAgente,
   ctx: CtxPreenchimento,
   sinal: AbortSignal,
 ): Promise<ExecucaoAgente> {
@@ -92,6 +92,154 @@ async function executarAgente(
   }
 }
 
+/** Dados comuns a uma tentativa de preenchimento: entrada do agente e base do registro de falha. */
+interface Tentativa {
+  readonly url: string;
+  readonly entradaAgente: EntradaAgente;
+  readonly registroBase: {
+    readonly motor: Vaga["motor"];
+    readonly dominio: string;
+    readonly url: string;
+    readonly idVaga: Vaga["id"];
+    readonly data: string;
+    readonly resolvida: false;
+  };
+}
+
+type EntradaAgente = Parameters<ExecutorAgente["preencher"]>[0];
+
+function montarTentativa(
+  deps: DepsPreencherFormulario,
+  vaga: Vaga,
+  pacote: PacoteCandidatura,
+): Tentativa {
+  const url = vaga.urlResolvida ?? vaga.urlCanonica;
+  const host = new URL(url).hostname;
+  return {
+    url,
+    entradaAgente: {
+      vaga,
+      urlCandidatura: url,
+      pacote,
+      hostsPermitidos: [host, ...padroesHostDoMotor(vaga.motor)],
+      saldo: { turnos: deps.agenteMaxTurnos, ms: deps.agenteTimeoutMin * 60_000 },
+    },
+    registroBase: {
+      motor: vaga.motor,
+      dominio: host,
+      url,
+      idVaga: vaga.id,
+      data: deps.relogio.agoraIso(),
+      resolvida: false,
+    },
+  };
+}
+
+function agenteFalhou(ctx: CtxPreenchimento, mensagem: string): ResultadoPreenchimento {
+  ctx.informar(`o agente falhou (${mensagem}); a vaga fica para você`);
+  return { tipo: "manual", motivo: "teto_agente" };
+}
+
+/** O conector parou: registra a falha em `falhas/` e o agente assume com o contexto do passo. */
+async function assumirAposConector(
+  deps: DepsPreencherFormulario,
+  conector: { readonly motor: string; readonly versao: string },
+  erro: ErroFalhaConector,
+  tentativa: Tentativa,
+  ctx: CtxPreenchimento,
+  sinal: AbortSignal,
+): Promise<ResultadoPreenchimento> {
+  ctx.informar(
+    `o conector parou em "${erro.passo}"; o agente (Claude) assume a partir daí, o que pode levar alguns minutos…`,
+  );
+  const idRegistro = deps.falhas.registrar(
+    {
+      ...tentativa.registroBase,
+      tipo: "falha_conector",
+      conector: conector.motor,
+      versaoConector: conector.versao,
+      passo: erro.passo,
+      seletor: erro.seletor,
+      erro: erro.message,
+      stack: erro.stack ?? null,
+      resultadoAgente: null,
+      passosAgente: [],
+    },
+    await htmlSanitizado(deps, erro.formulario),
+  );
+  const execucao = await executarAgente(
+    deps,
+    {
+      ...tentativa.entradaAgente,
+      contextoFalha: {
+        passo: erro.passo,
+        erro: erro.message,
+        url: erro.formulario?.urlAtual() ?? tentativa.url,
+      },
+    },
+    ctx,
+    sinal,
+  );
+  if (execucao.tipo === "erro") {
+    deps.falhas.atualizar(idRegistro, { resultadoAgente: `erro: ${execucao.mensagem}` });
+    return agenteFalhou(ctx, execucao.mensagem);
+  }
+  const resultado = execucao.resultado;
+  deps.falhas.atualizar(idRegistro, {
+    resultadoAgente: resultado.tipo,
+    passosAgente: resultado.passos,
+  });
+  return paraResultado(resultado);
+}
+
+/** Sem conector: o agente preenche e a vaga fica registrada em `_sem-conector`. */
+async function preencherComAgente(
+  deps: DepsPreencherFormulario,
+  vaga: Vaga,
+  tentativa: Tentativa,
+  ctx: CtxPreenchimento,
+  sinal: AbortSignal,
+): Promise<ResultadoPreenchimento> {
+  ctx.informar(
+    `sem conector para ${vaga.motor}: o agente (Claude) preenche o formulário, o que pode levar alguns minutos…`,
+  );
+  const registroSemConector = {
+    ...tentativa.registroBase,
+    tipo: "sem_conector",
+    conector: null,
+    versaoConector: null,
+    passo: null,
+    seletor: null,
+  } as const;
+  const execucao = await executarAgente(deps, tentativa.entradaAgente, ctx, sinal);
+  if (execucao.tipo === "erro") {
+    // Mesmo quebrando, o agente deixa registro: sem ele, a vaga some de `outbox falhas`.
+    deps.falhas.registrar(
+      {
+        ...registroSemConector,
+        erro: execucao.mensagem,
+        stack: execucao.stack,
+        resultadoAgente: "erro",
+        passosAgente: [],
+      },
+      "",
+    );
+    return agenteFalhou(ctx, execucao.mensagem);
+  }
+  const resultado = execucao.resultado;
+  deps.falhas.registrar(
+    {
+      ...registroSemConector,
+      erro: null,
+      stack: null,
+      resultadoAgente: resultado.tipo,
+      passosAgente: resultado.passos,
+    },
+    await htmlSanitizado(deps, resultado.tipo === "pronto" ? resultado.formulario : undefined),
+  );
+  return paraResultado(resultado);
+}
+
 /**
  * Abre e preenche o formulário: com conector, usa-o; se ele falhar, registra a falha em `falhas/` e o
  * agente assume com o contexto; sem conector, o agente preenche e a vaga é registrada em `_sem-conector`.
@@ -103,115 +251,14 @@ export async function preencherFormulario(
   ctx: CtxPreenchimento,
   sinal: AbortSignal,
 ): Promise<ResultadoPreenchimento> {
-  const url = vaga.urlResolvida ?? vaga.urlCanonica;
-  const host = new URL(url).hostname;
-  const entradaAgente = {
-    vaga,
-    urlCandidatura: url,
-    pacote,
-    hostsPermitidos: [host, ...padroesHostDoMotor(vaga.motor)],
-    saldo: { turnos: deps.agenteMaxTurnos, ms: deps.agenteTimeoutMin * 60_000 },
-  };
-  const registroBase = {
-    motor: vaga.motor,
-    dominio: host,
-    url,
-    idVaga: vaga.id,
-    data: deps.relogio.agoraIso(),
-    resolvida: false,
-  };
+  const tentativa = montarTentativa(deps, vaga, pacote);
   const conector = vaga.rota === "conector" ? deps.catalogo.para(vaga.motor) : null;
-
-  if (conector) {
-    try {
-      const formulario = await conector.abrirEPreencher(url, pacote, ctx, sinal);
-      return { tipo: "formulario", formulario, perguntasNaHora: [] };
-    } catch (erro) {
-      if (!(erro instanceof ErroFalhaConector)) throw erro;
-      ctx.informar(
-        `o conector parou em "${erro.passo}"; o agente (Claude) assume a partir daí, o que pode levar alguns minutos…`,
-      );
-      const idRegistro = deps.falhas.registrar(
-        {
-          ...registroBase,
-          tipo: "falha_conector",
-          conector: conector.motor,
-          versaoConector: conector.versao,
-          passo: erro.passo,
-          seletor: erro.seletor,
-          erro: erro.message,
-          stack: erro.stack ?? null,
-          resultadoAgente: null,
-          passosAgente: [],
-        },
-        await htmlSanitizado(deps, erro.formulario),
-      );
-      const execucao = await executarAgente(
-        deps,
-        {
-          ...entradaAgente,
-          contextoFalha: {
-            passo: erro.passo,
-            erro: erro.message,
-            url: erro.formulario?.urlAtual() ?? url,
-          },
-        },
-        ctx,
-        sinal,
-      );
-      if (execucao.tipo === "erro") {
-        deps.falhas.atualizar(idRegistro, { resultadoAgente: `erro: ${execucao.mensagem}` });
-        ctx.informar(`o agente falhou (${execucao.mensagem}); a vaga fica para você`);
-        return { tipo: "manual", motivo: "teto_agente" };
-      }
-      const resultado = execucao.resultado;
-      deps.falhas.atualizar(idRegistro, {
-        resultadoAgente: resultado.tipo,
-        passosAgente: resultado.passos,
-      });
-      return paraResultado(resultado);
-    }
+  if (!conector) return preencherComAgente(deps, vaga, tentativa, ctx, sinal);
+  try {
+    const formulario = await conector.abrirEPreencher(tentativa.url, pacote, ctx, sinal);
+    return { tipo: "formulario", formulario, perguntasNaHora: [] };
+  } catch (erro) {
+    if (!(erro instanceof ErroFalhaConector)) throw erro;
+    return assumirAposConector(deps, conector, erro, tentativa, ctx, sinal);
   }
-
-  ctx.informar(
-    `sem conector para ${vaga.motor}: o agente (Claude) preenche o formulário, o que pode levar alguns minutos…`,
-  );
-  const execucao = await executarAgente(deps, entradaAgente, ctx, sinal);
-  if (execucao.tipo === "erro") {
-    // Mesmo quebrando, o agente deixa registro: sem ele, a vaga some de `outbox falhas`.
-    deps.falhas.registrar(
-      {
-        ...registroBase,
-        tipo: "sem_conector",
-        conector: null,
-        versaoConector: null,
-        passo: null,
-        seletor: null,
-        erro: execucao.mensagem,
-        stack: execucao.stack,
-        resultadoAgente: "erro",
-        passosAgente: [],
-      },
-      "",
-    );
-    ctx.informar(`o agente falhou (${execucao.mensagem}); a vaga fica para você`);
-    return { tipo: "manual", motivo: "teto_agente" };
-  }
-  const resultado = execucao.resultado;
-  deps.falhas.registrar(
-    {
-      ...registroBase,
-      tipo: "sem_conector",
-      conector: null,
-      versaoConector: null,
-      passo: null,
-      seletor: null,
-      erro: null,
-      stack: null,
-      resultadoAgente: resultado.tipo,
-      passosAgente: resultado.passos,
-    },
-    await htmlSanitizado(deps, resultado.tipo === "pronto" ? resultado.formulario : undefined),
-  );
-  return paraResultado(resultado);
 }

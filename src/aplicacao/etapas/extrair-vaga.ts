@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { registrarExtracao } from "#dominio/vagas/atualizacoes.ts";
 import {
   esquemaVagaExtraida,
   normalizarEmpresa,
@@ -57,11 +58,6 @@ export async function extrairVaga(
     "descricao.md",
     `# ${extraida.cargo} — ${extraida.empresa}\n\n${extraida.descricao}\n`,
   );
-  deps.vagas.atualizar(vaga.id, {
-    empresa: extraida.empresa,
-    cargo: extraida.cargo,
-    localidade: extraida.localidade ?? null,
-    publicadaEm: extraida.publicadaEm ?? null,
-  });
+  deps.vagas.atualizar(vaga.id, registrarExtracao(extraida));
   return extraida;
 }

@@ -48,7 +48,7 @@ export interface NovaVaga {
 }
 
 /** Campos atualizáveis fora das transições de status. */
-export interface AtualizacaoVaga {
+export interface CamposAtualizaveisVaga {
   readonly urlCanonica?: UrlCanonica;
   readonly urlResolvida?: string | null;
   readonly motor?: Motor;
@@ -66,6 +66,12 @@ export interface AtualizacaoVaga {
   readonly anexoManual?: boolean;
   readonly tentativasPreparo?: number;
 }
+
+/**
+ * Atualização parcial da vaga. A marca obriga a passar pelas funções de `atualizacoes.ts`, que
+ * nomeiam a intenção e aplicam as regras de cada campo.
+ */
+export type AtualizacaoVaga = Marca<CamposAtualizaveisVaga, "AtualizacaoVaga">;
 
 export interface Evento {
   readonly id: number;

@@ -4,7 +4,14 @@ import type { CurriculoGerado } from "#dominio/curriculo/curriculo-gerado.ts";
 import type { Master } from "#dominio/curriculo/master.ts";
 import type { PacoteCandidatura, RespostaSugerida } from "#dominio/respostas/pacote.ts";
 import type { Perfil } from "#dominio/respostas/perfil.ts";
-import type { ChaveDedup, IdVaga, UrlCanonica, Vaga } from "#dominio/vagas/vaga.ts";
+import type {
+  AtualizacaoVaga,
+  CamposAtualizaveisVaga,
+  ChaveDedup,
+  IdVaga,
+  UrlCanonica,
+  Vaga,
+} from "#dominio/vagas/vaga.ts";
 
 export function umMaster(override: Partial<Master> = {}): Master {
   return {
@@ -277,4 +284,9 @@ export function umPacote(override: Partial<PacoteCandidatura> = {}): PacoteCandi
     contato: { ...master.pessoal },
     ...override,
   };
+}
+
+/** Atualização arbitrária para montar cenários: em produção ela vem de `#dominio/vagas/atualizacoes.ts`. */
+export function umaAtualizacao(campos: CamposAtualizaveisVaga): AtualizacaoVaga {
+  return campos as AtualizacaoVaga;
 }

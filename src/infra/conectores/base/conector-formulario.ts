@@ -10,14 +10,10 @@ import type { VagaExtraida } from "#dominio/vagas/vaga-extraida.ts";
 import type { CofreCredenciais } from "#infra/credenciais/cofre.ts";
 import type { LeitorHeadless } from "#infra/navegador/leitor-headless.ts";
 import type { ClienteHttp } from "#infra/sistema/cliente-http.ts";
-import {
-  ErroSemOpcao,
-  lerDescritores,
-  listarOpcoes,
-  paraCampos,
-  preencherCampo,
-  type DescritorCampo,
-} from "./campos.ts";
+import { preencherCampo } from "./campos.ts";
+import { listarOpcoes } from "./combobox.ts";
+import { lerDescritores, paraCampos, type DescritorCampo } from "./descritores.ts";
+import { ErroSemOpcao } from "./erro-sem-opcao.ts";
 import { FormularioPlaywright, type RegrasConfirmacao } from "./formulario-playwright.ts";
 import { dispensarCookies, navegar, tratarAutenticacao, type ModoAutenticacao } from "./pagina.ts";
 import { passo, type ContextoPasso } from "./passo.ts";

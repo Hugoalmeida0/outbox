@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { htmlParaTexto } from "#infra/extracao/html-texto.ts";
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
-import { comParametro, dataCurta } from "../base/util.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
+import { comParametro, dataCurta } from "#infra/conectores/base/util.ts";
 
 const secao = z.object({ text: z.string().optional() }).loose().optional();
 /** Resposta de `GET api.smartrecruiters.com/v1/companies/<empresa>/postings/<id>` (verificada em 2026-10-10). */

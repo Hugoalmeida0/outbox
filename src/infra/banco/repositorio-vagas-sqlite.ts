@@ -1,13 +1,14 @@
 import type { DatabaseSync, SQLInputValue, StatementSync } from "node:sqlite";
 import { z } from "zod";
 import { ErroInfra } from "#aplicacao/portas/erros.ts";
-import type { OpcoesTransicaoVaga, RepositorioVagas } from "#aplicacao/portas/repositorio-vagas.ts";
+import type { RepositorioVagas } from "#aplicacao/portas/repositorio-vagas.ts";
 import type { Relogio } from "#aplicacao/portas/relogio.ts";
 import type { Motor } from "#dominio/vagas/motores.ts";
 import { ETAPAS, MOTIVOS, ROTAS, TODOS_STATUS, type Status } from "#dominio/vagas/status.ts";
-import { validarTransicao } from "#dominio/vagas/transicoes.ts";
+import type { TransicaoVaga } from "#dominio/vagas/state-machine/transicoes.ts";
 import type {
   AtualizacaoVaga,
+  CamposAtualizaveisVaga,
   ChaveDedup,
   Evento,
   GapAberto,
@@ -97,7 +98,7 @@ function paraVaga(linha: unknown): Vaga {
 }
 
 /** Mapeamento camelCase (domínio) → snake_case (tabela) dos campos atualizáveis. */
-const COLUNAS: Readonly<Record<keyof AtualizacaoVaga, string>> = {
+const COLUNAS: Readonly<Record<keyof CamposAtualizaveisVaga, string>> = {
   urlCanonica: "url_canonica",
   urlResolvida: "url_resolvida",
   motor: "motor",
@@ -261,7 +262,9 @@ export class RepositorioVagasSqlite implements RepositorioVagas {
   }
 
   atualizar(id: IdVaga, campos: AtualizacaoVaga): void {
-    const entradas = (Object.keys(campos) as (keyof AtualizacaoVaga)[]).filter((k) => k in COLUNAS);
+    const entradas = (Object.keys(campos) as (keyof CamposAtualizaveisVaga)[]).filter(
+      (k) => k in COLUNAS,
+    );
     if (entradas.length === 0) return;
     const sets = entradas.map((k) => `${COLUNAS[k]} = ?`).join(", ");
     const valores = entradas.map((k) => valorSql(campos[k]));
@@ -270,34 +273,30 @@ export class RepositorioVagasSqlite implements RepositorioVagas {
       .run(...valores, this.relogio.agoraIso(), id);
   }
 
-  transicionar(id: IdVaga, para: Status, opcoes: OpcoesTransicaoVaga = {}): void {
+  gravarTransicao(id: IdVaga, t: TransicaoVaga): void {
     this.transacao(() => {
-      const atual = this.buscarObrigatoria(id);
-      validarTransicao(atual.status, para, { motivo: opcoes.motivo, etapa: opcoes.etapa });
       const agora = this.relogio.agoraIso();
-      const enviada = (para === "ENVIADA" || para === "PENDENTE_TESTE") && atual.enviadaEm === null;
-      this.db
+      const r = this.db
         .prepare(
           `UPDATE vagas SET status = ?, motivo = ?, etapa = ?, duplicada_de = COALESCE(?, duplicada_de),
-             enviada_em = COALESCE(enviada_em, ?), atualizada_em = ? WHERE id = ?`,
+             enviada_em = COALESCE(enviada_em, ?), atualizada_em = ? WHERE id = ? AND status = ?`,
         )
         .run(
-          para,
-          valorSql(opcoes.motivo),
-          para === "EM_PROCESSO" ? valorSql(opcoes.etapa) : null,
-          valorSql(opcoes.duplicadaDe),
-          enviada ? agora : null,
+          t.para,
+          t.motivo,
+          t.etapaAtual,
+          t.duplicadaDe,
+          t.registraEnvio ? agora : null,
           agora,
           id,
+          t.de,
         );
-      this.sql.evento.run(
-        id,
-        atual.status,
-        para,
-        valorSql(opcoes.etapa),
-        valorSql(opcoes.nota),
-        agora,
-      );
+      if (r.changes === 0) {
+        throw new ErroInfra(
+          `vaga #${String(id)} não encontrada ou fora do status ${t.de} esperado pela transição`,
+        );
+      }
+      this.sql.evento.run(id, t.de, t.para, t.etapa, t.nota, agora);
     });
   }
 

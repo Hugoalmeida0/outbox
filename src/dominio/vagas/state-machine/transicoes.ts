@@ -1,5 +1,14 @@
-import { ErroTransicaoInvalida } from "../compartilhado/erros.ts";
-import { ehMotivoDe, ehStatusComMotivo, ETAPAS, type Status } from "./status.ts";
+import { ErroTransicaoInvalida } from "#dominio/compartilhado/erros.ts";
+import type { Marca } from "#dominio/compartilhado/marca.ts";
+import {
+  ehMotivoDe,
+  ehStatusComMotivo,
+  ETAPAS,
+  type Etapa,
+  type Motivo,
+  type Status,
+} from "../status.ts";
+import type { IdVaga, Vaga } from "../vaga.ts";
 
 /** Máquina de estados da vaga: fonte única de transições válidas (CLI, painel e casos de uso). */
 export const TRANSICOES_VALIDAS: Readonly<Record<Status, readonly Status[]>> = {
@@ -53,4 +62,51 @@ export function validarTransicao(de: Status, para: Status, opcoes: OpcoesTransic
       );
     }
   }
+}
+
+export interface OpcoesTransicaoVaga {
+  readonly motivo?: Motivo;
+  readonly etapa?: Etapa;
+  readonly nota?: string;
+  readonly duplicadaDe?: IdVaga;
+}
+
+/**
+ * Mudança de status já validada pela máquina de estados. A marca impede que um repositório receba
+ * uma transição que não passou por `transicionar`.
+ */
+export type TransicaoVaga = Marca<
+  {
+    readonly de: Status;
+    readonly para: Status;
+    readonly motivo: Motivo | null;
+    /** Etapa registrada no evento. */
+    readonly etapa: Etapa | null;
+    /** Etapa que fica na vaga: só EM_PROCESSO guarda etapa. */
+    readonly etapaAtual: Etapa | null;
+    readonly nota: string | null;
+    readonly duplicadaDe: IdVaga | null;
+    /** `true` na primeira vez que a vaga sai para o ATS (ENVIADA ou PENDENTE_TESTE). */
+    readonly registraEnvio: boolean;
+  },
+  "TransicaoVaga"
+>;
+
+/** Aplica a máquina de estados à vaga e devolve a transição pronta para gravar. */
+export function transicionar(
+  vaga: Pick<Vaga, "status" | "enviadaEm">,
+  para: Status,
+  opcoes: OpcoesTransicaoVaga = {},
+): TransicaoVaga {
+  validarTransicao(vaga.status, para, { motivo: opcoes.motivo, etapa: opcoes.etapa });
+  return {
+    de: vaga.status,
+    para,
+    motivo: opcoes.motivo ?? null,
+    etapa: opcoes.etapa ?? null,
+    etapaAtual: para === "EM_PROCESSO" ? (opcoes.etapa ?? null) : null,
+    nota: opcoes.nota ?? null,
+    duplicadaDe: opcoes.duplicadaDe ?? null,
+    registraEnvio: (para === "ENVIADA" || para === "PENDENTE_TESTE") && vaga.enviadaEm === null,
+  } as TransicaoVaga;
 }

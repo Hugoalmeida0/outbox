@@ -3,9 +3,9 @@ import { z } from "zod";
 import { normalizarTexto } from "#dominio/compartilhado/texto.ts";
 import { consultasLocalizacao, ufDe } from "#dominio/respostas/localidade.ts";
 import { htmlParaTexto } from "#infra/extracao/html-texto.ts";
-import { ErroSemOpcao } from "../base/campos.ts";
-import type { DefinicaoConector } from "../base/conector-formulario.ts";
-import { comSufixo, dataCurta, nomeDoSlug } from "../base/util.ts";
+import { ErroSemOpcao } from "#infra/conectores/base/erro-sem-opcao.ts";
+import type { DefinicaoConector } from "#infra/conectores/base/conector-formulario.ts";
+import { comSufixo, dataCurta, nomeDoSlug } from "#infra/conectores/base/util.ts";
 
 /** A busca de localização da Lever consulta um serviço: leva de 1 a 3 s para listar. */
 const ESPERA_LOCALIZACAO_MS = 6000;

@@ -1,5 +1,10 @@
 import { calcularAderencia, recalcularComGaps } from "#dominio/analise/aderencia.ts";
 import { ErroDominio, ErroOutbox } from "#dominio/compartilhado/erros.ts";
+import {
+  contarTentativaPreparo,
+  registrarAderencia,
+  registrarResolucao,
+} from "#dominio/vagas/atualizacoes.ts";
 import { decidirDeduplicacaoChave } from "#dominio/vagas/deduplicacao.ts";
 import { canonizar } from "#dominio/vagas/motores.ts";
 import type { MotivoDe, Status } from "#dominio/vagas/status.ts";
@@ -7,6 +12,7 @@ import type { IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
 import type { ArquivoAnalise } from "../compartilhado/artefatos.ts";
 import { executarComLimite } from "../compartilhado/concorrencia.ts";
 import type { ConfigAplicacao } from "../compartilhado/config.ts";
+import { transicionarVaga } from "../compartilhado/transicionar-vaga.ts";
 import {
   analisarVaga,
   atualizarAnalise,
@@ -39,6 +45,7 @@ import {
 import type { Notificador } from "../portas/notificador.ts";
 import type { EtapaPreparo, ProgressoPreparo } from "../portas/progresso-preparo.ts";
 import type { Registrador } from "../portas/registrador.ts";
+import type { Resolucao } from "../portas/resolvedor-vagas.ts";
 import type { RepositorioVagas } from "../portas/repositorio-vagas.ts";
 import { garantirMasterGenerico, type DepsRenderizarMaster } from "./renderizar-master.ts";
 
@@ -56,7 +63,7 @@ export type DepsPrepararVagas = DepsResolverVaga &
       | "buscarPorChave"
       | "listarPorStatus"
       | "atualizar"
-      | "transicionar"
+      | "gravarTransicao"
       | "inserirGaps"
       | "termosConfirmados"
     >;
@@ -111,8 +118,8 @@ export interface ResumoPreparo {
 function descartarEncerrada(deps: DepsPrepararVagas, id: IdVaga): void {
   const atual = deps.vagas.buscar(id);
   if (!atual || (atual.status !== "NOVA" && atual.status !== "ERRO_PREPARO")) return;
-  deps.vagas.atualizar(id, { aderencia: null });
-  deps.vagas.transicionar(id, "DESCARTADA", { motivo: "vaga_encerrada" });
+  deps.vagas.atualizar(id, registrarAderencia(null));
+  transicionarVaga(deps.vagas, id, "DESCARTADA", { motivo: "vaga_encerrada" });
 }
 
 /** Mapeia o erro de uma vaga para o motivo de ERRO_PREPARO (arquitetura.md §10.1). */
@@ -144,7 +151,7 @@ function aplicarAderencia(
     aderencia: { score: r.score, detalhes: r.detalhes },
     alertas: [...new Set([...atual.alertas.filter((a) => !r.alertas.includes(a)), ...r.alertas])],
   }));
-  deps.vagas.atualizar(vaga.id, { aderencia: r.score });
+  deps.vagas.atualizar(vaga.id, registrarAderencia(r.score));
   return { score: r.score, eliminada: r.eliminacao !== undefined };
 }
 
@@ -155,7 +162,7 @@ function deduplicarPorChave(deps: DepsPrepararVagas, id: IdVaga): boolean {
     if (!atual?.chaveDedup) return false;
     const acoes = decidirDeduplicacaoChave(atual, deps.vagas.buscarPorChave(atual.chaveDedup, id));
     for (const acao of acoes) {
-      deps.vagas.transicionar(acao.id, "DESCARTADA", {
+      transicionarVaga(deps.vagas, acao.id, "DESCARTADA", {
         motivo: "duplicada_antiga",
         duplicadaDe: acao.duplicadaDe,
       });
@@ -170,110 +177,173 @@ function avisarEtapa(deps: DepsPrepararVagas, id: IdVaga, etapa: EtapaPreparo): 
   if (vaga) deps.progresso.emitir({ tipo: "etapa", vaga, etapa });
 }
 
+type AvisarEtapa = (nome: EtapaPreparo) => void;
+
+/** Easy Apply: gera o que for possível (currículo e carta) e deixa a vaga para o usuário. */
+async function prepararManual(
+  deps: DepsPrepararVagas,
+  vaga: Vaga,
+  resolucao: Resolucao,
+  etapa: AvisarEtapa,
+  sinal: AbortSignal,
+): Promise<void> {
+  try {
+    etapa("extrair");
+    const extraida = await extrairVaga(deps, vaga, resolucao.urlResolvida, sinal);
+    etapa("analisar");
+    const analise = await analisarVaga(deps, vaga, extraida, sinal);
+    etapa("gerar_curriculo");
+    await gerarCurriculo(deps, vaga, analise, sinal);
+    etapa("gerar_carta");
+    await gerarCartaAvulsa(deps, { vaga: deps.vagas.buscar(vaga.id) ?? vaga, analise }, sinal);
+  } catch (erro) {
+    if (sinal.aborted || erro instanceof ErroLimiteUso) throw erro;
+    deps.registrador.avisar(`vaga #${String(vaga.id)}: materiais do Easy Apply incompletos`, {
+      erro,
+    });
+  }
+  transicionarVaga(deps.vagas, vaga.id, "MANUAL", {
+    motivo: resolucao.manual?.motivo ?? "easy_apply",
+  });
+}
+
+interface Destino {
+  readonly resolucao: Resolucao;
+  readonly analise: ArquivoAnalise;
+  readonly destinoManual: MotivoDe<"MANUAL"> | null;
+}
+
+/** Rota `a_definir`: segue o "como se candidatar" da análise (link, e-mail ou nada). */
+async function definirDestino(
+  deps: DepsPrepararVagas,
+  vaga: Vaga,
+  analise: ArquivoAnalise,
+  etapa: AvisarEtapa,
+  sinal: AbortSignal,
+): Promise<Omit<Destino, "resolucao"> & { readonly resolucao?: Resolucao }> {
+  const como = analise.comoCandidatar;
+  if (como?.tipo === "link") {
+    const { canonica, motor } = canonizar(como.valor);
+    etapa("resolver");
+    const proxima = await deps.resolvedor.resolver(canonica, motor, sinal);
+    deps.vagas.atualizar(
+      vaga.id,
+      registrarResolucao({
+        motor: proxima.motor,
+        urlResolvida: proxima.urlResolvida,
+        rota: proxima.rota,
+      }),
+    );
+    return {
+      resolucao: proxima,
+      analise,
+      destinoManual:
+        proxima.rota === "manual" ? (proxima.manual?.motivo ?? "sem_formulario") : null,
+    };
+  }
+  if (como?.tipo === "email") {
+    return {
+      analise:
+        atualizarAnalise(deps.artefatos, vaga, (a) => ({ ...a, destinoEmail: como.valor })) ??
+        analise,
+      destinoManual: "candidatura_por_email",
+    };
+  }
+  return { analise, destinoManual: "sem_formulario" };
+}
+
+/** Descarta a vaga inelegível ou abaixo do score mínimo. Devolve `true` se descartou. */
+function descartarPorAderencia(
+  deps: DepsPrepararVagas,
+  vaga: Vaga,
+  analise: ArquivoAnalise,
+  forcar: boolean,
+): boolean {
+  const { score, eliminada } = aplicarAderencia(deps, vaga, analise);
+  if (eliminada) {
+    transicionarVaga(deps.vagas, vaga.id, "DESCARTADA", { motivo: "afirmativa_inelegivel" });
+    return true;
+  }
+  if (score < deps.config.scoreMinimo && !forcar) {
+    transicionarVaga(deps.vagas, vaga.id, "DESCARTADA", { motivo: "aderencia_baixa" });
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Com conector, lê os campos do formulário e já deixa as respostas sugeridas. `url` é a da primeira
+ * resolução, mesmo quando a rota `a_definir` trocou o motor.
+ */
+async function preResponderCampos(
+  deps: DepsPrepararVagas,
+  vaga: Vaga,
+  analise: ArquivoAnalise,
+  resolucao: Resolucao,
+  url: string,
+  sinal: AbortSignal,
+): Promise<void> {
+  const campos = await deps.catalogo.para(resolucao.motor)?.lerCampos?.(url, sinal);
+  if (!campos || campos.length === 0) return;
+  deps.artefatos.gravarJson(vaga.id, "campos.json", campos);
+  salvarRespostas(
+    deps.artefatos,
+    vaga,
+    await responderCampos(deps, { vaga, analise }, campos, sinal),
+  );
+}
+
 async function processarVaga(
   deps: DepsPrepararVagas,
   original: Vaga,
   entrada: EntradaPrepararVagas,
   sinal: AbortSignal,
 ): Promise<void> {
-  const etapa = (nome: EtapaPreparo): void => {
+  const etapa: AvisarEtapa = (nome) => {
     avisarEtapa(deps, original.id, nome);
   };
   etapa("resolver");
   const resolvida = await resolverVaga(deps, original, sinal);
   if (resolvida.tipo === "duplicada") return;
-  let { vaga, resolucao } = resolvida;
-  const url = resolucao.urlResolvida;
-
-  if (resolucao.rota === "manual") {
-    // Easy Apply: gera o que for possível (currículo e carta) e deixa a vaga para o usuário.
-    try {
-      etapa("extrair");
-      const extraida = await extrairVaga(deps, vaga, url, sinal);
-      etapa("analisar");
-      const analise = await analisarVaga(deps, vaga, extraida, sinal);
-      etapa("gerar_curriculo");
-      await gerarCurriculo(deps, vaga, analise, sinal);
-      etapa("gerar_carta");
-      await gerarCartaAvulsa(deps, { vaga: deps.vagas.buscar(vaga.id) ?? vaga, analise }, sinal);
-    } catch (erro) {
-      if (sinal.aborted || erro instanceof ErroLimiteUso) throw erro;
-      deps.registrador.avisar(`vaga #${String(vaga.id)}: materiais do Easy Apply incompletos`, {
-        erro,
-      });
-    }
-    deps.vagas.transicionar(vaga.id, "MANUAL", {
-      motivo: resolucao.manual?.motivo ?? "easy_apply",
-    });
+  let { vaga } = resolvida;
+  const url = resolvida.resolucao.urlResolvida;
+  if (resolvida.resolucao.rota === "manual") {
+    await prepararManual(deps, vaga, resolvida.resolucao, etapa, sinal);
     return;
   }
 
   etapa("extrair");
   const extraida = await extrairVaga(deps, vaga, url, sinal);
   etapa("analisar");
-  let analise = await analisarVaga(deps, vaga, extraida, sinal);
-  let destinoManual: MotivoDe<"MANUAL"> | null = null;
-
-  if (resolucao.rota === "a_definir") {
-    const como = analise.comoCandidatar;
-    if (como?.tipo === "link") {
-      const { canonica, motor } = canonizar(como.valor);
-      etapa("resolver");
-      const proxima = await deps.resolvedor.resolver(canonica, motor, sinal);
-      deps.vagas.atualizar(vaga.id, {
-        motor: proxima.motor,
-        urlResolvida: proxima.urlResolvida,
-        rota: proxima.rota,
-      });
-      resolucao = proxima;
-      if (proxima.rota === "manual") destinoManual = proxima.manual?.motivo ?? "sem_formulario";
-    } else if (como?.tipo === "email") {
-      destinoManual = "candidatura_por_email";
-      analise =
-        atualizarAnalise(deps.artefatos, vaga, (a) => ({ ...a, destinoEmail: como.valor })) ??
-        analise;
-    } else {
-      destinoManual = "sem_formulario";
-    }
-  }
+  const analisada = await analisarVaga(deps, vaga, extraida, sinal);
+  const destino: Destino =
+    resolvida.resolucao.rota === "a_definir"
+      ? {
+          resolucao: resolvida.resolucao,
+          ...(await definirDestino(deps, vaga, analisada, etapa, sinal)),
+        }
+      : { resolucao: resolvida.resolucao, analise: analisada, destinoManual: null };
 
   if (deduplicarPorChave(deps, vaga.id)) return;
   vaga = deps.vagas.buscar(vaga.id) ?? vaga;
+  if (descartarPorAderencia(deps, vaga, destino.analise, entrada.forcar)) return;
 
-  const { score, eliminada } = aplicarAderencia(deps, vaga, analise);
-  if (eliminada) {
-    deps.vagas.transicionar(vaga.id, "DESCARTADA", { motivo: "afirmativa_inelegivel" });
-    return;
-  }
-  if (score < deps.config.scoreMinimo && !entrada.forcar) {
-    deps.vagas.transicionar(vaga.id, "DESCARTADA", { motivo: "aderencia_baixa" });
-    return;
-  }
-
-  analise = lerAnalise(deps.artefatos, vaga) ?? analise;
+  const analise = lerAnalise(deps.artefatos, vaga) ?? destino.analise;
   etapa("gerar_curriculo");
   await gerarCurriculo(deps, vaga, analise, sinal);
   vaga = deps.vagas.buscar(vaga.id) ?? vaga;
 
-  if (destinoManual !== null) {
+  if (destino.destinoManual !== null) {
     etapa("gerar_carta");
     await gerarCartaAvulsa(deps, { vaga, analise }, sinal);
-    deps.vagas.transicionar(vaga.id, "MANUAL", { motivo: destinoManual });
+    transicionarVaga(deps.vagas, vaga.id, "MANUAL", { motivo: destino.destinoManual });
     return;
   }
-  if (resolucao.rota === "conector") {
+  if (destino.resolucao.rota === "conector") {
     etapa("responder_campos");
-    const campos = await deps.catalogo.para(resolucao.motor)?.lerCampos?.(url, sinal);
-    if (campos && campos.length > 0) {
-      deps.artefatos.gravarJson(vaga.id, "campos.json", campos);
-      salvarRespostas(
-        deps.artefatos,
-        vaga,
-        await responderCampos(deps, { vaga, analise }, campos, sinal),
-      );
-    }
+    await preResponderCampos(deps, vaga, analise, destino.resolucao, url, sinal);
   }
-  deps.vagas.transicionar(vaga.id, "PRONTA");
+  transicionarVaga(deps.vagas, vaga.id, "PRONTA");
 }
 
 function reavaliarDescartadas(deps: DepsPrepararVagas): number {
@@ -291,7 +361,7 @@ function reavaliarDescartadas(deps: DepsPrepararVagas): number {
     deps.artefatos.gravarJson(vaga.id, "analise.json", recalculada);
     const { score, eliminada } = aplicarAderencia(deps, vaga, recalculada);
     if (!eliminada && score >= deps.config.scoreMinimo) {
-      deps.vagas.transicionar(vaga.id, "NOVA");
+      transicionarVaga(deps.vagas, vaga.id, "NOVA");
       reabertas++;
     }
   }
@@ -349,8 +419,8 @@ export async function prepararVagas(
             }
             const atual = deps.vagas.buscar(vaga.id);
             if (atual && (atual.status === "NOVA" || atual.status === "ERRO_PREPARO")) {
-              deps.vagas.atualizar(vaga.id, { tentativasPreparo: atual.tentativasPreparo + 1 });
-              deps.vagas.transicionar(vaga.id, "ERRO_PREPARO", { motivo });
+              deps.vagas.atualizar(vaga.id, contarTentativaPreparo(atual));
+              transicionarVaga(deps.vagas, vaga.id, "ERRO_PREPARO", { motivo });
             }
             erros.push({ id: vaga.id, motivo, mensagem });
             const final = deps.vagas.buscar(vaga.id) ?? vaga;
