@@ -278,5 +278,11 @@ export type SaidaPerfil = z.infer<typeof esquemaSaidaPerfil>;
 
 /** `PUT /perfil` aceita o perfil inteiro; o agente valida com `esquemaPerfil` e devolve 422 por campo. */
 export { esquemaPerfil };
+export type { Perfil } from "#dominio/respostas/perfil.ts";
+/** Valores aceitos pelo formulário de perfil e pelos filtros do site. */
+export { GENEROS, RACAS } from "#dominio/respostas/perfil.ts";
+export { MODELOS_TRABALHO, REGIMES, SENIORIDADES } from "#dominio/analise/analise-vaga.ts";
+export { ETAPAS, STATUS } from "#dominio/vagas/status.ts";
+export type { Etapa, Status } from "#dominio/vagas/status.ts";
 
 export const esquemaOk = z.object({ ok: z.literal(true) });

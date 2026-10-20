@@ -39,6 +39,8 @@ export default tseslint.config(
       "curriculo/",
       "specs/",
       ".claude/",
+      // O site tem o próprio lint (apps/web/eslint.config.js), rodado por `npm run -w apps/web lint`.
+      "apps/",
     ],
   },
   js.configs.recommended,

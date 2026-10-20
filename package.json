@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=24"
   },
+  "workspaces": [
+    "apps/web"
+  ],
   "bin": {
     "camaleao": "bin/camaleao.js"
   },
@@ -25,8 +28,9 @@
     "lint": "eslint .",
     "formatar": "prettier --write .",
     "tipos": "tsc --noEmit",
-    "verificar": "npm run tipos && npm run lint && prettier --check . && vitest run --coverage && npm audit --omit=dev --audit-level=high",
-    "capturar-fixture": "node scripts/capturar-fixture.ts"
+    "verificar": "npm run tipos && npm run lint && prettier --check . && npm run -w apps/web tipos && npm run -w apps/web lint && npm run -w apps/web build && npm run -w apps/web test && vitest run --coverage && npm audit --omit=dev --audit-level=high",
+    "capturar-fixture": "node scripts/capturar-fixture.ts",
+    "web": "npm run -w apps/web dev"
   },
   "dependencies": {
     "@hono/node-server": "2.1.3",

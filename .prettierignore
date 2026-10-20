@@ -8,3 +8,4 @@ falhas/**/*.html
 specs/
 .claude/
 graphify-out/
+dist/

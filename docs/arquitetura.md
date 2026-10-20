@@ -6,7 +6,8 @@ documento, `docs/convencoes.md` e `docs/adr/` são a fonte de verdade.
 
 ## 1. Forças
 
-- CLI pessoal, local, num Windows 11, com um usuário: SQLite e arquivos locais, sem servidor.
+- Uso pessoal, local, num Windows 11, com um usuário: SQLite e arquivos locais. A CLI e o site (estático,
+  na Vercel) chamam os mesmos casos de uso; o site fala com o agente local em `127.0.0.1` (ADR-0024).
 - Os sites dos ATS mudam sem aviso: o código que conhece cada site fica em conectores substituíveis,
   com fixtures e registro de falhas.
 - O LLM não é determinístico nem confiável como fonte: toda saída é validada por schema, e o lastro do
@@ -14,14 +15,13 @@ documento, `docs/convencoes.md` e `docs/adr/` são a fonte de verdade.
 - Há dados sensíveis (documentos, salário, diversidade, senhas): eles nunca chegam ao LLM, ao log nem
   ao git.
 - O LLM é o `claude -p` da assinatura (custo marginal zero), atrás de portas para poder ser trocado.
-- A v2 (painel) reusa os casos de uso da v1.
 
 ## 2. Visão geral
 
 Hexagonal enxuto (portas e adaptadores), com núcleo funcional e casca imperativa:
 
 ```
- interfaces  (CLI · MCP camaleao-segredos)      traduz o mundo externo; sem regra de negócio
+ interfaces  (CLI · agente HTTP · MCP camaleao-segredos)   traduz o mundo externo; sem regra de negócio
      │ chama
  aplicacao   (casos de uso · etapas · portas)   orquestra; só conhece portas
      │ usa regras puras
@@ -60,11 +60,15 @@ src/infra/                         config · log · sistema · banco · armazena
 src/interfaces/cli/                principal (commander), comandos/, apresentacao/, interação de
                                    terminal, sinais, códigos de saída, contexto
 src/interfaces/mcp/                servidor stdio camaleao-segredos
+src/interfaces/http/               agente local do site (Hono): contrato.ts, servidor, segurança,
+                                   pareamento, execuções, ProgressoWeb, InteracaoWeb, arquivos, rotas/
+src/interfaces/compartilhado/      leitura do currículo a importar e versão, comuns à CLI e ao agente
+apps/web/                          site estático (Vite + React): tema da marca, cliente do agente, telas
 src/composicao.ts                  criarContainer: getters preguiçosos e casos de uso prontos
 prompts/                           prompts versionados (front-matter `versao`)
 scripts/capturar-fixture.ts        captura de fixture sanitizada
 tests/                             apoio (fakes, builders, harness), contratos, integracao, arquitetura,
-                                   fixtures, fakes/claude.mjs
+                                   fixtures, fakes/claude.mjs, e2e (site + agente com Playwright)
 ```
 
 Não versionados: `curriculo/`, `dados/` (banco, navegador, credenciais, artefatos por vaga, master,
@@ -98,9 +102,9 @@ toda escrita passa pelo `RepositorioVagas`.
 | `ResolvedorVagas`                    | `ResolvedorEncadeado`                                       | Elos: direto, agregadores, GitHub, portal Gupy, detecção de ATS                                      |
 | `ExtratorVagas`                      | `ExtratorEstrutural`                                        | API do conector, JSON-LD e texto visível; o fallback por LLM fica na etapa                           |
 | `RenderizadorDocumentos`             | `RenderizadorPdfPlaywright`                                 | Contexto sem JavaScript e rede bloqueada                                                             |
-| `Interacao`                          | `InteracaoTerminal` (interfaces)                            | `@inquirer/prompts`; Ctrl+C num prompt aborta o comando                                              |
+| `Interacao`                          | `InteracaoTerminal` e `InteracaoWeb` (interfaces)           | `@inquirer/prompts`; Ctrl+C num prompt aborta o comando                                              |
 | `Notificador`                        | `NotificadorWindows`                                        | `node-notifier` importado sob demanda; falha vira aviso no log                                       |
-| `ProgressoPreparo`                   | `ProgressoTerminal` (interfaces)                            | Eventos de início, etapa e conclusão por vaga; com TTY, região viva no stderr (ADR-0021)             |
+| `ProgressoPreparo`                   | `ProgressoTerminal` e `ProgressoWeb` (interfaces)           | Eventos de início, etapa e conclusão por vaga; com TTY, região viva no stderr (ADR-0021)             |
 | `NavegadorUsuario`                   | `NavegadorCamaleao`                                         | Chrome dedicado com perfil persistente e porta CDP                                                   |
 | `Relogio`                            | `RelogioSistema`                                            | ISO com offset; `hoje()`                                                                             |
 | `Registrador`                        | `RegistradorJsonl`                                          | Terminal mais JSONL diário, com redação de PII                                                       |
@@ -196,6 +200,21 @@ declarativa em `infra/conectores/strategy/<motor>/conector.ts`, registrada em `r
 - **Risco residual aceito:** uma injeção poderia induzir o agente a enviar antes da revisão; a mitigação
   é a allowlist sem envio implícito, o prompt e a revisão obrigatória.
 
+### 9.1 Modelo de ameaças do agente local (ADR-0025)
+
+| Ameaça                                                    | Defesa                                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Outro site aberto no navegador chama `127.0.0.1`          | CORS só para `agente.origensPermitidas` (403 sem cabeçalhos CORS) e token em toda rota protegida |
+| DNS rebinding (domínio do atacante resolvendo para local) | Allowlist de `Host` (`127.0.0.1:<porta>` e `localhost:<porta>`), 403 fora dela                   |
+| Acesso pela rede                                          | Socket só em `127.0.0.1`                                                                         |
+| Adivinhar o código de pareamento                          | 8 caracteres de 31, uso único, 10 minutos, troca após 5 erros                                    |
+| Token roubado do disco                                    | `dados/agente/tokens.json` guarda só o SHA-256; `POST /pareamento/revogar`                       |
+| Ler arquivos locais pelo agente                           | `/arquivos/<id>` aleatório, 5 minutos, só `dados/vagas/` e `dados/master/` (caminho real)        |
+| Responder outra pergunta ou enviar fora da revisão        | Só a pergunta pendente aceita resposta (409); envio só pela escolha "enviar", com confirmação    |
+| Agente LLM (por injeção) usar a aba do site               | `paginaMaisRecente` ignora as origens do site; o token nunca entra no prompt                     |
+| Vazamento em log                                          | Log de rotas só com método, caminho mascarado e status; corpo (perfil, pareamento) nunca         |
+| Script de terceiros no site                               | Fontes empacotadas, sem CDN; CSP `default-src 'self'` na Vercel                                  |
+
 ## 10. Desempenho
 
 - `status`, `retorno` e `falhas` não carregam Playwright, mammoth, node-notifier nem `@inquirer`: a
@@ -207,9 +226,9 @@ declarativa em `infra/conectores/strategy/<motor>/conector.ts`, registrada em `r
 
 ## 11. Qualidade
 
-`npm run verificar` = `tsc --noEmit`, ESLint (`strictTypeChecked` e fronteiras), Prettier, Vitest com
-cobertura v8 (limiares: global 70% de linhas, domínio 90% de linhas e ramos, aplicação 80%) e
-`npm audit --omit=dev --audit-level=high`. O CI (`.github/workflows/verificar.yml`) roda o mesmo em
+`npm run verificar` = `tsc --noEmit`, ESLint (`strictTypeChecked` e fronteiras), Prettier, tipos, lint,
+build e testes do site (`npm run -w apps/web ...`), Vitest com cobertura v8 (limiares: global 70% de
+linhas, domínio 90% de linhas e ramos, aplicação 80%) e `npm audit --omit=dev --audit-level=high`. O CI (`.github/workflows/verificar.yml`) roda o mesmo em
 `windows-latest`. Estratégia de testes:
 
 - **Unitários** ao lado do código (domínio e aplicação com fakes de porta e SQLite `:memory:`).
@@ -218,7 +237,12 @@ cobertura v8 (limiares: global 70% de linhas, domínio 90% de linhas e ramos, ap
 - **Integração** (`tests/integracao/`): infra real em pasta temporária (banco, YAML, PDF com extração
   de texto, navegador, resolução, segredos, agente e LLM com o `claude` falso, CLI, MCP stdio,
   inicialização preguiçosa).
-- **Arquitetura** (`tests/arquitetura/`): imports proibidos falham no lint.
+- **Arquitetura** (`tests/arquitetura/`): imports proibidos falham no lint; o nome antigo do produto só
+  aparece na compatibilidade (ADR-0026).
+- **Site** (`apps/web`): Vitest + Testing Library sobre um agente simulado (conexão, fluxos, perfil),
+  contraste AA dos tokens nos dois temas e varredura do `dist/` por URLs externas.
+- **e2e** (`tests/e2e/fluxo-web.test.ts`): o agente real, o build servido por `vite preview` e um
+  Chromium headless (parear, importar, perfil, adicionar, preparar, aplicar simulando e pular).
 - O `fetch` não stubado lança erro em qualquer teste: nenhum teste faz rede.
 
 ## 12. Diferenças em relação à spec
@@ -237,3 +261,15 @@ cobertura v8 (limiares: global 70% de linhas, domínio 90% de linhas e ramos, ap
 | `#scripts/*`                              | Não listado                                                               | Subpath para importar `scripts/` nos testes | Mantém a regra "sem `../../`"                                                    |
 | Apresentação                              | `tabela`, `resumo-preparo`, `resumo-revisao`, `status`, `falhas`, `cores` | Mais `adicao.ts`                            | Formatação do `adicionar` fora do comando                                        |
 | Mensagem de retorno inválido para ENVIADA | Lista vazia                                                               | Lista as transições aceitas                 | AC21 exige listar as aceitas                                                     |
+
+## 13. Dependências do agente e do site
+
+| Pacote                                            | Onde       | Por quê                                                                                        |
+| ------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
+| `hono` 4.13.13                                    | agente     | Roteamento, middleware e streaming SSE tipados, sem build (ADR-0004); `app.request` nos testes |
+| `@hono/node-server` 2.1.3                         | agente     | Adaptador oficial do Hono para `node:http`, com `hostname` fixo em `127.0.0.1`                 |
+| `react`, `react-dom` 19.3.0                       | site       | UI declarativa com o ecossistema de testes (Testing Library)                                   |
+| `react-router` 8.4.0                              | site       | Rotas da SPA (Início, Vagas, Currículo, Falhas, Preparar, Aplicar)                             |
+| `vite` 8.3.2, `@vitejs/plugin-react` 6.1.2        | site (dev) | Build estático e o alias `@contrato` para o contrato do agente                                 |
+| `@fontsource/poppins`, `@fontsource/nunito` 5.3.0 | site       | Fontes da marca empacotadas: nenhuma requisição a terceiros, compatível com a CSP              |
+| `@testing-library/*`, `jsdom` 29.1.1              | site (dev) | Testes das telas; o `jsdom` 30 exige Node 24.15+                                               |

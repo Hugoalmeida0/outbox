@@ -1,0 +1,59 @@
+/* Tokens da marca (Canva "Brand board Camaleão"): a paleta fixa e os papéis semânticos de cada tema.
+   Os pares de texto e fundo usados no site são verificados contra o contraste AA em tokens.test.ts. */
+:root {
+  --coral: #ff6b5b;
+  --petroleo: #1f4e5f;
+  --sol: #ffc94d;
+  --menta: #9ed9c3;
+  --creme: #fff6ec;
+  --branco: #ffffff;
+
+  --fundo: #fff6ec;
+  --superficie: #fffdf9;
+  --superficie-2: #fbeee0;
+  --texto: #1f4e5f;
+  --texto-suave: #3d6676;
+  --borda: #f1dfcc;
+  --primaria: #ff6b5b;
+  --texto-primaria: #1f4e5f;
+  --destaque: #ffc94d;
+  --texto-destaque: #1f4e5f;
+  --sucesso: #9ed9c3;
+  --texto-sucesso: #1f4e5f;
+  /* Coral escurecido para texto pequeno sobre o creme (o coral puro não passa AA). */
+  --acento-texto: #b83a2c;
+  --erro-texto: #b83a2c;
+  --sombra: 0 10px 30px rgb(31 78 95 / 10%);
+  --foco: #1f4e5f;
+
+  --raio: 16px;
+  --raio-pilula: 999px;
+  --fonte-titulo: "Poppins", system-ui, sans-serif;
+  --fonte-texto: "Nunito", system-ui, sans-serif;
+
+  color-scheme: light;
+}
+
+/* Tema escuro do BRAND.md: fundo azul-petróleo e texto creme. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #1f4e5f;
+    --superficie: #255a6d;
+    --superficie-2: #2c6579;
+    --texto: #fff6ec;
+    --texto-suave: #d9e7ea;
+    --borda: #3a7489;
+    --primaria: #ff6b5b;
+    --texto-primaria: #1f4e5f;
+    --destaque: #ffc94d;
+    --texto-destaque: #1f4e5f;
+    --sucesso: #9ed9c3;
+    --texto-sucesso: #1f4e5f;
+    --acento-texto: #ffcdc5;
+    --erro-texto: #ffcdc5;
+    --sombra: 0 10px 30px rgb(0 0 0 / 25%);
+    --foco: #ffc94d;
+
+    color-scheme: dark;
+  }
+}

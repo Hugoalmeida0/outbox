@@ -13,6 +13,8 @@ documento do repositório.
   `README.md`, tipos do Conventional Commits, métodos HTTP, palavras-chave SQL e APIs de bibliotecas.
 - Pastas nomeadas por design pattern ficam em inglês (`strategy/`, `registry/`,
   `chain-of-responsibility/`, `state-machine/`; ADR-0022).
+- No site (`apps/web`), componentes React ficam em arquivos PascalCase `.tsx` com o nome do componente
+  (`Conectar.tsx`, `PerguntaCartao.tsx`); hooks e módulos sem JSX seguem kebab-case (`perfil-formulario.ts`).
 
 ## 2. Nomenclatura
 
@@ -46,6 +48,8 @@ documento do repositório.
 - Datas ISO 8601 com offset, sempre via `Relogio`. Caminhos sempre com `node:path`.
 - Nenhum `catch` vazio, salvo os documentados (falha do notificador vira aviso; limpeza best-effort).
 - Formatação: Prettier (`printWidth: 100`), UTF-8, LF, 2 espaços.
+- O site importa do agente só o contrato (`@contrato`, que puxa só `zod` e `#dominio/*`); o build e o lint
+  do site barram as demais camadas.
 
 ## 4. Conectores e automação de navegador
 

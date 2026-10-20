@@ -17,6 +17,7 @@ endereco:
   pais: Brasil
 
 # Pretensão salarial por regime e moeda. O Camaleão escolhe pela vaga (CLT anual = 13 salários).
+# Opcional: sem este bloco, os campos de pretensão ficam vazios e aparecem destacados na revisão.
 salario:
   clt_brl_mensal: 15000
   pj_brl_mensal: 20000

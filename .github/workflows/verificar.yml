@@ -1,4 +1,5 @@
-# Verificação completa (arquitetura.md §11.2): tipos, lint, formatação, testes com cobertura e audit.
+# Verificação completa (arquitetura.md §11): tipos, lint, formatação, site (tipos, lint, build e testes),
+# testes com cobertura (inclui o e2e do site com o agente) e audit. O `npm ci` instala os workspaces.
 name: verificar
 
 on:

@@ -5,7 +5,7 @@ resolve cada link até o ATS de verdade, analisa a vaga, gera um currículo ajus
 além do seu currículo master), pré-responde o formulário e abre tudo preenchido para você revisar.
 **Nada é enviado sem a sua confirmação**, e o Camaleão nunca contorna CAPTCHA.
 
-Roda localmente no Windows, numa CLI. O LLM é o Claude, via `claude -p` da sua assinatura do Claude
+Roda localmente no Windows, numa CLI ou pelo site (que conversa com o agente local). O LLM é o Claude, via `claude -p` da sua assinatura do Claude
 Code (sem custo por chamada).
 
 ## Requisitos
@@ -67,6 +67,31 @@ camaleao status                      # o que está pronto, enviado e o que aguar
   ("A vaga pede Kafka (3 vagas). Você tem?"). "Sim" grava a skill no master; "não" nunca é perguntado
   de novo.
 
+## Usar pelo site
+
+O site faz o mesmo que a CLI, em telas: importar, perfil (formulário), colar links, preparar com o
+andamento ao vivo, aplicar com a revisão na tela, vagas, retornos e falhas. Ele roda no navegador e
+conversa com o **agente local**, que roda na sua máquina e usa o mesmo currículo, o mesmo Claude e o
+mesmo navegador da CLI. Nada vai para servidor nenhum: o site é só a interface.
+
+```powershell
+npm run camaleao -- agente           # sobe o agente em 127.0.0.1:4321 e abre o site já pareado
+npm run camaleao -- agente --sem-navegador   # só imprime o código de pareamento
+```
+
+- O agente abre o site numa janela própria do navegador do Camaleão. Em outro navegador, abra o site e
+  digite o **código de pareamento** que aparece no terminal (vale 10 minutos e uma vez).
+- O Chrome pode pedir permissão de **acesso à rede local**: é o site falando com o agente em
+  `127.0.0.1`.
+- Para usar o site publicado, acrescente a URL dele em `agente.origensPermitidas` no `config.yaml` (a
+  última da lista é a que o agente abre). Por padrão só vale o site de desenvolvimento
+  (`npm run web`, em `http://localhost:5173`).
+- O agente aceita só requisições de `127.0.0.1`, das origens configuradas e com o token do pareamento
+  (guardado no navegador; o agente guarda só o hash). Ctrl+C no terminal encerra.
+
+Publicação: um projeto na Vercel com a raiz em `apps/web` (o `vercel.json` já traz o build, o rewrite da
+SPA e a CSP).
+
 ## Retornos
 
 Registre o andamento das candidaturas (sem expiração):
@@ -111,6 +136,7 @@ enquanto, com um aviso de depreciação, e o banco antigo em `dados/` é renomea
 | `falhas`                                             | Falhas de conector e motores sem conector                                         |
 | `navegador`                                          | Abre o navegador do Camaleão para logins                                          |
 | `renderizar-master`                                  | Gera o PDF genérico do master                                                     |
+| `agente [--sem-navegador]`                           | Serve o site nesta máquina (127.0.0.1) e o abre já pareado                        |
 
 Códigos de saída: `0` sucesso, `1` erro de execução, `2` uso inválido, `130` interrompido (Ctrl+C).
 O primeiro Ctrl+C encerra de forma ordenada; o segundo força a saída. Dois `preparar` (ou `aplicar`)
@@ -195,4 +221,5 @@ se ele mudou, o bot comita `graphify-out/` com `[skip ci]`.
 npm run verificar   # tipos, lint, formatação, testes com cobertura e npm audit
 npm test            # só os testes
 npm run formatar    # Prettier
+npm run web         # site em modo de desenvolvimento (http://localhost:5173)
 ```
