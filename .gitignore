@@ -4,3 +4,9 @@ coverage/
 /dados/
 /config.yaml
 *.log
+
+# Graphify: versiona só graph.json e GRAPH_REPORT.md; o resto (cache, manifest com mtimes,
+# custo, graph.html de 2 MB) é regenerável e não é reproduzível entre checkouts
+graphify-out/*
+!graphify-out/graph.json
+!graphify-out/GRAPH_REPORT.md

@@ -7,3 +7,4 @@ curriculo/
 falhas/**/*.html
 specs/
 .claude/
+graphify-out/

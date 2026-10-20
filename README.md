@@ -169,6 +169,24 @@ Antes de confiar no fluxo com vagas reais:
 - `docs/progresso.md`: rastreabilidade da implementação da v1.
 - `specs/`: specs originais (registro histórico).
 
+## Grafo de conhecimento (Graphify)
+
+O [Graphify](https://github.com/Graphify-Labs/graphify) mapeia o código (nós, arestas e comunidades) em
+`graphify-out/graph.json` e `graphify-out/GRAPH_REPORT.md`, para o Claude Code consultar a estrutura do projeto
+antes de varrer arquivos. Roda só em modo code-only (tree-sitter local, sem LLM e sem chave de API).
+
+Localmente (Python 3.10+; a versão fica fixada em `requirements-graphify.txt`):
+
+```powershell
+pip install -r requirements-graphify.txt
+$env:GRAPHIFY_BACKEND = 'none'
+graphify update .
+```
+
+O que o `.graphifyignore` exclui não entra no grafo. O `graph.html` e o cache não são versionados.
+No CI (`.github/workflows/graphify.yml`), PRs só validam a geração; um push em `main` regenera o grafo e,
+se ele mudou, o bot comita `graphify-out/` com `[skip ci]`.
+
 ## Desenvolvimento
 
 ```powershell
