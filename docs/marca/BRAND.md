@@ -3,48 +3,50 @@
 ## Logo Files
 
 ### 1. Full Logo (icon + wordmark)
-| File | Usage |
-|------|-------|
-| `logo-full-light.svg` | Primary — light backgrounds |
-| `logo-full-dark.svg` | Dark backgrounds |
+
+| File                              | Usage                        |
+| --------------------------------- | ---------------------------- |
+| `logo-full-light.svg`             | Primary — light backgrounds  |
+| `logo-full-dark.svg`              | Dark backgrounds             |
 | `logo-full-800w.png` / `400w.png` | README header, presentations |
-| `logo-full-mono-black.svg` | Single-color printing |
-| `logo-full-mono-white.svg` | Single-color on dark |
+| `logo-full-mono-black.svg`        | Single-color printing        |
+| `logo-full-mono-white.svg`        | Single-color on dark         |
 
 ### 2. Icon Only (avatar, favicon, app icon)
-| File | Usage |
-|------|-------|
-| `icon-light.svg` / `icon-dark.svg` | SVG icon |
-| `icon-mono-black.svg` / `icon-mono-white.svg` | Single-color |
-| `icon-1024.png` | App Store |
-| `icon-512.png` | Google PWA, high-res |
-| `icon-256.png` | Windows tile |
-| `icon-192.png` | Android PWA manifest |
-| `icon-180.png` | Apple touch icon |
-| `icon-128.png` | Medium UI |
-| `icon-64.png` | Small UI |
-| `icon-48.png` / `icon-32.png` / `icon-16.png` | Favicons |
-| `favicon.ico` | Browser favicon |
-| `icon-512.webp` | Web optimized |
 
+| File                                          | Usage                |
+| --------------------------------------------- | -------------------- |
+| `icon-light.svg` / `icon-dark.svg`            | SVG icon             |
+| `icon-mono-black.svg` / `icon-mono-white.svg` | Single-color         |
+| `icon-1024.png`                               | App Store            |
+| `icon-512.png`                                | Google PWA, high-res |
+| `icon-256.png`                                | Windows tile         |
+| `icon-192.png`                                | Android PWA manifest |
+| `icon-180.png`                                | Apple touch icon     |
+| `icon-128.png`                                | Medium UI            |
+| `icon-64.png`                                 | Small UI             |
+| `icon-48.png` / `icon-32.png` / `icon-16.png` | Favicons             |
+| `favicon.ico`                                 | Browser favicon      |
+| `icon-512.webp`                               | Web optimized        |
 
 ### 4. Social Media
-| File | Size | Usage |
-|------|------|-------|
-| `og-image.png` | 1200×630 | Facebook, LinkedIn, default share |
-| `github-social-preview.png` | 1280×640 | GitHub repo social preview |
-| `twitter-header.png` | 1500×500 | Twitter/X profile header |
+
+| File                        | Size     | Usage                             |
+| --------------------------- | -------- | --------------------------------- |
+| `og-image.png`              | 1200×630 | Facebook, LinkedIn, default share |
+| `github-social-preview.png` | 1280×640 | GitHub repo social preview        |
+| `twitter-header.png`        | 1500×500 | Twitter/X profile header          |
 
 ## Colors
 
-| Name | Hex | Usage |
-|------|-----|-------|
-| Primary | `#FF6B5B` | Gradient start, CTA, accents |
-| Secondary | `#FFC94D` | Gradient end, hover states |
-| Text (light bg) | `#FFF6EC` | Body text on white/light |
-| Text (dark bg) | `#1F4E5F` | Body text on dark |
-| Background (light) | `#FFF6EC` | Light mode |
-| Background (dark) | `#1F4E5F` | Dark mode |
+| Name               | Hex       | Usage                        |
+| ------------------ | --------- | ---------------------------- |
+| Primary            | `#FF6B5B` | Gradient start, CTA, accents |
+| Secondary          | `#FFC94D` | Gradient end, hover states   |
+| Text (light bg)    | `#FFF6EC` | Body text on white/light     |
+| Text (dark bg)     | `#1F4E5F` | Body text on dark            |
+| Background (light) | `#FFF6EC` | Light mode                   |
+| Background (dark)  | `#1F4E5F` | Dark mode                    |
 
 ## Typography
 
