@@ -374,6 +374,29 @@ describe("prepararVagas", () => {
     });
   });
 
+  it("issue com link lê os campos na URL do ATS, não na da issue", async () => {
+    const lever = new ConectorFake("lever");
+    lever.campos = CAMPOS;
+    const amb = criarAmbienteAplicacao({ catalogo: new CatalogoConectoresFake(lever) });
+    roteiroPadrao(amb);
+    const urlAts = "https://jobs.lever.co/acme/0f8e4c7a-1111-2222-3333-444455556666";
+    const issue = amb.inserirVaga("https://github.com/frontendbr/vagas/issues/6");
+    amb.resolvedor.definir("https://github.com/frontendbr/vagas/issues/6", {
+      motor: "github",
+      urlResolvida: "https://github.com/frontendbr/vagas/issues/6",
+      canonica: "https://github.com/frontendbr/vagas/issues/6" as never,
+      rota: "a_definir",
+    });
+    amb.gerador.sempre(
+      "analisar-vaga",
+      umaAnalise({ comoCandidatar: { tipo: "link", valor: urlAts } }),
+    );
+    await prepararVagas(amb.deps(), { forcar: false, reavaliar: false }, sinal());
+    expect(lever.urlsLidas).toEqual([urlAts]);
+    expect(amb.vagas.buscar(issue.id)).toMatchObject({ status: "PRONTA", motor: "lever" });
+    expect(amb.artefatos.existe(issue.id, "campos.json")).toBe(true);
+  });
+
   it("usa o LLM para extrair quando não há estrutura (AC5)", async () => {
     const { amb } = ambienteComConector(null);
     const vaga = amb.inserirVaga(URL_GH);

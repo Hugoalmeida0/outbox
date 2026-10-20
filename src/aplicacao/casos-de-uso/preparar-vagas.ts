@@ -272,18 +272,19 @@ function descartarPorAderencia(
 }
 
 /**
- * Com conector, lê os campos do formulário e já deixa as respostas sugeridas. `url` é a da primeira
- * resolução, mesmo quando a rota `a_definir` trocou o motor.
+ * Com conector, lê os campos do formulário e já deixa as respostas sugeridas. Usa a URL da resolução
+ * final: na rota `a_definir`, é a do ATS para onde o anúncio apontou, não a do anúncio.
  */
 async function preResponderCampos(
   deps: DepsPrepararVagas,
   vaga: Vaga,
   analise: ArquivoAnalise,
   resolucao: Resolucao,
-  url: string,
   sinal: AbortSignal,
 ): Promise<void> {
-  const campos = await deps.catalogo.para(resolucao.motor)?.lerCampos?.(url, sinal);
+  const campos = await deps.catalogo
+    .para(resolucao.motor)
+    ?.lerCampos?.(resolucao.urlResolvida, sinal);
   if (!campos || campos.length === 0) return;
   deps.artefatos.gravarJson(vaga.id, "campos.json", campos);
   salvarRespostas(
@@ -341,7 +342,7 @@ async function processarVaga(
   }
   if (destino.resolucao.rota === "conector") {
     etapa("responder_campos");
-    await preResponderCampos(deps, vaga, analise, destino.resolucao, url, sinal);
+    await preResponderCampos(deps, vaga, analise, destino.resolucao, sinal);
   }
   transicionarVaga(deps.vagas, vaga.id, "PRONTA");
 }

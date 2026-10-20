@@ -1,7 +1,7 @@
 # Graph Report - outbox  (2026-10-20)
 
 ## Corpus Check
-- 267 files · ~139,201 words
+- 267 files · ~139,309 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 6 file(s) not represented in the graph (top: (none) 5, .ico 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d118aa95`
+- Built from commit: `e39faee7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -579,7 +579,7 @@ Nodes (3): T20: Casos de uso de entrada, abrirNavegador(), NavegadorUsuario
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `vitest` connect `claude-falso.ts` to `valor-codigo.ts`, `resolucao.test.ts`, `api.ts`, `agente.test.ts`, `zod`, `ArmazemArtefatosFs`, `composicao.ts`, `documentos.test.ts`, `rodada-gaps.ts`, `principal.ts`, `basicos.ts`, `compartilhado/erros.ts`, `package.json`, `apresentacao.test.ts`, `gerar-curriculo.ts`, `curriculo-ats.test.ts`, `campos.ts`, `capturar-fixture.ts`, `outbox-segredos.ts`, `servico-segredos.ts`, `conectores.test.ts`, `motores.ts`, `ref_node_path`, `aplicar-vagas.ts`, `entrada-consultas.test.ts`, `portas/erros.ts`, `progresso-terminal.test.ts`, `vitest`, `eslint.config.js`, `ErroUsuario`, `transicoes.ts`, `atualizacoes.ts`, `respostas-bordas.test.ts`?**
-  _High betweenness centrality (0.080) - this node is a cross-community bridge._
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `IdVaga` (e.g. with `3. Números medidos` and `8.1 Adotados`) actually correct?**
   _`IdVaga` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `npx`, `@mcpware/logoloom`, `ADR-0004` to the rest of the system?**
@@ -587,7 +587,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `resolucao.test.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.09745293466223699 - nodes in this community are weakly interconnected._
 - **Why does `zod` connect `zod` to `resolucao.test.ts`, `api.ts`, `agente.test.ts`, `composicao.ts`, `rodada-gaps.ts`, `compartilhado/erros.ts`, `package.json`, `gerar-curriculo.ts`, `capturar-fixture.ts`, `lever/conector.ts`, `claude-falso.ts`, `aplicar-vagas.ts`, `outbox-segredos.ts`, `servico-segredos.ts`, `GeradorEstruturadoClaude`, `conectores.test.ts`, `responder-campos.ts`, `revisar-e-enviar.ts`, `portas/erros.ts`, `portas/erros.ts`, `Relogio`, `ErroUsuario`, `armazens.ts`, `perfil.ts`, `repositorio-vagas-sqlite.ts`, `pacote.ts`?**
-  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
 - **Are the 10 inferred relationships involving `ErroUsuario` (e.g. with `8. Erros, validação, logging, config e concorrência` and `3. Números medidos`) actually correct?**
   _`ErroUsuario` has 10 INFERRED edges - model-reasoned connections that need verification._
 - **Should `api.ts` be split into smaller, more focused modules?**

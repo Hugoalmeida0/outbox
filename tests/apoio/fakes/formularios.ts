@@ -76,6 +76,8 @@ export class ConectorFake implements ConectorAts {
   camposAoVivo: Campo[] = [];
   falharNoPasso: string | null = null;
   pacotesRecebidos: PacoteCandidatura[] = [];
+  /** URLs pedidas a `lerCampos`, na ordem. */
+  urlsLidas: string[] = [];
 
   constructor(motor: Motor = "greenhouse", formulario = new FormularioAbertoFake()) {
     this.motor = motor;
@@ -86,7 +88,8 @@ export class ConectorFake implements ConectorAts {
     return Promise.resolve(this.vagaExtraida);
   }
 
-  lerCampos(): Promise<Campo[] | null> {
+  lerCampos(url: string): Promise<Campo[] | null> {
+    this.urlsLidas.push(url);
     return Promise.resolve(this.campos);
   }
 
