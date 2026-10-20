@@ -18,4 +18,4 @@
   - Atomicidade por "não usar `await` entre ler e escrever" (a spec anterior): frágil e sem efeito entre processos.
 - **Consequências.**
   - Uma futura troca para armazenamento assíncrono exigiria revisar a porta, o que é aceitável (YAGNI).
-  - Se o Node emitir `ExperimentalWarning` para o SQLite, o `bin/outbox.js` filtra só esse aviso.
+  - Se o Node emitir `ExperimentalWarning` para o SQLite, o `bin/camaleao.js` filtra só esse aviso.

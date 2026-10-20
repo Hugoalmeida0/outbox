@@ -14,7 +14,7 @@ const esquema = z.object({
     .optional(),
 });
 
-/** `outbox aplicar [--simular] [--id <id>]`. Nunca envia sem a escolha explícita do usuário. */
+/** `camaleao aplicar [--simular] [--id <id>]`. Nunca envia sem a escolha explícita do usuário. */
 export async function comandoAplicar(
   ctx: ContextoComando,
   bruto: unknown,

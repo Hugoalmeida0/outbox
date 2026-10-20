@@ -21,7 +21,7 @@ import { contarFontes, inspecionarPdf, pngDaPagina } from "#testes/apoio/pdf.ts"
 
 const leitor = new LeitorHeadless({ interceptar: (rota) => rota.abort() });
 const renderizador = new RenderizadorPdfPlaywright(leitor);
-const pasta = mkdtempSync(join(tmpdir(), "outbox-ats-"));
+const pasta = mkdtempSync(join(tmpdir(), "camaleao-ats-"));
 const sinal = new AbortController().signal;
 
 beforeAll(() => aquecerNavegador(leitor));

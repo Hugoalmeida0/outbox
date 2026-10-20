@@ -18,7 +18,7 @@ async function textoDocx(caminho: string): Promise<string> {
   return value;
 }
 
-/** `outbox importar <arquivo> [--sobrescrever]`. */
+/** `camaleao importar <arquivo> [--sobrescrever]`. */
 export async function comandoImportar(ctx: ContextoComando, bruto: unknown): Promise<number> {
   const { arquivo, sobrescrever } = validarEntrada(esquema, bruto);
   const caminho = resolve(arquivo);
@@ -60,7 +60,7 @@ export async function comandoImportar(ctx: ContextoComando, bruto: unknown): Pro
   for (const criado of resultado.criados)
     ctx.saida.escrever(`Criado a partir do exemplo: ${rel(criado)}`);
   ctx.saida.escrever(
-    "Próximos passos: revise o master, preencha curriculo/perfil.yaml e faça os logins com `outbox navegador`.",
+    "Próximos passos: revise o master, preencha curriculo/perfil.yaml e faça os logins com `camaleao navegador`.",
   );
   return 0;
 }

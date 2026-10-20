@@ -16,13 +16,13 @@ endereco:
   cep: "00000-000"
   pais: Brasil
 
-# Pretensão salarial por regime e moeda. O Outbox escolhe pela vaga (CLT anual = 13 salários).
+# Pretensão salarial por regime e moeda. O Camaleão escolhe pela vaga (CLT anual = 13 salários).
 salario:
   clt_brl_mensal: 15000
   pj_brl_mensal: 20000
   usd_anual: 60000
   # Opcional: salário atual ou último, para campos "compartilhe seu salário atual". Sem ele, o campo fica
-  # vazio (o Outbox nunca usa a pretensão no lugar).
+  # vazio (o Camaleão nunca usa a pretensão no lugar).
   # atual: "12000 CLT + VR/VA + plano de saúde"
 
 disponibilidade:
@@ -36,7 +36,7 @@ autorizacaoTrabalho:
   precisaSponsorship: true # para vagas fora do Brasil
   paisesAutorizados: [BR]
 
-# Opcional. Sem dado, o Outbox marca "prefiro não informar".
+# Opcional. Sem dado, o Camaleão marca "prefiro não informar".
 # genero: mulher_cis, mulher_trans, homem_cis, homem_trans, nao_binario ou outro
 # raca: branca, preta, parda, amarela ou indigena
 diversidade:

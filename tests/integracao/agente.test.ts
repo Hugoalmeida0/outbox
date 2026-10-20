@@ -39,7 +39,7 @@ function criarExecutor(artefatos = new ArmazemArtefatosMemoria(), modeloReserva?
     garantirNavegador: () => Promise.resolve(),
     endpointCdp: "http://127.0.0.1:9333",
     raiz: RAIZ,
-    pastaTmp: mkdtempSync(join(tmpdir(), "outbox-agente-")),
+    pastaTmp: mkdtempSync(join(tmpdir(), "camaleao-agente-")),
     pastaPrompts: join(RAIZ, "prompts"),
     modelo: "sonnet",
     maxTokensThinking: 0,
@@ -115,9 +115,9 @@ describe("ExecutorAgenteClaude com o claude falso", () => {
       mcpServers: Record<string, { args: string[]; env?: Record<string, string> }>;
     };
     expect(config.mcpServers.playwright?.args).toContain("--cdp-endpoint");
-    expect(config.mcpServers["outbox-segredos"]?.env).toEqual({
-      OUTBOX_VAGA_ID: "11",
-      OUTBOX_HOSTS_PERMITIDOS: "acme.wd5.myworkdayjobs.com,*.myworkdayjobs.com",
+    expect(config.mcpServers["camaleao-segredos"]?.env).toEqual({
+      CAMALEAO_VAGA_ID: "11",
+      CAMALEAO_HOSTS_PERMITIDOS: "acme.wd5.myworkdayjobs.com,*.myworkdayjobs.com",
     });
     const pdfCopiado = /Currículo \(PDF\): (.+)/.exec(chamada?.prompt ?? "")?.[1]?.trim() ?? "";
     expect(existsSync(pdfCopiado)).toBe(true);

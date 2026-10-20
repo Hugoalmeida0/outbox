@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Executável do Outbox. Filtra apenas os avisos experimentais esperados (node:sqlite e type stripping)
+// Executável do Camaleão. Filtra apenas os avisos experimentais esperados (node:sqlite e type stripping)
 // antes de qualquer import e delega para a CLI em TypeScript, executada nativamente pelo Node 24 (ADR-004).
 const emitirAvisoOriginal = process.emitWarning.bind(process);
 

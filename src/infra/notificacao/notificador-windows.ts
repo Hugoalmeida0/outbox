@@ -31,7 +31,7 @@ export class NotificadorWindows implements Notificador {
     if (!this.ativo) return;
     void this.carregarMotor()
       .then((motor) => {
-        motor.notify({ title: titulo, message: mensagem, appID: "Outbox" }, (erro) => {
+        motor.notify({ title: titulo, message: mensagem, appID: "Camaleão" }, (erro) => {
           if (erro) this.registrador.avisar("falha ao exibir notificação", { erro: erro.message });
         });
       })

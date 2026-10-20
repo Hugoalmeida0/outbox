@@ -125,8 +125,8 @@ describe("prepararVagas", () => {
     expect(amb.artefatos.lerTexto(vaga.id, "carta.md")).toContain("Quero a vaga.");
     expect(amb.notificador.notificacoes).toEqual([
       {
-        titulo: "Outbox",
-        mensagem: "Outbox: preparar concluído. 1 prontas, 0 descartadas, 0 com erro, 0 manuais.",
+        titulo: "Camaleão",
+        mensagem: "Camaleão: preparar concluído. 1 prontas, 0 descartadas, 0 com erro, 0 manuais.",
       },
     ]);
   });
@@ -512,7 +512,7 @@ describe("prepararVagas", () => {
     ]);
     expect(amb.vagas.buscar(ids[1] as IdVaga)?.tentativasPreparo).toBe(0);
     expect(amb.notificador.notificacoes[0]?.mensagem).toBe(
-      "Outbox: limite de uso do Claude atingido. 3 vagas aguardando novo `preparar`.",
+      "Camaleão: limite de uso do Claude atingido. 3 vagas aguardando novo `preparar`.",
     );
   });
 

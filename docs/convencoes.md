@@ -1,4 +1,4 @@
-# Convenções do Outbox
+# Convenções do Camaleão
 
 Versão viva de `specs/v1/spec-outbox/arquitetura.md` §16. Vale para todo código, teste, prompt e
 documento do repositório.
@@ -69,7 +69,7 @@ documento do repositório.
 - Domínio testado sem mocks; aplicação com fakes de porta (`tests/apoio/fakes/`) e SQLite `:memory:`.
 - Nenhum teste faz rede (o `fetch` não stubado lança erro); conectores rodam sobre fixtures servidas
   por `page.route`.
-- O `claude` é substituído pelo executável falso `tests/fakes/claude.mjs` (`OUTBOX_CLAUDE_BIN`).
+- O `claude` é substituído pelo executável falso `tests/fakes/claude.mjs` (`CAMALEAO_CLAUDE_BIN`).
 - Mocks e stubs ficam só nos testes; o código de produção não tem caminhos de teste.
 
 ## 7. Documentação

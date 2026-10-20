@@ -26,7 +26,7 @@ describe("gerarSenha e CofreCredenciaisJson", () => {
   });
 
   it("cria uma senha por tenant, reutiliza depois e ignora caixa", () => {
-    const caminho = join(mkdtempSync(join(tmpdir(), "outbox-cofre-")), "credenciais.json");
+    const caminho = join(mkdtempSync(join(tmpdir(), "camaleao-cofre-")), "credenciais.json");
     const cofre = new CofreCredenciaisJson(
       caminho,
       () => "ana.exemplo@example.com",
@@ -60,7 +60,7 @@ describe("ServicoSegredos", () => {
   beforeAll(() => aquecerNavegador(leitor));
   afterAll(() => leitor.fechar());
 
-  const caminhoCofre = join(mkdtempSync(join(tmpdir(), "outbox-cofre-")), "credenciais.json");
+  const caminhoCofre = join(mkdtempSync(join(tmpdir(), "camaleao-cofre-")), "credenciais.json");
   const cofre = new CofreCredenciaisJson(
     caminhoCofre,
     () => "ana.exemplo@example.com",

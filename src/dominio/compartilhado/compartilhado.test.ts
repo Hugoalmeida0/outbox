@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { contemTermo, escaparRegex, normalizarTexto, paraKebab } from "./texto.ts";
 import { validar } from "./validar.ts";
-import { ErroOutbox, ErroTransicaoInvalida, ErroUsuario, ErroValidacao } from "./erros.ts";
+import { ErroCamaleao, ErroTransicaoInvalida, ErroUsuario, ErroValidacao } from "./erros.ts";
 
 describe("texto", () => {
   it.each([
@@ -44,7 +44,7 @@ describe("erros e validação", () => {
 
   it("mantém nome, código e hierarquia", () => {
     const erro = new ErroUsuario("arquivo não encontrado");
-    expect(erro).toBeInstanceOf(ErroOutbox);
+    expect(erro).toBeInstanceOf(ErroCamaleao);
     expect(erro.name).toBe("ErroUsuario");
     expect(erro.codigo).toBe("usuario");
     const transicao = new ErroTransicaoInvalida("ENVIADA", "PRONTA", []);

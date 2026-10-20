@@ -16,7 +16,7 @@ import { aquecerNavegador } from "#testes/apoio/harness-conector.ts";
 
 const leitor = new LeitorHeadless({ interceptar: (rota) => rota.abort() });
 const renderizador = new RenderizadorPdfPlaywright(leitor);
-const pasta = mkdtempSync(join(tmpdir(), "outbox-pdf-"));
+const pasta = mkdtempSync(join(tmpdir(), "camaleao-pdf-"));
 const sinal = new AbortController().signal;
 
 beforeAll(() => aquecerNavegador(leitor));

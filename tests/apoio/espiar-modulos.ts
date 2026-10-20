@@ -15,7 +15,7 @@ const [raiz, ...args] = process.argv.slice(2);
 if (raiz === undefined) throw new Error("informe a raiz temporária");
 const { criarContainer } = await import("#composicao");
 const { executar } = await import("#interfaces/cli/principal.ts");
-const codigo = await executar(["node", "outbox", ...args], {
+const codigo = await executar(["node", "camaleao", ...args], {
   saida: { escrever: () => undefined, erro: () => undefined },
   fabricarContainer: () => criarContainer({ raiz }),
 });

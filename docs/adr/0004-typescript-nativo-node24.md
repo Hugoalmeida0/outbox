@@ -16,4 +16,4 @@
   - Proibidos `enum`, `namespace` e parameter properties, todos substituíveis.
   - Imports com a extensão `.ts`.
   - JSX não é suportado, então o painel da v2 usa o template literal `html` do Hono.
-  - Se a versão instalada do Node exigir uma flag ou emitir um aviso, `bin/outbox.js` trata isso (T1 verifica). Se houver bloqueio real, o fallback documentado é `tsx`.
+  - Se a versão instalada do Node exigir uma flag ou emitir um aviso, `bin/camaleao.js` trata isso (T1 verifica). Se houver bloqueio real, o fallback documentado é `tsx`.

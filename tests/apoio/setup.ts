@@ -17,7 +17,7 @@ globalThis.fetch = async (entrada: Parameters<typeof fetch>[0], init?: RequestIn
   return fetchOriginal(entrada, init);
 };
 
-// Mesmo filtro do bin/outbox.js: o aviso experimental do node:sqlite é esperado.
+// Mesmo filtro do bin/camaleao.js: o aviso experimental do node:sqlite é esperado.
 const emitirAvisoOriginal = process.emitWarning.bind(process) as (...args: unknown[]) => void;
 process.emitWarning = (aviso: string | Error, ...resto: unknown[]): void => {
   const texto = typeof aviso === "string" ? aviso : aviso.message;

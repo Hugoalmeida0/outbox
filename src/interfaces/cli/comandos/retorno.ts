@@ -22,7 +22,7 @@ const esquema = z.object({
   nota: z.string().trim().min(1).optional(),
 });
 
-/** `outbox retorno <id> <status> [--etapa <etapa>] [--nota <texto>]`. */
+/** `camaleao retorno <id> <status> [--etapa <etapa>] [--nota <texto>]`. */
 export function comandoRetorno(ctx: ContextoComando, bruto: unknown): number {
   const { id, status, etapa, nota } = validarEntrada(esquema, bruto);
   ctx.container().casos.registrarRetorno({

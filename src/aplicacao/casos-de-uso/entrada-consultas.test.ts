@@ -148,7 +148,7 @@ describe("renderizarMaster e abrirNavegador", () => {
     expect(amb.renderizador.curriculos).toHaveLength(2);
   });
 
-  it("abre o navegador do Outbox", async () => {
+  it("abre o navegador do Camaleão", async () => {
     let aberto = false;
     await abrirNavegador({
       navegador: { abrirParaLogin: () => ((aberto = true), Promise.resolve()) },

@@ -51,7 +51,7 @@ function paraLinha(v: Vaga): LinhaStatus {
   };
 }
 
-/** Dados do `outbox status`: contagens, linhas (filtráveis por status) e o que aguarda o usuário. */
+/** Dados do `camaleao status`: contagens, linhas (filtráveis por status) e o que aguarda o usuário. */
 export function listarStatus(
   deps: DepsListarStatus,
   entrada: { readonly status?: Status },

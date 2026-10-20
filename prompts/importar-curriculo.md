@@ -1,10 +1,10 @@
 ---
-versao: 1
+versao: 2
 ---
 
 # Tarefa
 
-Converta o currículo do candidato no currículo master estruturado do Outbox.
+Converta o currículo do candidato no currículo master estruturado do Camaleão.
 
 {{fonte}}
 

@@ -2,7 +2,7 @@ import { relative } from "node:path";
 import { cores } from "../apresentacao/cores.ts";
 import type { ContextoComando } from "../contexto.ts";
 
-/** `outbox renderizar-master`: gera o PDF genérico do master em `dados/master/`. */
+/** `camaleao renderizar-master`: gera o PDF genérico do master em `dados/master/`. */
 export async function comandoRenderizarMaster(ctx: ContextoComando): Promise<number> {
   const container = ctx.container();
   const { pdf, paginas } = await container.casos.renderizarMaster(ctx.sinal);

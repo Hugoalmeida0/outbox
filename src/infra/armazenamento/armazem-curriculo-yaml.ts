@@ -20,8 +20,8 @@ import { isoLocal } from "../sistema/relogio-sistema.ts";
 import { editarYaml, lerYaml } from "./yaml.ts";
 
 const CABECALHO_MASTER =
-  "# Currículo master: fonte única e verdadeira. Gerado por `outbox importar`; revise e ajuste à vontade.\n" +
-  "# Tudo o que o Outbox afirmar sobre você precisa estar aqui.\n";
+  "# Currículo master: fonte única e verdadeira. Gerado por `camaleao importar`; revise e ajuste à vontade.\n" +
+  "# Tudo o que o Camaleão afirmar sobre você precisa estar aqui.\n";
 
 const AUXILIARES = ["perfil.yaml", "respostas.yaml", "gaps.yaml"] as const;
 
@@ -42,7 +42,7 @@ export class ArmazemCurriculoYaml implements ArmazemCurriculo {
   lerMaster(): Master {
     if (!this.existeMaster()) {
       throw new ErroUsuario(
-        "curriculo/master.yaml não encontrado: rode `outbox importar <arquivo>` primeiro",
+        "curriculo/master.yaml não encontrado: rode `camaleao importar <arquivo>` primeiro",
       );
     }
     return lerYaml(this.caminhos.master, esquemaMaster);
@@ -112,7 +112,7 @@ export class ArmazemCurriculoYaml implements ArmazemCurriculo {
       escreverAtomico(this.caminhos.respostas, stringify(validado));
       return;
     }
-    // O banco é gerido pelo Outbox: preserva-se o bloco de comentários do topo e reescreve-se o resto.
+    // O banco é gerido pelo Camaleão: preserva-se o bloco de comentários do topo e reescreve-se o resto.
     const cabecalho =
       /^(?:#[^\n]*\r?\n)+/.exec(readFileSync(this.caminhos.respostas, "utf8"))?.[0] ?? "";
     escreverAtomico(this.caminhos.respostas, cabecalho + stringify(validado));

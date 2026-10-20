@@ -13,7 +13,7 @@ function titulo(linha: LinhaStatus): string {
   return `#${String(linha.id)} ${linha.empresa ?? "(empresa?)"} · ${linha.cargo ?? "(cargo?)"}`;
 }
 
-/** Saída do `outbox status`: contagens, tabela e o que aguarda o usuário. */
+/** Saída do `camaleao status`: contagens, tabela e o que aguarda o usuário. */
 export function formatarStatus(dados: DadosStatus, filtro?: Status): string {
   const total = TODOS_STATUS.reduce((soma, s) => soma + dados.contagens[s], 0);
   const contagens = TODOS_STATUS.filter((s) => dados.contagens[s] > 0)
@@ -25,7 +25,7 @@ export function formatarStatus(dados: DadosStatus, filtro?: Status): string {
     partes.push(
       filtro
         ? `Nenhuma vaga com status ${filtro}.`
-        : "Nenhuma vaga. Adicione com `outbox adicionar <url>`.",
+        : "Nenhuma vaga. Adicione com `camaleao adicionar <url>`.",
     );
   } else {
     partes.push(
@@ -67,7 +67,7 @@ export function formatarStatus(dados: DadosStatus, filtro?: Status): string {
     }
     for (const p of pendentesTeste) {
       linhas.push(
-        `  PENDENTE_TESTE  ${titulo(p)}: conclua o teste e rode \`outbox retorno ${String(p.id)} ENVIADA\``,
+        `  PENDENTE_TESTE  ${titulo(p)}: conclua o teste e rode \`camaleao retorno ${String(p.id)} ENVIADA\``,
       );
     }
     partes.push(linhas.join("\n"));

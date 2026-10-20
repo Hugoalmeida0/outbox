@@ -69,7 +69,7 @@ export class ClienteHttpFetch implements ClienteHttp {
       try {
         resposta = await fetch(url, {
           headers: {
-            "user-agent": "Outbox/1.0 (uso pessoal)",
+            "user-agent": "Camaleao/1.0 (uso pessoal)",
             accept: "application/json, text/html;q=0.9",
           },
           signal: AbortSignal.any([sinal, AbortSignal.timeout(this.timeoutMs)]),

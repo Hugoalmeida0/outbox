@@ -13,7 +13,7 @@
     PDFs do pacote (currículo e carta); o prompt recebe os caminhos copiados.
   - `--allowed-origins` não é usado. A fronteira de segurança é a allowlist de ferramentas
     (`--strict-mcp-config`, `--tools ""` e `--allowedTools` sem execução de script, cookies, storage,
-    rede, rotas nem teclas) mais a allowlist de hosts do `outbox-segredos`, que é o único caminho para
+    rede, rotas nem teclas) mais a allowlist de hosts do `camaleao-segredos`, que é o único caminho para
     dado sensível.
   - O executor garante o navegador do Outbox aberto antes de iniciar o `claude`, porque o Playwright MCP
     se conecta a ele por CDP.

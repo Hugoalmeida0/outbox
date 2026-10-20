@@ -45,7 +45,7 @@ export function destinoDeRedirecionamento(href: string, base: string): string | 
 }
 
 /**
- * Lê a vaga no agregador (sessão do navegador do Outbox, só leitura) e descobre para onde a candidatura
+ * Lê a vaga no agregador (sessão do navegador do Camaleão, só leitura) e descobre para onde a candidatura
  * leva. Não preenche nada no agregador.
  */
 export async function resolverNoAgregador(

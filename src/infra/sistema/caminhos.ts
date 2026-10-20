@@ -41,7 +41,7 @@ export function criarCaminhos(raiz: string = RAIZ, raizCodigo: string = RAIZ): C
     gaps: join(curriculoDir, "gaps.yaml"),
     exemplosDir: join(raizCodigo, "curriculo.exemplo"),
     dadosDir,
-    db: join(dadosDir, "outbox.db"),
+    db: join(dadosDir, "camaleao.db"),
     navegadorDir: join(dadosDir, "navegador"),
     credenciais: join(dadosDir, "credenciais.json"),
     vagasDir: join(dadosDir, "vagas"),

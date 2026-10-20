@@ -1,4 +1,4 @@
-# Arquitetura do Outbox
+# Arquitetura do Camaleão
 
 Versão viva da arquitetura, derivada de `specs/v1/spec-outbox/arquitetura.md` e atualizada com o que a
 implementação da v1 confirmou ou mudou (seção 12). As specs ficam como registro histórico; este
@@ -21,7 +21,7 @@ documento, `docs/convencoes.md` e `docs/adr/` são a fonte de verdade.
 Hexagonal enxuto (portas e adaptadores), com núcleo funcional e casca imperativa:
 
 ```
- interfaces  (CLI · MCP outbox-segredos)        traduz o mundo externo; sem regra de negócio
+ interfaces  (CLI · MCP camaleao-segredos)      traduz o mundo externo; sem regra de negócio
      │ chama
  aplicacao   (casos de uso · etapas · portas)   orquestra; só conhece portas
      │ usa regras puras
@@ -46,7 +46,7 @@ o subpath (`#camada/...`).
 ## 3. Estrutura
 
 ```
-bin/outbox.js                      filtra ExperimentalWarning (SQLite, type stripping) e chama a CLI
+bin/camaleao.js                    filtra ExperimentalWarning (SQLite, type stripping) e chama a CLI
 src/dominio/                       compartilhado · vagas · curriculo · analise · respostas · falhas
 src/aplicacao/portas/              uma interface por arquivo (seção 5)
 src/aplicacao/etapas/              resolver, extrair, analisar, gerar currículo, responder campos,
@@ -59,7 +59,7 @@ src/infra/                         config · log · sistema · banco · armazena
                                    agente · notificacao
 src/interfaces/cli/                principal (commander), comandos/, apresentacao/, interação de
                                    terminal, sinais, códigos de saída, contexto
-src/interfaces/mcp/                servidor stdio outbox-segredos
+src/interfaces/mcp/                servidor stdio camaleao-segredos
 src/composicao.ts                  criarContainer: getters preguiçosos e casos de uso prontos
 prompts/                           prompts versionados (front-matter `versao`)
 scripts/capturar-fixture.ts        captura de fixture sanitizada
@@ -85,32 +85,32 @@ toda escrita passa pelo `RepositorioVagas`.
 
 ## 5. Portas
 
-| Porta                                | Implementação                                               | Observação                                                                                         |
-| ------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `RepositorioVagas`                   | `RepositorioVagasSqlite`                                    | Síncrona; `transacao(fn)` com `BEGIN IMMEDIATE`; inclui `termosConfirmados()`                      |
-| `ArmazemCurriculo`                   | `ArmazemCurriculoYaml`                                      | Edita YAML preservando comentários                                                                 |
-| `ArmazemArtefatos`                   | `ArmazemArtefatosFs`                                        | Escrita atômica; texto do master genérico (`gravarTextoMaster`/`lerTextoMaster`)                   |
-| `RegistroFalhas`                     | `RegistroFalhasFs`                                          | `falhas/<conector>/` e `falhas/_sem-conector/<motor>/`, JSON mais HTML sanitizado                  |
-| `GeradorEstruturado`                 | `GeradorEstruturadoClaude`                                  | `claude -p --output-format json`, cwd vazio, JSON Schema a partir do Zod                           |
-| `ExecutorAgente`                     | `ExecutorAgenteClaude`                                      | Playwright MCP por CDP mais `outbox-segredos`; devolve `FormularioPlaywright` com `rota: "agente"` |
-| `CatalogoConectores` / `ConectorAts` | `CatalogoConectoresPlaywright` / `criarConector(definicao)` | 8 definições declarativas (seção 7)                                                                |
-| `FormularioAberto`                   | `FormularioPlaywright`                                      | Handle comum a conector e agente; `fechar()` idempotente                                           |
-| `ResolvedorVagas`                    | `ResolvedorEncadeado`                                       | Elos: direto, agregadores, GitHub, portal Gupy, detecção de ATS                                    |
-| `ExtratorVagas`                      | `ExtratorEstrutural`                                        | API do conector, JSON-LD e texto visível; o fallback por LLM fica na etapa                         |
-| `RenderizadorDocumentos`             | `RenderizadorPdfPlaywright`                                 | Contexto sem JavaScript e rede bloqueada                                                           |
-| `Interacao`                          | `InteracaoTerminal` (interfaces)                            | `@inquirer/prompts`; Ctrl+C num prompt aborta o comando                                            |
-| `Notificador`                        | `NotificadorWindows`                                        | `node-notifier` importado sob demanda; falha vira aviso no log                                     |
-| `ProgressoPreparo`                   | `ProgressoTerminal` (interfaces)                            | Eventos de início, etapa e conclusão por vaga; com TTY, região viva no stderr (ADR-0021)           |
-| `NavegadorUsuario`                   | `NavegadorOutbox`                                           | Chrome dedicado com perfil persistente e porta CDP                                                 |
-| `Relogio`                            | `RelogioSistema`                                            | ISO com offset; `hoje()`                                                                           |
-| `Registrador`                        | `RegistradorJsonl`                                          | Terminal mais JSONL diário, com redação de PII                                                     |
+| Porta                                | Implementação                                               | Observação                                                                                           |
+| ------------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `RepositorioVagas`                   | `RepositorioVagasSqlite`                                    | Síncrona; `transacao(fn)` com `BEGIN IMMEDIATE`; inclui `termosConfirmados()`                        |
+| `ArmazemCurriculo`                   | `ArmazemCurriculoYaml`                                      | Edita YAML preservando comentários                                                                   |
+| `ArmazemArtefatos`                   | `ArmazemArtefatosFs`                                        | Escrita atômica; texto do master genérico (`gravarTextoMaster`/`lerTextoMaster`)                     |
+| `RegistroFalhas`                     | `RegistroFalhasFs`                                          | `falhas/<conector>/` e `falhas/_sem-conector/<motor>/`, JSON mais HTML sanitizado                    |
+| `GeradorEstruturado`                 | `GeradorEstruturadoClaude`                                  | `claude -p --output-format json`, cwd vazio, JSON Schema a partir do Zod                             |
+| `ExecutorAgente`                     | `ExecutorAgenteClaude`                                      | Playwright MCP por CDP mais `camaleao-segredos`; devolve `FormularioPlaywright` com `rota: "agente"` |
+| `CatalogoConectores` / `ConectorAts` | `CatalogoConectoresPlaywright` / `criarConector(definicao)` | 8 definições declarativas (seção 7)                                                                  |
+| `FormularioAberto`                   | `FormularioPlaywright`                                      | Handle comum a conector e agente; `fechar()` idempotente                                             |
+| `ResolvedorVagas`                    | `ResolvedorEncadeado`                                       | Elos: direto, agregadores, GitHub, portal Gupy, detecção de ATS                                      |
+| `ExtratorVagas`                      | `ExtratorEstrutural`                                        | API do conector, JSON-LD e texto visível; o fallback por LLM fica na etapa                           |
+| `RenderizadorDocumentos`             | `RenderizadorPdfPlaywright`                                 | Contexto sem JavaScript e rede bloqueada                                                             |
+| `Interacao`                          | `InteracaoTerminal` (interfaces)                            | `@inquirer/prompts`; Ctrl+C num prompt aborta o comando                                              |
+| `Notificador`                        | `NotificadorWindows`                                        | `node-notifier` importado sob demanda; falha vira aviso no log                                       |
+| `ProgressoPreparo`                   | `ProgressoTerminal` (interfaces)                            | Eventos de início, etapa e conclusão por vaga; com TTY, região viva no stderr (ADR-0021)             |
+| `NavegadorUsuario`                   | `NavegadorCamaleao`                                         | Chrome dedicado com perfil persistente e porta CDP                                                   |
+| `Relogio`                            | `RelogioSistema`                                            | ISO com offset; `hoje()`                                                                             |
+| `Registrador`                        | `RegistradorJsonl`                                          | Terminal mais JSONL diário, com redação de PII                                                       |
 
 Portas de IO local (banco e arquivos pequenos) são síncronas; as de rede, processo, navegador e usuário
 são assíncronas e recebem `AbortSignal`. Interfaces internas da infra: `CofreCredenciais` e `ClienteHttp`.
 
 ## 6. Fluxos
 
-**`outbox preparar`:** a CLI valida as flags e adquire a trava. `prepararVagas` garante o PDF do master
+**`camaleao preparar`:** a CLI valida as flags e adquire a trava. `prepararVagas` garante o PDF do master
 genérico e processa as vagas elegíveis com `executarComLimite`:
 
 1. `resolverVaga`: resolução e deduplicação por URL, numa transação.
@@ -130,7 +130,7 @@ genérico e processa as vagas elegíveis com `executarComLimite`:
 Falha por vaga vira ERRO_PREPARO (com tentativas); `ErroLimiteUso` e cancelamento encerram o lote de
 forma ordenada; ao fim, toast com o resumo.
 
-**`outbox aplicar`:** rodada de gaps (sim grava a skill e refaz o currículo das vagas afetadas), depois,
+**`camaleao aplicar`:** rodada de gaps (sim grava a skill e refaz o currículo das vagas afetadas), depois,
 por aderência decrescente: `montarPacote`, `preencherFormulario` (conector; campo que falha é pulado e
 fica para a revisão; se o conector lançar `ErroFalhaConector` num passo estrutural, registro sanitizado e
 agente com o contexto; sem conector, agente e registro `sem_conector`) e `revisarEEnviar` (tela que
@@ -165,12 +165,12 @@ declarativa em `infra/conectores/strategy/<motor>/conector.ts`, registrada em `r
 
 ## 8. Erros, validação, logging, config e concorrência
 
-- **Erros:** hierarquia única `ErroOutbox` (`ErroUsuario`, `ErroDominio`, `ErroInfra` e subclasses). A
+- **Erros:** hierarquia única `ErroCamaleao` (`ErroUsuario`, `ErroDominio`, `ErroInfra` e subclasses). A
   CLI mapeia `0` sucesso, `1` erro, `2` uso inválido (incluindo parse do commander e trava ocupada) e
   `130` interrompido. Erro inesperado mostra uma linha curta e grava o stack no log.
 - **Validação:** Zod em toda fronteira (config, YAML, saída do LLM, APIs, linhas do SQLite, argumentos
   da CLI, entradas MCP).
-- **Logging:** `OUTBOX_LOG` controla o nível; JSONL em `dados/logs/outbox-AAAA-MM-DD.jsonl`; PII
+- **Logging:** `CAMALEAO_LOG` controla o nível; JSONL em `dados/logs/camaleao-AAAA-MM-DD.jsonl`; PII
   redigida e chaves sensíveis omitidas.
 - **Config:** padrões no schema (`esquema-config.ts`); `config.yaml` local e opcional;
   `config.exemplo.yaml` verificado por teste.
@@ -186,11 +186,11 @@ declarativa em `infra/conectores/strategy/<motor>/conector.ts`, registrada em `r
   do LLM nunca é executada.
 - **Agente:** `--strict-mcp-config`, `--tools ""` (sem ferramentas nativas do Claude Code) e
   `--allowedTools` com navegação, clique, digitação, seleção, snapshot, upload, abas, espera, hover,
-  diálogos, screenshot e as 4 ferramentas do `outbox-segredos`. Ficam de fora a execução de script
+  diálogos, screenshot e as 4 ferramentas do `camaleao-segredos`. Ficam de fora a execução de script
   (`browser_evaluate`, `browser_run_code_unsafe`), cookies, storage, rede, rotas e `browser_press_key`.
   O prompt proíbe `submit: true` e o clique no envio final (ADR-0017, ADR-0018).
-- **`outbox-segredos`:** preenche senha (cofre por tenant), CPF/RG/data de nascimento e respostas
-  protegidas (`p<n>`) só em hosts da allowlist (`OUTBOX_HOSTS_PERMITIDOS`) e nunca devolve o valor.
+- **`camaleao-segredos`:** preenche senha (cofre por tenant), CPF/RG/data de nascimento e respostas
+  protegidas (`p<n>`) só em hosts da allowlist (`CAMALEAO_HOSTS_PERMITIDOS`) e nunca devolve o valor.
 - **Render de PDF:** HTML escapado, sem JavaScript e com rede bloqueada.
 - **Supply chain:** lockfile, `npm ci`, `ignore-scripts=true`, versões exatas, `npm audit` no `verificar`.
 - **Risco residual aceito:** uma injeção poderia induzir o agente a enviar antes da revisão; a mitigação

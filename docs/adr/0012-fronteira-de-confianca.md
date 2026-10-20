@@ -8,6 +8,6 @@
 - **Decisão.**
   - Os controles da seção 12.3.
   - Respostas sensíveis preenchidas por ferramenta protegida.
-  - Allowlist de hosts no `outbox-segredos`.
+  - Allowlist de hosts no `camaleao-segredos`.
 - **Alternativas.** Confiar só na instrução do prompt: insuficiente contra injeção.
 - **Consequências.** Dado sensível fora do LLM e exfiltração bloqueada por host. O risco residual (envio antecipado) está documentado.

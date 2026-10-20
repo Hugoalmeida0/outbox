@@ -16,7 +16,7 @@ export interface OpcoesRegistrador {
   readonly relogio: Relogio;
   /** Lista de PII a redigir; obtida sob demanda (o currículo pode ainda não existir). */
   readonly obterPii: () => readonly string[];
-  /** Nível mínimo, normalmente de `OUTBOX_LOG`. */
+  /** Nível mínimo, normalmente de `CAMALEAO_LOG`. */
   readonly nivel?: NivelLog | undefined;
   readonly escreverTerminal?: (linha: string, nivel: NivelLog) => void;
 }
@@ -109,7 +109,7 @@ export class RegistradorJsonl implements Registrador {
       try {
         mkdirSync(this.opcoes.pastaLogs, { recursive: true });
         appendFileSync(
-          join(this.opcoes.pastaLogs, `outbox-${ts.slice(0, 10)}.jsonl`),
+          join(this.opcoes.pastaLogs, `camaleao-${ts.slice(0, 10)}.jsonl`),
           `${redigirPii(linha, pii)}\n`,
         );
       } catch {

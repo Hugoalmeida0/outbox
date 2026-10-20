@@ -1,5 +1,5 @@
 import { calcularAderencia, recalcularComGaps } from "#dominio/analise/aderencia.ts";
-import { ErroDominio, ErroOutbox } from "#dominio/compartilhado/erros.ts";
+import { ErroDominio, ErroCamaleao } from "#dominio/compartilhado/erros.ts";
 import {
   contarTentativaPreparo,
   registrarAderencia,
@@ -370,7 +370,7 @@ function reavaliarDescartadas(deps: DepsPrepararVagas): number {
 }
 
 /**
- * `outbox preparar`: para cada vaga NOVA (ou com erro dentro do limite de tentativas), resolve, extrai,
+ * `camaleao preparar`: para cada vaga NOVA (ou com erro dentro do limite de tentativas), resolve, extrai,
  * analisa, deduplica, aplica o corte de aderência, gera o currículo camaleão e pré-responde os campos.
  * A falha de uma vaga não interrompe o lote; limite de uso e cancelamento encerram de forma ordenada.
  */
@@ -415,7 +415,7 @@ export async function prepararVagas(
             }
             const motivo = motivoDoErro(erro);
             const mensagem = erro instanceof Error ? erro.message : String(erro);
-            if (!(erro instanceof ErroOutbox)) {
+            if (!(erro instanceof ErroCamaleao)) {
               deps.registrador.erro(`erro inesperado na vaga #${String(vaga.id)}`, { erro });
             }
             const atual = deps.vagas.buscar(vaga.id);
@@ -448,13 +448,13 @@ export async function prepararVagas(
 
   if (interrompido === "limite") {
     deps.notificador.notificar(
-      "Outbox",
-      `Outbox: limite de uso do Claude atingido. ${String(contagens.NOVA ?? 0)} vagas aguardando novo \`preparar\`.`,
+      "Camaleão",
+      `Camaleão: limite de uso do Claude atingido. ${String(contagens.NOVA ?? 0)} vagas aguardando novo \`preparar\`.`,
     );
   } else if (interrompido === null && elegiveis.length > 0) {
     deps.notificador.notificar(
-      "Outbox",
-      `Outbox: preparar concluído. ${String(contagens.PRONTA ?? 0)} prontas, ${String(contagens.DESCARTADA ?? 0)} descartadas, ` +
+      "Camaleão",
+      `Camaleão: preparar concluído. ${String(contagens.PRONTA ?? 0)} prontas, ${String(contagens.DESCARTADA ?? 0)} descartadas, ` +
         `${String(contagens.ERRO_PREPARO ?? 0)} com erro, ${String(contagens.MANUAL ?? 0)} manuais.`,
     );
   }

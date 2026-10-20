@@ -28,7 +28,7 @@ const esquemaPostagemSr = z.object({
 /**
  * SmartRecruiters (jobs.smartrecruiters.com). A vaga redireciona (`?oga=true`) para o formulário
  * `oneclick-ui`, protegido pelo CAPTCHA da DataDome contra navegadores automatizados: o formulário não pode
- * ser lido no `preparar` (headless) e, no `aplicar`, o Outbox pausa para o usuário resolver o CAPTCHA.
+ * ser lido no `preparar` (headless) e, no `aplicar`, o Camaleão pausa para o usuário resolver o CAPTCHA.
  * Estrutura do formulário não verificada (ver docs/progresso.md).
  */
 export const definicaoSmartRecruiters: DefinicaoConector = {

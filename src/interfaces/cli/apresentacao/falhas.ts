@@ -2,7 +2,7 @@ import type { DadosFalhas } from "#aplicacao/casos-de-uso/listar-falhas.ts";
 import { cores } from "./cores.ts";
 import { dataHora, formatarTabela, truncar } from "./tabela.ts";
 
-/** Saída do `outbox falhas`: falhas de conector por passo e motores sem conector. */
+/** Saída do `camaleao falhas`: falhas de conector por passo e motores sem conector. */
 export function formatarFalhas(dados: DadosFalhas): string {
   if (dados.grupos.length === 0 && dados.semConector.length === 0)
     return "Nenhuma falha aberta em falhas/.";

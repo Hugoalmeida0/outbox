@@ -123,7 +123,7 @@ describe("dados sensíveis fora do LLM e dos logs (AC11, AC16, AC27)", () => {
       },
     ]);
 
-    const raiz = mkdtempSync(join(tmpdir(), "outbox-sensiveis-"));
+    const raiz = mkdtempSync(join(tmpdir(), "camaleao-sensiveis-"));
     const caminhos = criarCaminhos(raiz, RAIZ);
     mkdirSync(caminhos.curriculoDir, { recursive: true });
     writeFileSync(caminhos.master, stringify(umMaster()));

@@ -142,7 +142,7 @@ export function hostCasaPadrao(host: string, padrao: string): boolean {
   return h === p;
 }
 
-/** Padrões de host do motor (usados na allowlist do outbox-segredos). */
+/** Padrões de host do motor (usados na allowlist do camaleao-segredos). */
 export function padroesHostDoMotor(motor: Motor): readonly string[] {
   return PADROES_MOTOR.find((p) => p.motor === motor)?.hosts ?? [];
 }

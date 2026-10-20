@@ -15,7 +15,7 @@ const esquema = z.object({
     .optional(),
 });
 
-/** `outbox preparar [--forcar] [--paralelo <n>] [--reavaliar]`. */
+/** `camaleao preparar [--forcar] [--paralelo <n>] [--reavaliar]`. */
 export async function comandoPreparar(ctx: ContextoComando, bruto: unknown): Promise<number> {
   const { forcar, reavaliar, paralelo } = validarEntrada(esquema, bruto);
   const container = ctx.container();

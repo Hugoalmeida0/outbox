@@ -1,5 +1,5 @@
 import { CommanderError } from "commander";
-import { ErroOutbox, ErroUsuario } from "#dominio/compartilhado/erros.ts";
+import { ErroCamaleao, ErroUsuario } from "#dominio/compartilhado/erros.ts";
 
 /** Códigos de saída da CLI (arquitetura.md §10.1). */
 export const CODIGOS_SAIDA = { sucesso: 0, erro: 1, usoInvalido: 2, interrompido: 130 } as const;
@@ -22,14 +22,14 @@ export function codigoDoErro(erro: unknown): number {
 
 /** Erro previsto: mostra a mensagem e não precisa de stack. */
 export function ehErroPrevisto(erro: unknown): boolean {
-  return erro instanceof ErroOutbox || erro instanceof CommanderError || ehInterrupcao(erro);
+  return erro instanceof ErroCamaleao || erro instanceof CommanderError || ehInterrupcao(erro);
 }
 
 /** Mensagem curta para o terminal; `null` quando o commander já escreveu a sua. */
 export function mensagemDoErro(erro: unknown): string | null {
   if (erro instanceof CommanderError) return null;
   if (ehInterrupcao(erro)) return "interrompido";
-  if (erro instanceof ErroOutbox) return erro.message;
+  if (erro instanceof ErroCamaleao) return erro.message;
   const detalhe = erro instanceof Error ? `: ${erro.message}` : "";
   return `erro inesperado${detalhe} (stack em dados/logs/)`;
 }

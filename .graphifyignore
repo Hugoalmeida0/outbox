@@ -1,5 +1,5 @@
 # Fora do grafo: artefatos de build, dependências e dados locais.
-# bin/ NÃO é ignorado: contém o executável bin/outbox.js (código-fonte)
+# bin/ NÃO é ignorado: contém o executável bin/camaleao.js (código-fonte)
 obj/
 node_modules/
 dist/

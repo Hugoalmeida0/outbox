@@ -25,8 +25,8 @@ do usuário, que a política do projeto não permite fazer sem confirmação hum
 
 ## Como concluir o spike
 
-1. Escolher uma vaga real da InHire, `outbox adicionar` e `outbox preparar`.
-2. `outbox aplicar --simular --id <id>`: observar se pede conta, quais etapas aparecem e o que fica sem
+1. Escolher uma vaga real da InHire, `camaleao adicionar` e `camaleao preparar`.
+2. `camaleao aplicar --simular --id <id>`: observar se pede conta, quais etapas aparecem e o que fica sem
    preencher.
 3. Enviar uma candidatura real (escolha do usuário) e confirmar o texto de confirmação.
 4. Capturar fixtures reais com `npm run capturar-fixture`, substituir as sintéticas e ajustar o

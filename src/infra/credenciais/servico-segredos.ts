@@ -21,14 +21,14 @@ export interface OpcoesServicoSegredos {
   readonly cofre: CofreCredenciais;
   readonly curriculo: ArmazemCurriculo;
   readonly artefatos: ArmazemArtefatos;
-  /** Hosts permitidos (`OUTBOX_HOSTS_PERMITIDOS`), aceitando `*.` como prefixo. */
+  /** Hosts permitidos (`CAMALEAO_HOSTS_PERMITIDOS`), aceitando `*.` como prefixo. */
   readonly hostsPermitidos: readonly string[];
   readonly vagaId: IdVaga | null;
   readonly registrador: Registrador;
 }
 
 /**
- * Lógica das ferramentas do MCP `outbox-segredos` (ADR-012): preenche senha, documentos e respostas
+ * Lógica das ferramentas do MCP `camaleao-segredos` (ADR-012): preenche senha, documentos e respostas
  * sensíveis direto na página, só em hosts da allowlist, e nunca devolve o valor preenchido.
  */
 export class ServicoSegredos {

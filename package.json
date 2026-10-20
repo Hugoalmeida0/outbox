@@ -1,14 +1,14 @@
 {
-  "name": "outbox",
+  "name": "camaleao",
   "version": "1.0.0",
   "private": true,
-  "description": "CLI pessoal de candidatura assistida com currículo camaleão",
+  "description": "Camaleão: candidatura assistida com currículo camaleão, pela CLI ou pelo site",
   "type": "module",
   "engines": {
     "node": ">=24"
   },
   "bin": {
-    "outbox": "bin/outbox.js"
+    "camaleao": "bin/camaleao.js"
   },
   "imports": {
     "#dominio/*": "./src/dominio/*",
@@ -20,7 +20,7 @@
     "#scripts/*": "./scripts/*"
   },
   "scripts": {
-    "outbox": "node bin/outbox.js",
+    "camaleao": "node bin/camaleao.js",
     "test": "vitest run",
     "lint": "eslint .",
     "formatar": "prettier --write .",

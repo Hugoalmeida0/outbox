@@ -1,8 +1,8 @@
-import { ErroOutbox } from "#dominio/compartilhado/erros.ts";
+import { ErroCamaleao } from "#dominio/compartilhado/erros.ts";
 import type { FormularioAberto } from "./formulario-aberto.ts";
 
 /** Falha externa (LLM, rede, navegador, sites). As portas declaram quais destas lançam. */
-export class ErroInfra extends ErroOutbox {
+export class ErroInfra extends ErroCamaleao {
   constructor(mensagem: string, opcoes?: ErrorOptions, codigo = "infra") {
     super(codigo, mensagem, opcoes);
   }
@@ -56,7 +56,7 @@ export class ErroResolucao extends ErroInfra {
 
 export class ErroAgregadorExigeLogin extends ErroInfra {
   constructor(
-    mensagem = "o agregador exige login: faça login com `outbox navegador` ou cole a URL do ATS",
+    mensagem = "o agregador exige login: faça login com `camaleao navegador` ou cole a URL do ATS",
     opcoes?: ErrorOptions,
   ) {
     super(mensagem, opcoes, "agregador_exige_login");

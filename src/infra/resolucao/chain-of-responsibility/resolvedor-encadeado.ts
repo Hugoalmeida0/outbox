@@ -45,7 +45,7 @@ export const eloGithub: EloResolucao = {
     Promise.resolve({ motor: "github", urlResolvida: canonica, canonica, rota: "a_definir" }),
 };
 
-/** Agregadores: usa a sessão do navegador do Outbox só para descobrir o destino da candidatura. */
+/** Agregadores: usa a sessão do navegador do Camaleão só para descobrir o destino da candidatura. */
 export function eloAgregadores(abrirPagina: () => Promise<Page>): EloResolucao {
   return {
     aceita: (motor) => ehMotorConhecido(motor) && AGREGADORES.includes(motor),

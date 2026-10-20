@@ -20,7 +20,7 @@ import { passo, type ContextoPasso } from "./passo.ts";
 
 /** Dependências de infraestrutura entregues pela composição a todos os conectores. */
 export interface DepsConector {
-  /** Nova aba no navegador do Outbox (CDP); nos testes, uma página com fixtures. */
+  /** Nova aba no navegador do Camaleão (CDP); nos testes, uma página com fixtures. */
   abrirPagina(): Promise<Page>;
   readonly leitor: LeitorHeadless;
   readonly http: ClienteHttp;

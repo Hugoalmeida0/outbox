@@ -213,7 +213,7 @@ async function preencherComAgente(
   } as const;
   const execucao = await executarAgente(deps, tentativa.entradaAgente, ctx, sinal);
   if (execucao.tipo === "erro") {
-    // Mesmo quebrando, o agente deixa registro: sem ele, a vaga some de `outbox falhas`.
+    // Mesmo quebrando, o agente deixa registro: sem ele, a vaga some de `camaleao falhas`.
     deps.falhas.registrar(
       {
         ...registroSemConector,

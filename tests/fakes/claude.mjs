@@ -1,8 +1,8 @@
-// Executável falso do `claude` para testes (configurado via OUTBOX_CLAUDE_BIN).
-// OUTBOX_CLAUDE_ROTEIRO: JSON { "regras": [ { "contem"?, "resultado"?, "erro"?, "atrasoMs"?, "turnos"?, "usos"? } ] }
+// Executável falso do `claude` para testes (configurado via CAMALEAO_CLAUDE_BIN).
+// CAMALEAO_CLAUDE_ROTEIRO: JSON { "regras": [ { "contem"?, "resultado"?, "erro"?, "atrasoMs"?, "turnos"?, "usos"? } ] }
 //   - a primeira regra cujo `contem` aparece no prompt (ou sem `contem`) e com usos restantes é usada;
 //   - erro: "limite" | "max_turns" | "falha" | "texto_invalido" | "saida_longa".
-// OUTBOX_CLAUDE_REGISTRO: arquivo JSONL onde cada chamada grava { args, prompt, env }.
+// CAMALEAO_CLAUDE_REGISTRO: arquivo JSONL onde cada chamada grava { args, prompt, env }.
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const entrada = await new Promise((resolver) => {
@@ -13,13 +13,13 @@ const entrada = await new Promise((resolver) => {
 });
 
 const args = process.argv.slice(2);
-const caminhoRoteiro = process.env.OUTBOX_CLAUDE_ROTEIRO;
-const caminhoRegistro = process.env.OUTBOX_CLAUDE_REGISTRO;
+const caminhoRoteiro = process.env.CAMALEAO_CLAUDE_ROTEIRO;
+const caminhoRegistro = process.env.CAMALEAO_CLAUDE_REGISTRO;
 
 if (caminhoRegistro) {
   const env = {
-    OUTBOX_VAGA_ID: process.env.OUTBOX_VAGA_ID,
-    OUTBOX_HOSTS_PERMITIDOS: process.env.OUTBOX_HOSTS_PERMITIDOS,
+    CAMALEAO_VAGA_ID: process.env.CAMALEAO_VAGA_ID,
+    CAMALEAO_HOSTS_PERMITIDOS: process.env.CAMALEAO_HOSTS_PERMITIDOS,
     MAX_THINKING_TOKENS: process.env.MAX_THINKING_TOKENS,
     CLAUDE_CODE_MAX_OUTPUT_TOKENS: process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS,
   };

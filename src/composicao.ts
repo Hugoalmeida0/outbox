@@ -37,6 +37,7 @@ import { ArmazemArtefatosFs } from "#infra/armazenamento/armazem-artefatos-fs.ts
 import { ArmazemCurriculoYaml } from "#infra/armazenamento/armazem-curriculo-yaml.ts";
 import { CacheRespostasJson } from "#infra/armazenamento/cache-respostas-json.ts";
 import { RegistroFalhasFs } from "#infra/armazenamento/registro-falhas-fs.ts";
+import { migrarBancoLegado } from "#infra/banco/banco-legado.ts";
 import { abrirConexao } from "#infra/banco/conexao.ts";
 import { migrar } from "#infra/banco/migrador.ts";
 import { RepositorioVagasSqlite } from "#infra/banco/repositorio-vagas-sqlite.ts";
@@ -44,6 +45,7 @@ import { CatalogoConectoresPlaywright } from "#infra/conectores/registry/catalog
 import { DEFINICOES_V1 } from "#infra/conectores/registry/definicoes.ts";
 import { carregarConfig } from "#infra/config/carregar-config.ts";
 import type { Config } from "#infra/config/esquema-config.ts";
+import { lerVariavel } from "#infra/config/variaveis.ts";
 import { CofreCredenciaisJson } from "#infra/credenciais/cofre-credenciais-json.ts";
 import { ServicoSegredos } from "#infra/credenciais/servico-segredos.ts";
 import { RenderizadorPdfPlaywright } from "#infra/documentos/renderizador-pdf-playwright.ts";
@@ -52,7 +54,7 @@ import { GeradorEstruturadoClaude } from "#infra/llm/gerador-estruturado-claude.
 import { executarClaude } from "#infra/llm/processo-claude.ts";
 import { nivelDoAmbiente, RegistradorJsonl, type NivelLog } from "#infra/log/registrador-jsonl.ts";
 import { LeitorHeadless } from "#infra/navegador/leitor-headless.ts";
-import { NavegadorOutbox } from "#infra/navegador/navegador-outbox.ts";
+import { NavegadorCamaleao } from "#infra/navegador/navegador-camaleao.ts";
 import { NotificadorWindows } from "#infra/notificacao/notificador-windows.ts";
 import {
   eloAgregadores,
@@ -111,7 +113,7 @@ export interface Container {
   adquirirTrava(comando: "preparar" | "aplicar"): Trava;
   /** Registro de erros e avisos da interface (o stack vai só para o log). */
   registrarErro(mensagem: string, erro: unknown): void;
-  /** Serviço das ferramentas do MCP `outbox-segredos`, ligado ao navegador do Outbox por CDP. */
+  /** Serviço das ferramentas do MCP `camaleao-segredos`, ligado ao navegador do Camaleão por CDP. */
   criarServicoSegredos(opcoes: {
     readonly vagaId: IdVaga | null;
     readonly hostsPermitidos: readonly string[];
@@ -169,12 +171,15 @@ function criarLocais(caminhos: Caminhos, opcoes: OpcoesContainer, preguicoso: Pr
             return listaPii(master.pessoal);
           }
         },
-        nivel: opcoes.nivelLog ?? nivelDoAmbiente(process.env.OUTBOX_LOG),
+        nivel: opcoes.nivelLog ?? nivelDoAmbiente(lerVariavel("LOG")),
         ...(opcoes.escreverTerminal ? { escreverTerminal: opcoes.escreverTerminal } : {}),
       }),
   );
   const db = preguicoso("banco", (): DatabaseSync => {
     mkdirSync(caminhos.dadosDir, { recursive: true });
+    migrarBancoLegado(caminhos.dadosDir, (mensagem) => {
+      registrador().avisar(mensagem);
+    });
     const conexao = abrirConexao(caminhos.db);
     migrar(conexao, caminhos.migracoesDir);
     return conexao;
@@ -212,7 +217,7 @@ function criarWeb(caminhos: Caminhos, config: Config, locais: Locais, preguicoso
   const navegador = preguicoso(
     "navegador",
     () =>
-      new NavegadorOutbox({
+      new NavegadorCamaleao({
         portaCdp: config.navegador.portaCdp,
         executavel: config.navegador.executavel,
         pastaPerfil: caminhos.navegadorDir,

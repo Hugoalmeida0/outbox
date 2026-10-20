@@ -1,7 +1,7 @@
 import type { ZodError } from "zod";
 
-/** Base de todos os erros do Outbox. `codigo` identifica a família do erro de forma estável. */
-export class ErroOutbox extends Error {
+/** Base de todos os erros do Camaleão. `codigo` identifica a família do erro de forma estável. */
+export class ErroCamaleao extends Error {
   readonly codigo: string;
 
   constructor(codigo: string, mensagem: string, opcoes?: ErrorOptions) {
@@ -12,14 +12,14 @@ export class ErroOutbox extends Error {
 }
 
 /** Entrada inválida fornecida pelo usuário (arquivo inexistente, flag inválida, master já existe). */
-export class ErroUsuario extends ErroOutbox {
+export class ErroUsuario extends ErroCamaleao {
   constructor(mensagem: string, opcoes?: ErrorOptions) {
     super("usuario", mensagem, opcoes);
   }
 }
 
 /** Violação de regra de negócio. */
-export class ErroDominio extends ErroOutbox {}
+export class ErroDominio extends ErroCamaleao {}
 
 /** Dado que não respeita um schema do domínio. */
 export class ErroValidacao extends ErroDominio {

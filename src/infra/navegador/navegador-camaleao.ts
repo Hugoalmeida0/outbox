@@ -6,7 +6,7 @@ import { ErroNavegador } from "#aplicacao/portas/erros.ts";
 import type { NavegadorUsuario } from "#aplicacao/portas/navegador-usuario.ts";
 import { hostCasaPadrao } from "#dominio/vagas/motores.ts";
 
-export interface OpcoesNavegadorOutbox {
+export interface OpcoesNavegadorCamaleao {
   readonly portaCdp: number;
   readonly executavel: "auto" | "chrome" | "chromium";
   readonly pastaPerfil: string;
@@ -27,14 +27,14 @@ function caminhosChrome(): string[] {
 }
 
 /**
- * Navegador dedicado do Outbox: Chrome (ou Chromium) com perfil persistente em `dados/navegador/` e porta
+ * Navegador dedicado do Camaleão: Chrome (ou Chromium) com perfil persistente em `dados/navegador/` e porta
  * CDP, compartilhado por conectores, agente e MCP. Sobrevive ao fim do processo da CLI.
  */
-export class NavegadorOutbox implements NavegadorUsuario {
-  private readonly opcoes: OpcoesNavegadorOutbox;
+export class NavegadorCamaleao implements NavegadorUsuario {
+  private readonly opcoes: OpcoesNavegadorCamaleao;
   private conexao: Browser | null = null;
 
-  constructor(opcoes: OpcoesNavegadorOutbox) {
+  constructor(opcoes: OpcoesNavegadorCamaleao) {
     this.opcoes = opcoes;
   }
 
@@ -71,7 +71,7 @@ export class NavegadorOutbox implements NavegadorUsuario {
     }
   }
 
-  /** Conecta ao navegador do Outbox, lançando-o se ainda não estiver aberto. */
+  /** Conecta ao navegador do Camaleão, lançando-o se ainda não estiver aberto. */
   async garantir(): Promise<Browser> {
     if (this.conexao?.isConnected()) return this.conexao;
     try {
@@ -86,7 +86,7 @@ export class NavegadorOutbox implements NavegadorUsuario {
           return this.conexao;
         } catch {
           throw new ErroNavegador(
-            `o navegador do Outbox em ${this.endpointCdp} está aberto, mas não aceitou a conexão`,
+            `o navegador do Camaleão em ${this.endpointCdp} está aberto, mas não aceitou a conexão`,
             { cause: erro },
           );
         }
@@ -117,7 +117,7 @@ export class NavegadorOutbox implements NavegadorUsuario {
       }
     }
     throw new ErroNavegador(
-      `não foi possível conectar ao navegador do Outbox em ${this.endpointCdp}`,
+      `não foi possível conectar ao navegador do Camaleão em ${this.endpointCdp}`,
       {
         cause: ultimoErro,
       },

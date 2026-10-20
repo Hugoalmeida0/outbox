@@ -167,7 +167,7 @@ describe("GeradorEstruturadoClaude com o claude falso", () => {
   ) =>
     new GeradorEstruturadoClaude({
       pastaPrompts: PROMPTS,
-      cwd: mkdtempSync(join(tmpdir(), "outbox-cwd-")),
+      cwd: mkdtempSync(join(tmpdir(), "camaleao-cwd-")),
       modelo: "sonnet",
       maxTokensThinking: extras.maxTokensThinking ?? 0,
       ...(extras.modeloPorTarefa ? { modeloPorTarefa: extras.modeloPorTarefa } : {}),
@@ -199,7 +199,7 @@ describe("GeradorEstruturadoClaude com o claude falso", () => {
     falso = usarClaudeFalso([
       { resultado: respostaJson({ empresa: "Acme", cargo: "Dev", descricao: "x" }) },
     ]);
-    const pastaLog = mkdtempSync(join(tmpdir(), "outbox-log-"));
+    const pastaLog = mkdtempSync(join(tmpdir(), "camaleao-log-"));
     const r = await criar().gerar(pedido(pastaLog), new AbortController().signal);
     expect(r).toEqual({ empresa: "Acme", cargo: "Dev", descricao: "x" });
     const [chamada] = falso.chamadas();

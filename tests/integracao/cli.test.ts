@@ -1,5 +1,13 @@
 // CLI ponta a ponta sobre a composição real, numa raiz temporária (AC1, AC21, AC26, AC30, AC31).
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripVTControlCharacters } from "node:util";
@@ -17,14 +25,14 @@ interface Execucao {
 }
 
 function novaRaiz(): string {
-  return mkdtempSync(join(tmpdir(), "outbox-cli-"));
+  return mkdtempSync(join(tmpdir(), "camaleao-cli-"));
 }
 
 async function rodar(raiz: string, ...args: string[]): Promise<Execucao> {
   const saida: string[] = [];
   const erro: string[] = [];
   let container: Container | null = null;
-  const codigo = await executar(["node", "outbox", ...args], {
+  const codigo = await executar(["node", "camaleao", ...args], {
     saida: { escrever: (t) => saida.push(t), erro: (t) => erro.push(t) },
     fabricarContainer: () =>
       (container = criarContainer({
@@ -126,7 +134,29 @@ describe("CLI: fila, status, retorno e falhas", () => {
     );
 
     expect((await rodar(raiz, "falhas")).saida).toBe("Nenhuma falha aberta em falhas/.");
-    expect(existsSync(join(raiz, "dados", "outbox.db"))).toBe(true);
+    expect(existsSync(join(raiz, "dados", "camaleao.db"))).toBe(true);
+  });
+
+  it("move o banco legado dados/outbox.db (com -wal e -shm) para dados/camaleao.db e avisa", async () => {
+    const raiz = novaRaiz();
+    const dados = join(raiz, "dados");
+    expect((await rodar(raiz, "adicionar", "https://jobs.ashbyhq.com/acme/1")).codigo).toBe(0);
+    for (const sufixo of ["", "-wal", "-shm"]) {
+      const atual = join(dados, `camaleao.db${sufixo}`);
+      if (existsSync(atual)) renameSync(atual, join(dados, `outbox.db${sufixo}`));
+    }
+    writeFileSync(join(dados, "outbox.db-shm"), "");
+
+    const r = await rodar(raiz, "status");
+    expect(r.codigo).toBe(0);
+    expect(r.saida).toContain("Vagas: 1");
+    expect(r.erro).toContain("banco renomeado de dados/outbox.db para dados/camaleao.db");
+    expect(readdirSync(dados).filter((a) => a.startsWith("outbox.db"))).toEqual([]);
+
+    writeFileSync(join(dados, "outbox.db"), "");
+    const ambos = await rodar(raiz, "status");
+    expect(ambos.saida).toContain("Vagas: 1");
+    expect(ambos.erro).toContain("dados/outbox.db ignorado: dados/camaleao.db já existe");
   });
 
   it("status, retorno e falhas não instanciam navegador, leitor, renderizador, notificador nem LLM (AC31)", async () => {

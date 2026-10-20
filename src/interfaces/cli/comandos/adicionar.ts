@@ -17,7 +17,7 @@ export function urlsDoArquivo(conteudo: string): string[] {
     .filter((l) => l !== "" && !l.startsWith("#"));
 }
 
-/** `outbox adicionar [urls...] [-a <arquivo>]`. */
+/** `camaleao adicionar [urls...] [-a <arquivo>]`. */
 export function comandoAdicionar(ctx: ContextoComando, bruto: unknown): number {
   const { urls, arquivo } = validarEntrada(esquema, bruto);
   const todas = [...urls];

@@ -124,9 +124,9 @@ export async function lerDescritores(
         if (el.id) return { id: el.id, seletor: `[id="${el.id}"]` };
         const nome = el.getAttribute("name");
         if (nome) return { id: nome, seletor: `[name="${nome}"]` };
-        const gerado = `outbox-campo-${String(++geradores)}`;
-        el.setAttribute("data-outbox-campo", gerado);
-        return { id: gerado, seletor: `[data-outbox-campo="${gerado}"]` };
+        const gerado = `camaleao-campo-${String(++geradores)}`;
+        el.setAttribute("data-camaleao-campo", gerado);
+        return { id: gerado, seletor: `[data-camaleao-campo="${gerado}"]` };
       };
 
       const grupos = new Map<string, HTMLInputElement[]>();

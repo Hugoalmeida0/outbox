@@ -1,4 +1,4 @@
--- Schema inicial do Outbox v1. Nunca edite uma migração publicada: crie NNNN-descricao.sql nova.
+-- Schema inicial do Camaleão v1. Nunca edite uma migração publicada: crie NNNN-descricao.sql nova.
 CREATE TABLE vagas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   url_original TEXT NOT NULL,

@@ -20,7 +20,7 @@ isso não foi feito de forma autônoma.
 ## O que foi implementado sem o spike
 
 - Conector `src/infra/conectores/strategy/gupy/conector.ts` (versão 1.0.0): autenticação `global` (login manual
-  uma vez em `outbox navegador`), botão "Candidatar-se", até 8 etapas com botão de avançar, envio por
+  uma vez em `camaleao navegador`), botão "Candidatar-se", até 8 etapas com botão de avançar, envio por
   "Finalizar/Enviar/Concluir candidatura" e confirmação por texto. A etapa de testes depois do envio
   vira **PENDENTE_TESTE** (os testes nunca são automatizados).
 - Extração da vaga por JSON-LD e, na falta, pelo `__NEXT_DATA__` da página (melhor esforço).
@@ -32,14 +32,14 @@ isso não foi feito de forma autônoma.
 ## Decisão provisória: `gupy.anexoPorCandidatura: true`
 
 Padrão provisório: anexar o currículo camaleão da vaga. Se a Gupy guardar um único currículo no perfil
-(e o anexo de uma vaga substituir o das candidaturas anteriores), o valor certo é `false`, e o Outbox
+(e o anexo de uma vaga substituir o das candidaturas anteriores), o valor certo é `false`, e o Camaleão
 passa a anexar o PDF genérico do master. Até o spike, o usuário deve conferir na primeira candidatura
 real se o anexo aparece por candidatura no painel da Gupy e ajustar `config.yaml` se necessário.
 
 ## Como concluir o spike
 
-1. `outbox navegador` e login na Gupy.
-2. Escolher 2 vagas reais de empresas diferentes e rodar `outbox aplicar --simular --id <id>` em cada
+1. `camaleao navegador` e login na Gupy.
+2. Escolher 2 vagas reais de empresas diferentes e rodar `camaleao aplicar --simular --id <id>` em cada
    uma; registrar as etapas vistas e os campos não preenchidos.
 3. Enviar uma candidatura real (escolha do usuário) e verificar no painel da Gupy se o currículo ficou
    vinculado à candidatura; enviar a segunda e verificar se a primeira mudou.

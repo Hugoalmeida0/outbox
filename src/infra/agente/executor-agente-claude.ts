@@ -43,10 +43,10 @@ export const FERRAMENTAS_AGENTE = [
   "mcp__playwright__browser_hover",
   "mcp__playwright__browser_handle_dialog",
   "mcp__playwright__browser_take_screenshot",
-  "mcp__outbox-segredos__email_cadastro",
-  "mcp__outbox-segredos__preencher_senha",
-  "mcp__outbox-segredos__preencher_dado_sensivel",
-  "mcp__outbox-segredos__preencher_resposta_protegida",
+  "mcp__camaleao-segredos__email_cadastro",
+  "mcp__camaleao-segredos__preencher_senha",
+  "mcp__camaleao-segredos__preencher_dado_sensivel",
+  "mcp__camaleao-segredos__preencher_resposta_protegida",
 ] as const;
 
 const esquemaSaidaAgente = z.object({
@@ -65,7 +65,7 @@ export interface OpcoesExecutorAgente {
   readonly executar: ExecutarClaude;
   /** Página da vaga: a mais recente entre as de `hosts`, ou a mais recente de todas. */
   readonly paginaMaisRecente: (hosts: readonly string[]) => Promise<Page | null>;
-  /** Garante o navegador do Outbox aberto (o Playwright MCP conecta-se a ele por CDP). */
+  /** Garante o navegador do Camaleão aberto (o Playwright MCP conecta-se a ele por CDP). */
   readonly garantirNavegador: () => Promise<unknown>;
   readonly endpointCdp: string;
   readonly raiz: string;
@@ -80,7 +80,7 @@ export interface OpcoesExecutorAgente {
   readonly registrador: Registrador;
 }
 
-/** Fallback agêntico: `claude -p` com Playwright MCP (via CDP) e `outbox-segredos`, sem envio final. */
+/** Fallback agêntico: `claude -p` com Playwright MCP (via CDP) e `camaleao-segredos`, sem envio final. */
 export class ExecutorAgenteClaude implements ExecutorAgente {
   private readonly opcoes: OpcoesExecutorAgente;
 
@@ -251,12 +251,12 @@ export class ExecutorAgenteClaude implements ExecutorAgente {
             this.opcoes.endpointCdp,
           ],
         },
-        "outbox-segredos": {
+        "camaleao-segredos": {
           command: process.execPath,
-          args: [join(this.opcoes.raiz, "src", "interfaces", "mcp", "outbox-segredos.ts")],
+          args: [join(this.opcoes.raiz, "src", "interfaces", "mcp", "camaleao-segredos.ts")],
           env: {
-            OUTBOX_VAGA_ID: String(entrada.vaga.id),
-            OUTBOX_HOSTS_PERMITIDOS: entrada.hostsPermitidos.join(","),
+            CAMALEAO_VAGA_ID: String(entrada.vaga.id),
+            CAMALEAO_HOSTS_PERMITIDOS: entrada.hostsPermitidos.join(","),
           },
         },
       },

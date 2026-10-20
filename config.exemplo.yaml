@@ -1,9 +1,9 @@
-# Configuração do Outbox. Todas as chaves são opcionais: os valores abaixo são os padrões.
+# Configuração do Camaleão. Todas as chaves são opcionais: os valores abaixo são os padrões.
 # Para ajustar, copie este arquivo para config.yaml (fora do git) e mantenha só o que quiser mudar.
 
 navegador:
   executavel: auto # auto (Chrome instalado, senão Chromium do Playwright), chrome ou chromium
-  portaCdp: 9333 # porta de depuração do navegador dedicado do Outbox
+  portaCdp: 9333 # porta de depuração do navegador dedicado do Camaleão
 
 llm:
   modeloTexto: claude-haiku-5-5 # extração, análise e respostas (use o id completo: o alias `haiku` ainda aponta para a 4.5)

@@ -2,7 +2,7 @@ import type { ResumoPreparo } from "#aplicacao/casos-de-uso/preparar-vagas.ts";
 import { TODOS_STATUS } from "#dominio/vagas/status.ts";
 import { cores } from "./cores.ts";
 
-/** Resumo do `outbox preparar`. */
+/** Resumo do `camaleao preparar`. */
 export function formatarResumoPreparo(resumo: ResumoPreparo): string {
   const linhas: string[] = [];
   if (resumo.reavaliadas > 0) {
@@ -11,7 +11,7 @@ export function formatarResumoPreparo(resumo: ResumoPreparo): string {
     );
   }
   if (resumo.processadas === 0 && resumo.interrompido === null) {
-    linhas.push("Nenhuma vaga para preparar. Adicione com `outbox adicionar <url>`.");
+    linhas.push("Nenhuma vaga para preparar. Adicione com `camaleao adicionar <url>`.");
     return linhas.join("\n");
   }
   linhas.push(cores.negrito(`Preparo: ${String(resumo.processadas)} vaga(s) processada(s)`));
@@ -26,7 +26,7 @@ export function formatarResumoPreparo(resumo: ResumoPreparo): string {
   if (resumo.interrompido === "limite") {
     linhas.push(
       cores.amarelo(
-        "Limite de uso do Claude atingido: as vagas restantes continuam NOVA. Rode `outbox preparar` mais tarde.",
+        "Limite de uso do Claude atingido: as vagas restantes continuam NOVA. Rode `camaleao preparar` mais tarde.",
       ),
     );
   } else if (resumo.interrompido === "cancelado") {
@@ -34,6 +34,6 @@ export function formatarResumoPreparo(resumo: ResumoPreparo): string {
   }
   const prontas = resumo.contagens.PRONTA ?? 0;
   if (prontas > 0)
-    linhas.push(cores.verde(`Próximo passo: \`outbox aplicar\` (${String(prontas)} pronta(s)).`));
+    linhas.push(cores.verde(`Próximo passo: \`camaleao aplicar\` (${String(prontas)} pronta(s)).`));
   return linhas.join("\n");
 }

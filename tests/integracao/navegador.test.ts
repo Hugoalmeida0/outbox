@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { NavegadorOutbox } from "#infra/navegador/navegador-outbox.ts";
+import { NavegadorCamaleao } from "#infra/navegador/navegador-camaleao.ts";
 
 async function portaLivre(): Promise<number> {
   return new Promise((resolver) => {
@@ -16,11 +16,11 @@ async function portaLivre(): Promise<number> {
   });
 }
 
-describe("NavegadorOutbox (Chromium real, headless)", () => {
+describe("NavegadorCamaleao (Chromium real, headless)", () => {
   let porta = 0;
   let servidor: Server;
   let urlPagina = "";
-  let navegador: NavegadorOutbox;
+  let navegador: NavegadorCamaleao;
 
   beforeAll(async () => {
     porta = await portaLivre();
@@ -28,10 +28,10 @@ describe("NavegadorOutbox (Chromium real, headless)", () => {
     await new Promise<void>((r) => servidor.listen(0, "127.0.0.1", r));
     const endereco = servidor.address();
     urlPagina = `http://127.0.0.1:${typeof endereco === "object" && endereco ? endereco.port : 0}/vaga`;
-    navegador = new NavegadorOutbox({
+    navegador = new NavegadorCamaleao({
       portaCdp: porta,
       executavel: "chromium",
-      pastaPerfil: mkdtempSync(join(tmpdir(), "outbox-perfil-")),
+      pastaPerfil: mkdtempSync(join(tmpdir(), "camaleao-perfil-")),
       argsExtras: ["--headless=new"],
     });
   });
@@ -71,27 +71,27 @@ describe("NavegadorOutbox (Chromium real, headless)", () => {
     await navegador.desconectar();
     const resposta = await fetch(`${navegador.endpointCdp}/json/version`);
     expect(resposta.ok).toBe(true);
-    const outraCli = new NavegadorOutbox({
+    const outraCli = new NavegadorCamaleao({
       portaCdp: porta,
       executavel: "chromium",
       // Perfil absoluto e temporário: se a reconexão falhasse e lançasse outro navegador, nada vaza.
-      pastaPerfil: mkdtempSync(join(tmpdir(), "outbox-perfil-nao-usado-")),
+      pastaPerfil: mkdtempSync(join(tmpdir(), "camaleao-perfil-nao-usado-")),
     });
     expect((await outraCli.paginaMaisRecente())?.url()).toBe(urlPagina);
     await outraCli.desconectar();
   });
 });
 
-describe("NavegadorOutbox: endpoint aberto que não aceita CDP", () => {
+describe("NavegadorCamaleao: endpoint aberto que não aceita CDP", () => {
   it("não lança um segundo navegador quando a porta já responde", async () => {
     // Responde em /json/version (como um navegador ocupado), mas não fala o protocolo CDP.
     const falso = criarServidorHttp((_req, res) => res.end("{}"));
     await new Promise<void>((r) => falso.listen(0, "127.0.0.1", r));
     const endereco = falso.address();
-    const navegador = new NavegadorOutbox({
+    const navegador = new NavegadorCamaleao({
       portaCdp: typeof endereco === "object" && endereco ? endereco.port : 0,
       executavel: "chromium",
-      pastaPerfil: mkdtempSync(join(tmpdir(), "outbox-perfil-ocupado-")),
+      pastaPerfil: mkdtempSync(join(tmpdir(), "camaleao-perfil-ocupado-")),
       esperaConexaoMs: 1000,
     });
     try {

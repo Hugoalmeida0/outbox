@@ -7,33 +7,33 @@ Legenda: ✅ concluída e validada · ⚠️ concluída com ressalva (ver observ
 
 ## Tarefas
 
-| Tarefa | Descrição                                           | Status | Observações                                                                                                                       |
-| ------ | --------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| T1     | Fundação do repositório, qualidade e CI             | ✅     | `bin/outbox.js`, lint de fronteiras, `verificar`, workflow `windows-latest` (não executado: o diretório não é um repositório git) |
-| T2     | Schemas do domínio e exemplos                       | ✅     |                                                                                                                                   |
-| T3     | Domínio de vagas                                    | ✅     |                                                                                                                                   |
-| T4     | Domínio de currículo e análise                      | ✅     |                                                                                                                                   |
-| T5     | Domínio de respostas e falhas                       | ✅     | Categoria `consentimento` acrescentada (ADR-0019)                                                                                 |
-| T6     | Portas, erros, concorrência e apoio de testes       | ✅     |                                                                                                                                   |
-| T7     | Infra base                                          | ✅     |                                                                                                                                   |
-| T8     | Persistência SQLite                                 | ✅     |                                                                                                                                   |
-| T9     | Armazenamento em arquivos                           | ✅     |                                                                                                                                   |
-| T10    | LLM: processo claude, gerador e prompts             | ✅     | Chamada real mínima do `claude -p` validada                                                                                       |
-| T11    | Navegador, leitor e documentos                      | ✅     |                                                                                                                                   |
-| T12    | Resolução e extração                                | ✅     |                                                                                                                                   |
-| T13    | Base de conectores, contratos e captura de fixtures | ✅     | `scripts/capturar-fixture.ts` testado sem navegador (argumentos, sanitização, uso)                                                |
-| T14    | Conectores Greenhouse, Lever e Ashby                | ✅     | Fixtures reais sanitizadas                                                                                                        |
-| T15    | Conectores SmartRecruiters, Workable e Teamtailor   | ⚠️     | SmartRecruiters com fixture sintética: DataDome bloqueia a leitura (ADR-0020)                                                     |
-| T16    | Conectores Gupy e InHire, com spikes                | ⛔     | Conectores e fixtures sintéticas prontos; spikes exigem candidaturas reais (`docs/spikes/`)                                       |
-| T17    | Cofre de credenciais e MCP outbox-segredos          | ✅     | Servidor MCP testado em memória e como processo stdio                                                                             |
-| T18    | Agente                                              | ✅     | Validado com o `claude` real contra página local (seção "Validação real do agente")                                               |
-| T19    | Notificação                                         | ✅     |                                                                                                                                   |
-| T20    | Casos de uso de entrada                             | ✅     |                                                                                                                                   |
-| T21    | Etapas de preparo e `preparar`                      | ✅     |                                                                                                                                   |
-| T22    | Etapas de aplicação e `aplicar`                     | ✅     |                                                                                                                                   |
-| T23    | Casos de uso de consulta                            | ✅     |                                                                                                                                   |
-| T24    | Composição e CLI                                    | ✅     | Testada pela CLI real (`bin/outbox.js`) e por testes de integração                                                                |
-| T25    | Documentação viva                                   | ✅     | README, arquitetura, convenções, ADR 0001 a 0020, guia de conector, spikes                                                        |
+| Tarefa | Descrição                                           | Status | Observações                                                                                                                         |
+| ------ | --------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| T1     | Fundação do repositório, qualidade e CI             | ✅     | `bin/camaleao.js`, lint de fronteiras, `verificar`, workflow `windows-latest` (não executado: o diretório não é um repositório git) |
+| T2     | Schemas do domínio e exemplos                       | ✅     |                                                                                                                                     |
+| T3     | Domínio de vagas                                    | ✅     |                                                                                                                                     |
+| T4     | Domínio de currículo e análise                      | ✅     |                                                                                                                                     |
+| T5     | Domínio de respostas e falhas                       | ✅     | Categoria `consentimento` acrescentada (ADR-0019)                                                                                   |
+| T6     | Portas, erros, concorrência e apoio de testes       | ✅     |                                                                                                                                     |
+| T7     | Infra base                                          | ✅     |                                                                                                                                     |
+| T8     | Persistência SQLite                                 | ✅     |                                                                                                                                     |
+| T9     | Armazenamento em arquivos                           | ✅     |                                                                                                                                     |
+| T10    | LLM: processo claude, gerador e prompts             | ✅     | Chamada real mínima do `claude -p` validada                                                                                         |
+| T11    | Navegador, leitor e documentos                      | ✅     |                                                                                                                                     |
+| T12    | Resolução e extração                                | ✅     |                                                                                                                                     |
+| T13    | Base de conectores, contratos e captura de fixtures | ✅     | `scripts/capturar-fixture.ts` testado sem navegador (argumentos, sanitização, uso)                                                  |
+| T14    | Conectores Greenhouse, Lever e Ashby                | ✅     | Fixtures reais sanitizadas                                                                                                          |
+| T15    | Conectores SmartRecruiters, Workable e Teamtailor   | ⚠️     | SmartRecruiters com fixture sintética: DataDome bloqueia a leitura (ADR-0020)                                                       |
+| T16    | Conectores Gupy e InHire, com spikes                | ⛔     | Conectores e fixtures sintéticas prontos; spikes exigem candidaturas reais (`docs/spikes/`)                                         |
+| T17    | Cofre de credenciais e MCP camaleao-segredos        | ✅     | Servidor MCP testado em memória e como processo stdio                                                                               |
+| T18    | Agente                                              | ✅     | Validado com o `claude` real contra página local (seção "Validação real do agente")                                                 |
+| T19    | Notificação                                         | ✅     |                                                                                                                                     |
+| T20    | Casos de uso de entrada                             | ✅     |                                                                                                                                     |
+| T21    | Etapas de preparo e `preparar`                      | ✅     |                                                                                                                                     |
+| T22    | Etapas de aplicação e `aplicar`                     | ✅     |                                                                                                                                     |
+| T23    | Casos de uso de consulta                            | ✅     |                                                                                                                                     |
+| T24    | Composição e CLI                                    | ✅     | Testada pela CLI real (`bin/camaleao.js`) e por testes de integração                                                                |
+| T25    | Documentação viva                                   | ✅     | README, arquitetura, convenções, ADR 0001 a 0020, guia de conector, spikes                                                          |
 
 ## Critérios de aceite
 
@@ -75,7 +75,7 @@ Legenda: ✅ concluída e validada · ⚠️ concluída com ressalva (ver observ
 
 - Node 24.8.0 executa `.ts` sem flag (type stripping nativo). `import.meta.main` e `module.registerHooks`
   disponíveis.
-- `node:sqlite` disponível (SQLite 3.50.4); o `ExperimentalWarning` é filtrado em `bin/outbox.js` e nos
+- `node:sqlite` disponível (SQLite 3.50.4); o `ExperimentalWarning` é filtrado em `bin/camaleao.js` e nos
   testes.
 - Versões: TypeScript 6.0.3, ESLint 10.12, typescript-eslint 8.71, Vitest 5.0.3, Zod 4.6.5, Playwright
   1.64.0, `@playwright/mcp` 0.0.83, `@modelcontextprotocol/sdk` 1.32.1, commander 15.0.0, Claude Code 2.1.181.
@@ -104,7 +104,7 @@ Antes da execução final, dois ajustes de estabilidade nos testes: o lançament
 
 Script fora do repositório: servidor local em 127.0.0.1 com formulário sintético (nome, e-mail,
 telefone, LinkedIn, pergunta e upload de PDF), navegador headless com perfil temporário e porta CDP
-própria, `ExecutorAgenteClaude` real com `claude -p` (Sonnet), Playwright MCP e `outbox-segredos`.
+própria, `ExecutorAgenteClaude` real com `claude -p` (Sonnet), Playwright MCP e `camaleao-segredos`.
 
 | Rodada | Prompt | Resultado                                                        | Tempo | POSTs (envios) |
 | ------ | ------ | ---------------------------------------------------------------- | ----- | -------------- |
@@ -144,7 +144,7 @@ implícito) e o formato do `target`; daí a versão 2 do prompt e a remoção de
 - **CLI:** cada comando é importado sob demanda; títulos da ajuda do commander em português; mensagens
   de validação em português; `adicionar` com todas as URLs inválidas sai com 2.
 - **`registrarRetorno`** lista as transições aceitas também na recusa de ENVIADA.
-- **`NavegadorOutbox.garantir`** verifica se o endpoint CDP responde antes de lançar um navegador: se
+- **`NavegadorCamaleao.garantir`** verifica se o endpoint CDP responde antes de lançar um navegador: se
   responde mas a conexão demora, reconecta com mais prazo em vez de abrir um segundo Chrome (encontrado
   porque um teste sob carga deixou um Chromium órfão, com perfil criado dentro da pasta do Playwright;
   o processo e o perfil foram removidos e o teste passou a usar perfil temporário absoluto).

@@ -1,4 +1,4 @@
-import { ErroOutbox, ErroUsuario } from "#dominio/compartilhado/erros.ts";
+import { ErroCamaleao, ErroUsuario } from "#dominio/compartilhado/erros.ts";
 import type { Campo } from "#dominio/respostas/campo.ts";
 import type { RespostaSugerida } from "#dominio/respostas/pacote.ts";
 import type { IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
@@ -83,7 +83,7 @@ export interface ResumoAplicacao {
 }
 
 /**
- * `outbox aplicar`: rodada de gaps e, para cada vaga PRONTA (maior aderência primeiro), preenche o
+ * `camaleao aplicar`: rodada de gaps e, para cada vaga PRONTA (maior aderência primeiro), preenche o
  * formulário (conector ou agente) e abre a revisão. Um erro inesperado numa vaga não interrompe as demais.
  */
 export async function aplicarVagas(
@@ -129,7 +129,7 @@ export async function aplicarVagas(
       const nome = [vaga.empresa, vaga.cargo].filter(Boolean).join(" · ");
       const posicao = `${String(indice + 1)} de ${String(prontas.length)}`;
       deps.interacao.informar(
-        `\nVaga #${String(vaga.id)} ${nome} (${posicao}): abrindo o formulário no navegador do Outbox…`,
+        `\nVaga #${String(vaga.id)} ${nome} (${posicao}): abrindo o formulário no navegador do Camaleão…`,
       );
       const desfecho = await aplicarUma(deps, vaga, entrada, sinal);
       contar(desfecho);
@@ -151,7 +151,7 @@ export async function aplicarVagas(
       contar("erro");
       deps.registrador.erro(`erro ao aplicar a vaga #${String(vaga.id)}`, { erro });
       const mensagem =
-        erro instanceof ErroOutbox ? erro.message : "erro inesperado (detalhes no log)";
+        erro instanceof ErroCamaleao ? erro.message : "erro inesperado (detalhes no log)";
       deps.interacao.informar(`vaga #${String(vaga.id)}: ${mensagem}; ela continua PRONTA`);
     }
   }

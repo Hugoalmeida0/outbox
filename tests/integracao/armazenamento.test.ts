@@ -21,7 +21,7 @@ import { RelogioFixo } from "#testes/apoio/fakes/basicos.ts";
 import { umMaster } from "#testes/apoio/builders.ts";
 
 function ambiente() {
-  const raiz = mkdtempSync(join(tmpdir(), "outbox-arm-"));
+  const raiz = mkdtempSync(join(tmpdir(), "camaleao-arm-"));
   const caminhos = criarCaminhos(raiz, RAIZ);
   mkdirSync(caminhos.curriculoDir, { recursive: true });
   return {
@@ -35,7 +35,7 @@ describe("ArmazemCurriculoYaml", () => {
   it("grava o master novo, recusa sobrescrever sem flag e faz backup com flag", () => {
     const { caminhos, armazem } = ambiente();
     expect(armazem.existeMaster()).toBe(false);
-    expect(() => armazem.lerMaster()).toThrow(/outbox importar/);
+    expect(() => armazem.lerMaster()).toThrow(/camaleao importar/);
     expect(armazem.gravarMasterNovo(umMaster(), { sobrescrever: false })).toEqual({});
     expect(armazem.lerMaster().pessoal.nome).toBe("Ana Exemplo da Silva");
     expect(() => armazem.gravarMasterNovo(umMaster(), { sobrescrever: false })).toThrow(
@@ -197,7 +197,7 @@ describe("RegistroFalhasFs", () => {
   };
 
   it("grava JSON e snapshot por ocorrência, sem sobrescrever, e atualiza", () => {
-    const pasta = mkdtempSync(join(tmpdir(), "outbox-falhas-"));
+    const pasta = mkdtempSync(join(tmpdir(), "camaleao-falhas-"));
     const registro = new RegistroFalhasFs(pasta);
     const id1 = registro.registrar({ ...base, tipo: "falha_conector" }, "<html></html>");
     const id2 = registro.registrar({ ...base, tipo: "falha_conector" }, "<html></html>");
@@ -229,7 +229,7 @@ describe("RegistroFalhasFs", () => {
   });
 
   it("ignora resolvidas e pastas inexistentes", () => {
-    const pasta = mkdtempSync(join(tmpdir(), "outbox-falhas-"));
+    const pasta = mkdtempSync(join(tmpdir(), "camaleao-falhas-"));
     expect(new RegistroFalhasFs(join(pasta, "nada")).listarAbertas()).toEqual([]);
     const registro = new RegistroFalhasFs(pasta);
     const id = registro.registrar({ ...base, tipo: "falha_conector" }, "<html/>");

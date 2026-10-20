@@ -1,7 +1,7 @@
 # Como adicionar um conector de ATS
 
-Um conector ensina o Outbox a preencher o formulário de um ATS de forma determinística. Sem conector, o
-agente (LLM operando o navegador) preenche e a vaga aparece em `outbox falhas` como "sem conector": o
+Um conector ensina o Camaleão a preencher o formulário de um ATS de forma determinística. Sem conector,
+o agente (LLM operando o navegador) preenche e a vaga aparece em `camaleao falhas` como "sem conector": o
 ranking dali indica qual ATS vale um conector. Nenhum caso de uso muda ao adicionar um conector.
 
 ## 1. Garanta o motor no domínio
@@ -20,7 +20,7 @@ Em `src/dominio/vagas/motores.ts`:
 npm run capturar-fixture -- https://<ats>/<empresa>/<vaga> <motor> formulario
 ```
 
-O navegador do Outbox abre na URL; navegue até o formulário aberto e pressione Enter no terminal. A
+O navegador do Camaleão abre na URL; navegue até o formulário aberto e pressione Enter no terminal. A
 fixture é salva em `tests/fixtures/<motor>/formulario.html` sem scripts, valores de input nem PII, com a
 origem e a data num comentário no topo. **Revise o arquivo antes de versionar.** Capture também a página
 de confirmação, se possível, ou escreva uma fixture mínima com o texto de confirmação.
@@ -71,7 +71,7 @@ npm run verificar
 
 ## 6. Valide com uma vaga real
 
-Rode `outbox aplicar --simular --id <id>` numa vaga real do ATS e confira os campos no navegador. Se o
+Rode `camaleao aplicar --simular --id <id>` numa vaga real do ATS e confira os campos no navegador. Se o
 conector falhar em produção, o registro sanitizado em `falhas/<motor>/` mostra o passo e o seletor; o
 agente assume a vaga enquanto isso. Falha ao preencher um campo não derruba o conector: o campo é pulado,
 anunciado antes da revisão e marcado como vazio na tela de revisão.

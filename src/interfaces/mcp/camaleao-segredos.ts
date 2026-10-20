@@ -1,4 +1,4 @@
-// Servidor MCP stdio `outbox-segredos` (spec T17, ADR-012): o agente preenche senha, documentos e respostas
+// Servidor MCP stdio `camaleao-segredos` (spec T17, ADR-012): o agente preenche senha, documentos e respostas
 // sensíveis sem nunca ver os valores. Iniciado pelo `claude -p` do agente com a config gerada pelo executor.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -11,7 +11,7 @@ export type ServicoFerramentas = Pick<
   "emailCadastro" | "preencherSenha" | "preencherDadoSensivel" | "preencherRespostaProtegida"
 >;
 
-/** `OUTBOX_HOSTS_PERMITIDOS`: lista separada por vírgula, aceitando `*.` como prefixo. */
+/** `CAMALEAO_HOSTS_PERMITIDOS`: lista separada por vírgula, aceitando `*.` como prefixo. */
 export function hostsDoAmbiente(valor: string | undefined): string[] {
   return (valor ?? "")
     .split(",")
@@ -19,7 +19,7 @@ export function hostsDoAmbiente(valor: string | undefined): string[] {
     .filter((h) => h !== "");
 }
 
-/** `OUTBOX_VAGA_ID`: id positivo, ou `null` quando ausente ou inválido. */
+/** `CAMALEAO_VAGA_ID`: id positivo, ou `null` quando ausente ou inválido. */
 export function vagaDoAmbiente(valor: string | undefined): IdVaga | null {
   const id = Number(valor);
   return Number.isInteger(id) && id > 0 ? (id as IdVaga) : null;
@@ -38,7 +38,7 @@ const seletor = z.string().min(1).max(500).describe("seletor CSS do campo na pá
 
 /** Registra as quatro ferramentas. Nenhuma devolve o valor preenchido. */
 export function criarServidorSegredos(servico: ServicoFerramentas): McpServer {
-  const servidor = new McpServer({ name: "outbox-segredos", version: "1.0.0" });
+  const servidor = new McpServer({ name: "camaleao-segredos", version: "1.0.0" });
 
   servidor.registerTool(
     "email_cadastro",
@@ -93,8 +93,8 @@ export function criarServidorSegredos(servico: ServicoFerramentas): McpServer {
 async function principal(): Promise<void> {
   const container = criarContainer();
   const servico = container.criarServicoSegredos({
-    vagaId: vagaDoAmbiente(process.env.OUTBOX_VAGA_ID),
-    hostsPermitidos: hostsDoAmbiente(process.env.OUTBOX_HOSTS_PERMITIDOS),
+    vagaId: vagaDoAmbiente(process.env.CAMALEAO_VAGA_ID),
+    hostsPermitidos: hostsDoAmbiente(process.env.CAMALEAO_HOSTS_PERMITIDOS),
   });
   const servidor = criarServidorSegredos(servico);
   const transporte = new StdioServerTransport();
@@ -108,7 +108,7 @@ if (import.meta.main) {
   principal().catch((erro: unknown) => {
     // stdout é do protocolo MCP: diagnóstico só no stderr.
     process.stderr.write(
-      `outbox-segredos: ${erro instanceof Error ? erro.message : String(erro)}\n`,
+      `camaleao-segredos: ${erro instanceof Error ? erro.message : String(erro)}\n`,
     );
     process.exitCode = 1;
   });

@@ -10,7 +10,7 @@ const ROTULOS: Readonly<Record<ResultadoAdicao, string>> = {
   invalida: "inválida",
 };
 
-/** Resultado do `outbox adicionar`: uma linha por URL e o total por resultado. */
+/** Resultado do `camaleao adicionar`: uma linha por URL e o total por resultado. */
 export function formatarAdicao(itens: readonly ItemAdicao[]): string {
   const tabela = formatarTabela(
     ["RESULTADO", "ID", "URL", "DETALHE"],

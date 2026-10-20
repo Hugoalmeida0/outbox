@@ -26,7 +26,7 @@ export function descreverContratoFormulario(
     });
 
     it("captura tela e HTML", async () => {
-      const destino = join(mkdtempSync(join(tmpdir(), "outbox-tela-")), "sub", "antes-envio.png");
+      const destino = join(mkdtempSync(join(tmpdir(), "camaleao-tela-")), "sub", "antes-envio.png");
       await formulario.capturarTela(destino);
       expect(existsSync(destino)).toBe(true);
       expect(await formulario.capturarHtml()).toContain("<html");

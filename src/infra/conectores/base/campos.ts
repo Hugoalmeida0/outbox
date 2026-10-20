@@ -130,7 +130,7 @@ function tipoDoElemento(info: {
 }
 
 /**
- * Preenche um elemento a partir só do seletor, inferindo o tipo (usado pelo outbox-segredos, que recebe
+ * Preenche um elemento a partir só do seletor, inferindo o tipo (usado pelo camaleao-segredos, que recebe
  * seletores do agente): select nativo, grupo de radio/checkbox, combobox, anexo ou texto.
  */
 export async function preencherElemento(

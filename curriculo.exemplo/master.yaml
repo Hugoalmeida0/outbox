@@ -1,5 +1,5 @@
 # Currículo master FICTÍCIO de exemplo. O seu fica em curriculo/master.yaml (fora do git).
-# Gere o seu com `outbox importar <arquivo>` e revise. Tudo aqui deve ser verdade: o Outbox nunca
+# Gere o seu com `camaleao importar <arquivo>` e revise. Tudo aqui deve ser verdade: o Camaleão nunca
 # afirma nada que não tenha lastro neste arquivo.
 idioma: pt # pt ou en: idioma em que este arquivo está escrito
 

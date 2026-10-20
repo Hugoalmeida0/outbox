@@ -12,7 +12,7 @@ const PROIBIDOS =
   /[\\/]node_modules[\\/](playwright|playwright-core|mammoth|node-notifier|@inquirer)[\\/]/;
 
 function carregar(...args: string[]): { codigo: number; carregados: string[] } {
-  const raiz = mkdtempSync(join(tmpdir(), "outbox-init-"));
+  const raiz = mkdtempSync(join(tmpdir(), "camaleao-init-"));
   const processo = spawnSync(
     process.execPath,
     ["--disable-warning=ExperimentalWarning", ESPIAO, raiz, ...args],

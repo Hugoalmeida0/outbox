@@ -13,7 +13,7 @@ export interface DadosFalhas {
   readonly semConector: readonly { readonly motor: string; readonly quantidade: number }[];
 }
 
-/** Dados do `outbox falhas`: falhas abertas por conector e passo, e ranking de motores sem conector. */
+/** Dados do `camaleao falhas`: falhas abertas por conector e passo, e ranking de motores sem conector. */
 export function listarFalhas(deps: {
   readonly falhas: Pick<RegistroFalhas, "listarAbertas">;
 }): DadosFalhas {

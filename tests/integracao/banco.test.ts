@@ -24,7 +24,7 @@ const nova = (n: number, extra: Partial<NovaVaga> = {}): NovaVaga => ({
 
 describe("migrador", () => {
   it("aplica todas num banco novo e só as pendentes num banco existente", () => {
-    const pasta = mkdtempSync(join(tmpdir(), "outbox-mig-"));
+    const pasta = mkdtempSync(join(tmpdir(), "camaleao-mig-"));
     writeFileSync(join(pasta, "0001-a.sql"), "CREATE TABLE a (x INTEGER) STRICT;");
     const db = abrirConexao(join(pasta, "teste.db"));
     expect(migrar(db, pasta)).toBe(1);
@@ -36,7 +36,7 @@ describe("migrador", () => {
   });
 
   it("faz rollback e não avança a versão quando uma migração falha", () => {
-    const pasta = mkdtempSync(join(tmpdir(), "outbox-mig-"));
+    const pasta = mkdtempSync(join(tmpdir(), "camaleao-mig-"));
     writeFileSync(join(pasta, "0001-ok.sql"), "CREATE TABLE ok (x INTEGER) STRICT;");
     writeFileSync(
       join(pasta, "0002-ruim.sql"),
@@ -197,9 +197,9 @@ describe("RepositorioVagasSqlite", () => {
   });
 
   it("BEGIN IMMEDIATE dá exclusividade de escrita entre conexões ao mesmo arquivo", () => {
-    const pasta = mkdtempSync(join(tmpdir(), "outbox-db-"));
+    const pasta = mkdtempSync(join(tmpdir(), "camaleao-db-"));
     mkdirSync(pasta, { recursive: true });
-    const arquivo = join(pasta, "outbox.db");
+    const arquivo = join(pasta, "camaleao.db");
     const dbA = abrirConexao(arquivo);
     migrar(dbA, PASTA_MIGRACOES);
     const dbB = abrirConexao(arquivo, { esperaLockMs: 50 });

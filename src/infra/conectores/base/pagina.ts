@@ -53,7 +53,7 @@ export async function tratarAutenticacao(
         : "Preenchi o e-mail e a senha deste portal. Conclua o login no navegador e pressione Enter",
     );
   } else {
-    await aguardarUsuario("Faça login no navegador do Outbox e pressione Enter");
+    await aguardarUsuario("Faça login no navegador do Camaleão e pressione Enter");
   }
   await pagina.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
 }

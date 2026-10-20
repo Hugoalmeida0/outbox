@@ -1,4 +1,4 @@
-// Servidor MCP `outbox-segredos` (AC18): ferramentas, validação de entrada e retorno sem valores.
+// Servidor MCP `camaleao-segredos` (AC18): ferramentas, validação de entrada e retorno sem valores.
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -9,10 +9,10 @@ import {
   hostsDoAmbiente,
   vagaDoAmbiente,
   type ServicoFerramentas,
-} from "#interfaces/mcp/outbox-segredos.ts";
+} from "#interfaces/mcp/camaleao-segredos.ts";
 
 const SERVIDOR = fileURLToPath(
-  new URL("../../src/interfaces/mcp/outbox-segredos.ts", import.meta.url),
+  new URL("../../src/interfaces/mcp/camaleao-segredos.ts", import.meta.url),
 );
 const FERRAMENTAS = [
   "email_cadastro",
@@ -64,7 +64,7 @@ function texto(resultado: Awaited<ReturnType<Client["callTool"]>>): string {
   return primeiro?.text ?? "";
 }
 
-describe("servidor MCP outbox-segredos", () => {
+describe("servidor MCP camaleao-segredos", () => {
   it("expõe as quatro ferramentas e repassa as entradas validadas", async () => {
     const { servico, chamadas } = servicoEspiao();
     const cliente = await conectar(servico);
@@ -131,8 +131,8 @@ describe("servidor MCP outbox-segredos", () => {
       args: ["--disable-warning=ExperimentalWarning", SERVIDOR],
       env: {
         ...(process.env as Record<string, string>),
-        OUTBOX_VAGA_ID: "1",
-        OUTBOX_HOSTS_PERMITIDOS: "127.0.0.1",
+        CAMALEAO_VAGA_ID: "1",
+        CAMALEAO_HOSTS_PERMITIDOS: "127.0.0.1",
       },
       stderr: "pipe",
     });

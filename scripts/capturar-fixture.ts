@@ -8,7 +8,7 @@ import { listaPii } from "#dominio/falhas/pii.ts";
 import { sanitizarHtml } from "#dominio/falhas/sanitizar.ts";
 import { ArmazemCurriculoYaml } from "#infra/armazenamento/armazem-curriculo-yaml.ts";
 import { carregarConfig } from "#infra/config/carregar-config.ts";
-import { NavegadorOutbox } from "#infra/navegador/navegador-outbox.ts";
+import { NavegadorCamaleao } from "#infra/navegador/navegador-camaleao.ts";
 import { criarCaminhos, RAIZ } from "#infra/sistema/caminhos.ts";
 import { escreverAtomico } from "#infra/sistema/escrita-atomica.ts";
 import { isoLocal, RelogioSistema } from "#infra/sistema/relogio-sistema.ts";
@@ -70,7 +70,7 @@ async function principal(): Promise<void> {
     );
   }
 
-  const navegador = new NavegadorOutbox({
+  const navegador = new NavegadorCamaleao({
     portaCdp: config.navegador.portaCdp,
     executavel: config.navegador.executavel,
     pastaPerfil: caminhos.navegadorDir,

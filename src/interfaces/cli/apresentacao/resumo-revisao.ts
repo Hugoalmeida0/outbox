@@ -51,7 +51,7 @@ export function formatarResumoRevisao(r: ResumoRevisao): string {
   return linhas.join("\n");
 }
 
-/** Resumo do `outbox aplicar`. */
+/** Resumo do `camaleao aplicar`. */
 export function formatarResumoAplicacao(resumo: ResumoAplicacao): string {
   const desfechos = Object.entries(resumo.desfechos)
     .filter(([, n]) => n > 0)

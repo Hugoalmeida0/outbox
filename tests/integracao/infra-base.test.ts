@@ -26,7 +26,7 @@ import { listaPii } from "#dominio/falhas/pii.ts";
 import { RelogioFixo } from "#testes/apoio/fakes/basicos.ts";
 import { umMaster, umPerfil } from "#testes/apoio/builders.ts";
 
-const novaPasta = () => mkdtempSync(join(tmpdir(), "outbox-teste-"));
+const novaPasta = () => mkdtempSync(join(tmpdir(), "camaleao-teste-"));
 const sinal = () => new AbortController().signal;
 
 describe("config", () => {
@@ -148,7 +148,7 @@ describe("ClienteHttpFetch", () => {
       sinal(),
     );
     expect(r.ok).toBe(true);
-    expect(r.ua).toContain("Outbox");
+    expect(r.ua).toContain("Camaleao");
   });
 
   it("repete em 5xx até o limite de tentativas", async () => {
@@ -189,7 +189,7 @@ describe("RegistradorJsonl", () => {
       perfil: { salario: 15000 },
     });
 
-    const arquivo = readFileSync(join(pasta, "outbox-2026-10-10.jsonl"), "utf8");
+    const arquivo = readFileSync(join(pasta, "camaleao-2026-10-10.jsonl"), "utf8");
     const linhas = arquivo
       .trim()
       .split("\n")

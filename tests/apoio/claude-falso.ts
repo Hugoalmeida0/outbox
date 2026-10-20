@@ -29,18 +29,18 @@ export interface ClaudeFalso {
 
 /** Ativa o claude falso via variáveis de ambiente; `restaurar()` desfaz. */
 export function usarClaudeFalso(regras: readonly RegraClaude[]): ClaudeFalso {
-  const pasta = mkdtempSync(join(tmpdir(), "outbox-claude-"));
+  const pasta = mkdtempSync(join(tmpdir(), "camaleao-claude-"));
   const roteiro = join(pasta, "roteiro.json");
   const registro = join(pasta, "registro.jsonl");
   writeFileSync(roteiro, JSON.stringify({ regras }));
   const anteriores = {
-    bin: process.env.OUTBOX_CLAUDE_BIN,
-    roteiro: process.env.OUTBOX_CLAUDE_ROTEIRO,
-    registro: process.env.OUTBOX_CLAUDE_REGISTRO,
+    bin: process.env.CAMALEAO_CLAUDE_BIN,
+    roteiro: process.env.CAMALEAO_CLAUDE_ROTEIRO,
+    registro: process.env.CAMALEAO_CLAUDE_REGISTRO,
   };
-  process.env.OUTBOX_CLAUDE_BIN = BINARIO_FALSO;
-  process.env.OUTBOX_CLAUDE_ROTEIRO = roteiro;
-  process.env.OUTBOX_CLAUDE_REGISTRO = registro;
+  process.env.CAMALEAO_CLAUDE_BIN = BINARIO_FALSO;
+  process.env.CAMALEAO_CLAUDE_ROTEIRO = roteiro;
+  process.env.CAMALEAO_CLAUDE_REGISTRO = registro;
   return {
     pasta,
     chamadas: () =>
@@ -53,9 +53,9 @@ export function usarClaudeFalso(regras: readonly RegraClaude[]): ClaudeFalso {
         : [],
     restaurar: () => {
       for (const [chave, nome] of [
-        ["bin", "OUTBOX_CLAUDE_BIN"],
-        ["roteiro", "OUTBOX_CLAUDE_ROTEIRO"],
-        ["registro", "OUTBOX_CLAUDE_REGISTRO"],
+        ["bin", "CAMALEAO_CLAUDE_BIN"],
+        ["roteiro", "CAMALEAO_CLAUDE_ROTEIRO"],
+        ["registro", "CAMALEAO_CLAUDE_REGISTRO"],
       ] as const) {
         const valor = anteriores[chave];
         if (valor === undefined) Reflect.deleteProperty(process.env, nome);

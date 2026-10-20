@@ -17,7 +17,7 @@ const IFRAMES_CAPTCHA = [
 ].join(", ");
 
 /**
- * Detecta CAPTCHA visível que pede ação ou pedido de verificação de e-mail. O Outbox nunca tenta
+ * Detecta CAPTCHA visível que pede ação ou pedido de verificação de e-mail. O Camaleão nunca tenta
  * resolvê-los: a detecção só serve para pausar e chamar o usuário.
  */
 export async function detectarBloqueio(pagina: Page): Promise<Bloqueio | null> {

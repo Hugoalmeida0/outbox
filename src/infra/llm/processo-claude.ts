@@ -2,6 +2,7 @@ import { spawn as spawnNativo } from "node:child_process";
 import spawn from "cross-spawn";
 import { z } from "zod";
 import { ErroLimiteUso, ErroLlm, ErroMaxTurnos, ErroTimeoutLlm } from "#aplicacao/portas/erros.ts";
+import { lerVariavel } from "#infra/config/variaveis.ts";
 
 /**
  * Verificado em 2026-10-10 com Claude Code 2.1.181: `-p --output-format json` devolve um único objeto
@@ -55,7 +56,7 @@ function encerrarArvore(pid: number | undefined, matar: () => void): void {
 }
 
 function comando(): { exe: string; prefixo: string[] } {
-  const bin = process.env.OUTBOX_CLAUDE_BIN;
+  const bin = lerVariavel("CLAUDE_BIN");
   if (!bin) return { exe: "claude", prefixo: [] };
   return /\.(m?js|ts)$/.test(bin)
     ? { exe: process.execPath, prefixo: [bin] }

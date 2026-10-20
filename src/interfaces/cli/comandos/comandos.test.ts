@@ -158,7 +158,7 @@ describe("executar", () => {
   async function rodar(casos: Partial<CasosDeUso>, ...args: string[]) {
     const duble = containerDuble(casos);
     const saida: string[] = [];
-    const codigo = await executar(["node", "outbox", ...args], {
+    const codigo = await executar(["node", "camaleao", ...args], {
       saida: { escrever: (t) => saida.push(t), erro: (t) => saida.push(t) },
       fabricarContainer: () => duble.container,
       alvoSinais: { on: () => undefined, off: () => undefined },

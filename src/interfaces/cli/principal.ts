@@ -40,7 +40,7 @@ function versao(): string {
 /** Define os comandos. Cada ação importa o seu módulo sob demanda (inicialização rápida, AC31). */
 function criarPrograma(ctx: ContextoComando, definirCodigo: (codigo: number) => void): Command {
   const programa = new Command()
-    .name("outbox")
+    .name("camaleao")
     .description("Candidatura assistida com currículo camaleão. Nunca envia sem a sua confirmação.")
     .version(versao(), "-v, --version", "mostra a versão")
     .helpOption("-h, --help", "mostra a ajuda")
@@ -132,7 +132,7 @@ function criarPrograma(ctx: ContextoComando, definirCodigo: (codigo: number) => 
 
   programa
     .command("navegador")
-    .description("abre o navegador do Outbox para fazer logins")
+    .description("abre o navegador do Camaleão para fazer logins")
     .action(async () => {
       const { comandoNavegador } = await import("./comandos/navegador.ts");
       definirCodigo(await comandoNavegador(ctx));

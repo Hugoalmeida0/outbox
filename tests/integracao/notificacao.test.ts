@@ -5,15 +5,15 @@ import { RegistradorMemoria } from "#testes/apoio/fakes/basicos.ts";
 const aguardar = () => new Promise((r) => setTimeout(r, 20));
 
 describe("NotificadorWindows", () => {
-  it("emite o toast com appID Outbox quando ativo", async () => {
+  it("emite o toast com appID Camaleão quando ativo", async () => {
     const enviados: unknown[] = [];
     const motor: MotorToast = { notify: (o, cb) => (enviados.push(o), cb?.(null)) };
     new NotificadorWindows(true, new RegistradorMemoria(), () => Promise.resolve(motor)).notificar(
-      "Outbox",
+      "Camaleão",
       "pronto",
     );
     await aguardar();
-    expect(enviados).toEqual([{ title: "Outbox", message: "pronto", appID: "Outbox" }]);
+    expect(enviados).toEqual([{ title: "Camaleão", message: "pronto", appID: "Camaleão" }]);
   });
 
   it("não faz nada quando desativado e transforma falhas em aviso", async () => {

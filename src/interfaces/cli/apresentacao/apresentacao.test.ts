@@ -88,7 +88,7 @@ describe("formatarStatus (AC10, AC21)", () => {
         "",
         "Aguardando você:",
         "  MANUAL          #3 Acme · Dev Sênior (candidatura_por_email: envie para vagas@acme.com)",
-        "  PENDENTE_TESTE  #7 (empresa?) · Dev Sênior: conclua o teste e rode `outbox retorno 7 ENVIADA`",
+        "  PENDENTE_TESTE  #7 (empresa?) · Dev Sênior: conclua o teste e rode `camaleao retorno 7 ENVIADA`",
       ].join("\n"),
     );
   });
@@ -100,7 +100,7 @@ describe("formatarStatus (AC10, AC21)", () => {
       aguardandoVoce: { manuais: [], pendentesTeste: [] },
     };
     expect(puro(formatarStatus(vazio))).toBe(
-      "Vagas: 0\n\nNenhuma vaga. Adicione com `outbox adicionar <url>`.",
+      "Vagas: 0\n\nNenhuma vaga. Adicione com `camaleao adicionar <url>`.",
     );
     expect(puro(formatarStatus(vazio, "OFERTA"))).toBe(
       "Vagas: 0\n\nNenhuma vaga com status OFERTA.",
@@ -164,8 +164,8 @@ describe("resumos de preparo e aplicação", () => {
         "  PRONTA 2 · ERRO_PREPARO 1",
         "Erros (tentam de novo no próximo `preparar`):",
         "  #4 extracao_falhou: página fora do ar",
-        "Limite de uso do Claude atingido: as vagas restantes continuam NOVA. Rode `outbox preparar` mais tarde.",
-        "Próximo passo: `outbox aplicar` (2 pronta(s)).",
+        "Limite de uso do Claude atingido: as vagas restantes continuam NOVA. Rode `camaleao preparar` mais tarde.",
+        "Próximo passo: `camaleao aplicar` (2 pronta(s)).",
       ].join("\n"),
     );
     expect(
@@ -176,7 +176,7 @@ describe("resumos de preparo e aplicação", () => {
         reavaliadas: 0,
         interrompido: null,
       }),
-    ).toBe("Nenhuma vaga para preparar. Adicione com `outbox adicionar <url>`.");
+    ).toBe("Nenhuma vaga para preparar. Adicione com `camaleao adicionar <url>`.");
     expect(
       puro(
         formatarResumoPreparo({

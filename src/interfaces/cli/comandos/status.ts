@@ -13,7 +13,7 @@ const esquema = z.object({
     .optional(),
 });
 
-/** `outbox status [--status <STATUS>]`. */
+/** `camaleao status [--status <STATUS>]`. */
 export function comandoStatus(ctx: ContextoComando, bruto: unknown): number {
   const { status } = validarEntrada(esquema, bruto);
   const dados = ctx.container().casos.listarStatus(status ? { status } : {});
