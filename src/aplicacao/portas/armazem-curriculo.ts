@@ -14,6 +14,16 @@ export interface ArmazemCurriculo {
   /** Define o nível de um idioma em `idiomas` (acrescenta o idioma se ausente), preservando comentários. */
   definirIdioma(idioma: string, nivel: NivelIdioma): void;
   lerPerfil(): Perfil;
+  /**
+   * YAML do perfil sem validar, para o formulário mostrar um perfil parcial; `existe: false` sem o
+   * arquivo. YAML com erro de sintaxe lança `ErroUsuario`.
+   */
+  lerPerfilBruto(): { readonly existe: boolean; readonly dados: unknown };
+  /**
+   * Grava o perfil (validado com `esquemaPerfil`) preservando os comentários e a ordem das chaves que
+   * continuam; sem arquivo, parte dos comentários de `curriculo.exemplo/perfil.yaml`. Escrita atômica.
+   */
+  gravarPerfil(perfil: Perfil): void;
   lerBanco(): BancoRespostas;
   gravarBanco(banco: BancoRespostas): void;
   lerGapsNegados(): readonly string[];

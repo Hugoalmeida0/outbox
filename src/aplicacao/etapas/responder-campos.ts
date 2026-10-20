@@ -11,7 +11,7 @@ import {
   type Contato,
   type RespostaSugerida,
 } from "#dominio/respostas/pacote.ts";
-import type { Perfil } from "#dominio/respostas/perfil.ts";
+import type { Perfil, TabelaSalario } from "#dominio/respostas/perfil.ts";
 import { melhorOpcao } from "#dominio/respostas/opcoes.ts";
 import {
   calcularSalario,
@@ -116,6 +116,20 @@ function base(
   };
 }
 
+/**
+ * Pretensão sem tabela salarial no perfil: resposta vazia com `fonte: "perfil"`, que a revisão destaca
+ * como vazia na página (`ehSemPretensao`).
+ */
+function semPretensao(campo: Campo): RespostaSugerida {
+  return {
+    ...base(campo, "salario"),
+    valor: null,
+    fonte: "perfil",
+    confianca: "baixa",
+    especificaDaVaga: false,
+  };
+}
+
 /** Resposta por código para campos determinísticos; `null` quando o campo exige o LLM. */
 function respostaPorCodigo(
   campo: Campo,
@@ -152,11 +166,13 @@ function respostaPorCodigo(
       return r(c.valor, c.confianca);
     }
     case "salario_atual":
-      return r(valorSalarioAtual(perfil.salario.atual, campo.tipo === "numero"));
+      return r(valorSalarioAtual(perfil.salario?.atual, campo.tipo === "numero"));
+    case "salario":
+      // Sem tabela no perfil, a pretensão fica vazia: nem valor por código nem pergunta ao LLM.
+      return perfil.salario ? null : semPretensao(campo);
     case "curriculo":
     case "anexo":
       return null;
-    case "salario":
     case "carta":
     case "pergunta":
       return null;
@@ -294,6 +310,7 @@ function respostaSalario(
   pedido: SaidaLlm["salarios"][number] | undefined,
   contexto: ContextoResposta,
   perfil: Perfil,
+  tabela: TabelaSalario,
 ): RespostaSugerida {
   const { regime, confianca } = resolverRegime(
     pedido?.regime ?? contexto.analise?.regime ?? "nao_informado",
@@ -305,7 +322,7 @@ function respostaSalario(
       periodo: pedido?.periodo ?? "mensal",
       moeda: pedido?.moeda ?? (regime === "contractor" ? "USD" : "BRL"),
     },
-    perfil.salario,
+    tabela,
   );
   const texto =
     campo.opcoes && campo.opcoes.length > 0 ? escolherFaixa(campo.opcoes, valor) : String(valor);
@@ -403,7 +420,12 @@ async function responderPeloLlm(
   for (const { campo, categoria } of pendentes) {
     if (categoria === "salario") {
       const pedido = saida.salarios.find((s) => s.campoId === campo.id);
-      respostas.set(campo.id, respostaSalario(campo, pedido, contexto, perfil));
+      respostas.set(
+        campo.id,
+        perfil.salario
+          ? respostaSalario(campo, pedido, contexto, perfil, perfil.salario)
+          : semPretensao(campo),
+      );
       continue;
     }
     const resposta = respostaGerada(

@@ -13,6 +13,15 @@ export interface OpcoesNavegadorCamaleao {
   /** Argumentos extras ao lançar (os testes usam `--headless=new`). */
   readonly argsExtras?: readonly string[];
   readonly esperaConexaoMs?: number;
+  /**
+   * Origens (ex.: o site do agente local) cujas abas nunca são escolhidas como página da vaga: o agente
+   * LLM e os conectores não podem tomar a aba do site por engano nem por injeção (ADR-0025).
+   */
+  readonly origensIgnoradas?: readonly string[];
+}
+
+function origemDe(url: string): string | null {
+  return URL.canParse(url) ? new URL(url).origin : null;
 }
 
 function caminhosChrome(): string[] {
@@ -137,14 +146,27 @@ export class NavegadorCamaleao implements NavegadorUsuario {
    */
   async paginaMaisRecente(hosts: readonly string[] = []): Promise<Page | null> {
     const navegador = await this.garantir();
-    const paginas = (navegador.contexts()[0]?.pages() ?? []).filter((p) =>
-      /^https?:/.test(p.url()),
+    const ignoradas = new Set(this.opcoes.origensIgnoradas ?? []);
+    const paginas = (navegador.contexts()[0]?.pages() ?? []).filter(
+      (p) => /^https?:/.test(p.url()) && !ignoradas.has(origemDe(p.url()) ?? ""),
     );
     const daVaga = paginas.filter((p) => {
       const host = URL.canParse(p.url()) ? new URL(p.url()).hostname : "";
       return hosts.some((padrao) => hostCasaPadrao(host, padrao));
     });
     return daVaga.at(-1) ?? paginas.at(-1) ?? null;
+  }
+
+  /** Abre `url` numa janela nova (CDP `Target.createTarget` com `newWindow`), não numa aba. */
+  async abrirJanela(url: string): Promise<void> {
+    const navegador = await this.garantir();
+    const sessao = await navegador.newBrowserCDPSession();
+    try {
+      await sessao.send("Target.createTarget", { url, newWindow: true });
+    } finally {
+      // Limpeza best-effort: a janela já foi pedida; a sessão CDP some com a conexão de qualquer forma.
+      await sessao.detach().catch(() => undefined);
+    }
   }
 
   async abrirParaLogin(): Promise<void> {

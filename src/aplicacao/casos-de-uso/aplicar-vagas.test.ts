@@ -151,6 +151,33 @@ describe("aplicarVagas: revisão e envio", () => {
     ]);
   });
 
+  it("sem salário no perfil, a pretensão vazia aparece destacada na revisão (AC12)", async () => {
+    const salario: Campo = {
+      id: "sal",
+      rotulo: "Pretensão salarial",
+      tipo: "texto",
+      obrigatorio: true,
+      categoria: "salario",
+    };
+    const { amb, formulario } = criar({ campos: [...CAMPOS, salario] });
+    const { salario: _salario, ...semSalario } = amb.curriculo.perfil;
+    amb.curriculo.perfil = semSalario;
+    formulario.valores = [
+      { rotulo: "First Name", valor: "Ana", ehArquivo: false },
+      { rotulo: "Por que você quer trabalhar aqui?", valor: "Admiro o produto.", ehArquivo: false },
+      { rotulo: "Pretensão salarial", valor: "", ehArquivo: false },
+    ];
+    await prontas(amb);
+    const interacao = roteiro(amb, "pular");
+    await aplicarVagas(amb.deps(), { simular: true }, sinal());
+    expect(interacao.resumos[0]?.respostas).toContainEqual({
+      rotulo: "Pretensão salarial",
+      valor: "(sem resposta)",
+      nova: true,
+      vaziaNaPagina: true,
+    });
+  });
+
   it("pular, manual, ver o PDF e sair respeitam a escolha e fecham a aba", async () => {
     const { amb, formulario } = criar();
     const [a, b, c] = await prontas(

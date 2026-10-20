@@ -57,6 +57,11 @@ function esperaValor(resposta: RespostaSugerida): boolean {
   );
 }
 
+/** Pretensão sem tabela salarial no perfil (`responderCampos`): campo deixado vazio de propósito. */
+function ehSemPretensao(resposta: RespostaSugerida): boolean {
+  return resposta.categoria === "salario" && resposta.valor === null && resposta.fonte === "perfil";
+}
+
 /**
  * Monta a tela de revisão conferindo a página: uma resposta planejada cujo campo está vazio no formulário
  * aparece como vazia, em vez de parecer preenchida.
@@ -88,7 +93,8 @@ async function montarResumo(
         rotulo: r.rotulo,
         valor: r.valor ?? "(sem resposta)",
         nova: r.fonte === "gerada" || r.confianca === "baixa",
-        vaziaNaPagina: esperaValor(r) && acharValor(valores, r)?.valor.trim() === "",
+        vaziaNaPagina:
+          (esperaValor(r) || ehSemPretensao(r)) && acharValor(valores, r)?.valor.trim() === "",
       })),
       ...perguntasNaHora.map((p) => ({ rotulo: p.rotulo, valor: p.valor, nova: true })),
     ],

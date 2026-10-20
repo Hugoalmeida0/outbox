@@ -18,7 +18,8 @@ import { ErroUsuario } from "#dominio/compartilhado/erros.ts";
 import { ErroInfra } from "#aplicacao/portas/erros.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
 import { RelogioFixo } from "#testes/apoio/fakes/basicos.ts";
-import { umMaster } from "#testes/apoio/builders.ts";
+import { esquemaPerfil } from "#dominio/respostas/perfil.ts";
+import { umMaster, umPerfil } from "#testes/apoio/builders.ts";
 
 function ambiente() {
   const raiz = mkdtempSync(join(tmpdir(), "camaleao-arm-"));
@@ -79,7 +80,7 @@ describe("ArmazemCurriculoYaml", () => {
     const { caminhos, armazem } = ambiente();
     writeFileSync(caminhos.perfil, "endereco: {cidade: X, pais: Y}\n");
     expect(() => armazem.lerPerfil()).toThrow(ErroUsuario);
-    expect(() => armazem.lerPerfil()).toThrow(/perfil\.yaml: salario/);
+    expect(() => armazem.lerPerfil()).toThrow(/perfil\.yaml: disponibilidade/);
     writeFileSync(caminhos.perfil, "a: [");
     expect(() => armazem.lerPerfil()).toThrow(/não é um YAML válido/);
   });
@@ -113,6 +114,42 @@ describe("ArmazemCurriculoYaml", () => {
     armazem.negarGap("go");
     expect(armazem.lerGapsNegados()).toEqual(["kafka", "go"]);
     expect(readFileSync(caminhos.gaps, "utf8")).toContain("# Termos que você declarou");
+  });
+
+  it("lê o perfil bruto e grava o perfil preservando comentários e a ordem das chaves (AC11)", () => {
+    const { caminhos, armazem } = ambiente();
+    expect(armazem.lerPerfilBruto()).toEqual({ existe: false, dados: null });
+
+    // Sem arquivo, parte do exemplo: os comentários explicativos vêm junto, os valores fictícios não.
+    const perfil = { ...umPerfil(), comoSoube: "Indicação" };
+    armazem.gravarPerfil(perfil);
+    const criado = readFileSync(caminhos.perfil, "utf8");
+    expect(criado).toContain("# Perfil FICTÍCIO de exemplo");
+    expect(criado).not.toContain("000.000.000-00");
+    expect(armazem.lerPerfil()).toEqual(esquemaPerfil.parse(perfil));
+
+    writeFileSync(
+      caminhos.perfil,
+      `# meu perfil\n${criado.replace("comoSoube:", "# como soube\ncomoSoube:")}`,
+    );
+    const { salario: _salario, ...semSalario } = perfil;
+    armazem.gravarPerfil({
+      ...semSalario,
+      preferencias: { ...perfil.preferencias, modelos: ["remoto"] },
+    });
+    const texto = readFileSync(caminhos.perfil, "utf8");
+    expect(texto).toMatch(/^# meu perfil/);
+    expect(texto).toContain("# como soube\ncomoSoube: Indicação");
+    expect(texto).toContain("modelos: [ remoto ]");
+    expect(texto).not.toMatch(/^salario:/m);
+    expect(Object.keys(armazem.lerPerfilBruto().dados as object).slice(0, 2)).toEqual([
+      "documentos",
+      "endereco",
+    ]);
+    expect(armazem.lerPerfil().salario).toBeUndefined();
+
+    writeFileSync(caminhos.perfil, "a: [");
+    expect(() => armazem.lerPerfilBruto()).toThrow(/não é um YAML válido/);
   });
 
   it("cria banco e gaps quando os arquivos não existem", () => {

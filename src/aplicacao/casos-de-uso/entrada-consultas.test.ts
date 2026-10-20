@@ -1,14 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { transicionarVaga } from "#aplicacao/compartilhado/transicionar-vaga.ts";
-import { ErroTransicaoInvalida, ErroUsuario, ErroValidacao } from "#dominio/compartilhado/erros.ts";
+import {
+  ErroEntradaInvalida,
+  ErroTransicaoInvalida,
+  ErroUsuario,
+  ErroValidacao,
+} from "#dominio/compartilhado/erros.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
-import { umMaster, umaAtualizacao } from "#testes/apoio/builders.ts";
+import { umMaster, umPerfil, umaAtualizacao } from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { ArmazemCurriculoMemoria } from "#testes/apoio/fakes/armazens.ts";
 import { GeradorEstruturadoRoteirizado } from "#testes/apoio/fakes/llm.ts";
 import { abrirNavegador } from "./abrir-navegador.ts";
 import { adicionarVagas } from "./adicionar-vagas.ts";
+import { obterEstadoCurriculo } from "./estado-curriculo.ts";
 import { importarCurriculo } from "./importar-curriculo.ts";
+import { obterPerfil } from "./obter-perfil.ts";
+import { salvarPerfil } from "./salvar-perfil.ts";
 import { listarFalhas } from "./listar-falhas.ts";
 import { listarStatus } from "./listar-status.ts";
 import { registrarRetorno } from "./registrar-retorno.ts";
@@ -183,6 +191,54 @@ describe("listarStatus, registrarRetorno e listarFalhas (AC21)", () => {
     expect(dados.aguardandoVoce.manuais[0]).toMatchObject({ id: a.id, destino: "vagas@acme.com" });
     expect(dados.aguardandoVoce.pendentesTeste.map((l) => l.id)).toEqual([b.id]);
     expect(listarStatus(amb.deps(), { status: "NOVA" }).linhas).toHaveLength(1);
+  });
+
+  it("inclui o PDF do currículo das vagas que já têm um gerado", () => {
+    const amb = criarAmbienteAplicacao();
+    const comPdf = amb.inserirVaga("https://empresa.gupy.io/jobs/2");
+    const semPdf = amb.inserirVaga("https://empresa.gupy.io/jobs/3");
+    amb.vagas.atualizar(comPdf.id, umaAtualizacao({ atsAntes: 50, atsDepois: 80 }));
+    amb.artefatos.gravarTexto(comPdf.id, "pdf-curriculo", "%PDF");
+    const linhas = listarStatus(amb.deps(), {}).linhas;
+    expect(linhas.find((l) => l.id === comPdf.id)?.pdf).toBe(
+      amb.artefatos.caminho(comPdf.id, "pdf-curriculo"),
+    );
+    expect(linhas.find((l) => l.id === semPdf.id)?.pdf).toBeUndefined();
+  });
+
+  it("obterPerfil, salvarPerfil e obterEstadoCurriculo (AC11)", () => {
+    const curriculo = new ArmazemCurriculoMemoria();
+    expect(obterPerfil({ curriculo })).toMatchObject({ perfil: umPerfil(), erros: [] });
+    expect(obterEstadoCurriculo({ curriculo })).toMatchObject({
+      masterExiste: true,
+      perfilValido: true,
+      errosPerfil: [],
+    });
+
+    const invalido = { ...umPerfil(), endereco: { cidade: "" }, comoSoube: undefined };
+    let erro: unknown;
+    try {
+      salvarPerfil({ curriculo }, invalido);
+    } catch (e) {
+      erro = e;
+    }
+    expect(erro).toBeInstanceOf(ErroEntradaInvalida);
+    expect((erro as ErroEntradaInvalida).problemas.map((p) => p.caminho)).toEqual(
+      expect.arrayContaining(["endereco.cidade", "endereco.pais", "comoSoube"]),
+    );
+    expect(curriculo.perfil).toEqual(umPerfil());
+
+    const { salario: _salario, diversidade: _diversidade, ...semSensiveis } = umPerfil();
+    salvarPerfil({ curriculo }, { ...semSensiveis, documentos: {} });
+    expect(curriculo.perfil.salario).toBeUndefined();
+    expect(curriculo.perfil.documentos).toEqual({});
+
+    curriculo.perfil = { ...umPerfil(), preferencias: undefined } as never;
+    expect(obterPerfil({ curriculo })).toMatchObject({
+      perfil: null,
+      erros: [{ caminho: "preferencias" }],
+    });
+    expect(obterEstadoCurriculo({ curriculo }).perfilValido).toBe(false);
   });
 
   it("registra retornos válidos e recusa os inválidos", () => {

@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { isMap, isSeq, stringify } from "yaml";
+import { isMap, isSeq, parseDocument, stringify } from "yaml";
 import type { ArmazemCurriculo } from "#aplicacao/portas/armazem-curriculo.ts";
 import type { Relogio } from "#aplicacao/portas/relogio.ts";
 import { ErroUsuario } from "#dominio/compartilhado/erros.ts";
@@ -17,7 +17,7 @@ import { esquemaPerfil, type Perfil } from "#dominio/respostas/perfil.ts";
 import type { Caminhos } from "../sistema/caminhos.ts";
 import { escreverAtomico } from "../sistema/escrita-atomica.ts";
 import { isoLocal } from "../sistema/relogio-sistema.ts";
-import { editarYaml, lerYaml } from "./yaml.ts";
+import { editarYaml, lerYaml, lerYamlBruto, mesclarNoDocumento } from "./yaml.ts";
 
 const CABECALHO_MASTER =
   "# Currículo master: fonte única e verdadeira. Gerado por `camaleao importar`; revise e ajuste à vontade.\n" +
@@ -99,6 +99,26 @@ export class ArmazemCurriculoYaml implements ArmazemCurriculo {
       );
     }
     return lerYaml(this.caminhos.perfil, esquemaPerfil);
+  }
+
+  lerPerfilBruto(): { existe: boolean; dados: unknown } {
+    if (!existsSync(this.caminhos.perfil)) return { existe: false, dados: null };
+    return { existe: true, dados: lerYamlBruto(this.caminhos.perfil) };
+  }
+
+  gravarPerfil(perfil: Perfil): void {
+    const validado = esquemaPerfil.parse(perfil);
+    const origem = existsSync(this.caminhos.perfil)
+      ? this.caminhos.perfil
+      : join(this.caminhos.exemplosDir, "perfil.yaml");
+    const documento = parseDocument(readFileSync(origem, "utf8"));
+    if (documento.errors.length > 0) {
+      throw new ErroUsuario(
+        `perfil.yaml não é um YAML válido: ${documento.errors[0]?.message ?? ""}`,
+      );
+    }
+    mesclarNoDocumento(documento, validado);
+    escreverAtomico(this.caminhos.perfil, documento.toString());
   }
 
   lerBanco(): BancoRespostas {

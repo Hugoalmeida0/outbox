@@ -4,7 +4,13 @@ import { transicionarVaga } from "#aplicacao/compartilhado/transicionar-vaga.ts"
 import type { Campo } from "#dominio/respostas/campo.ts";
 import { esquemaRespostasSalvas } from "#dominio/respostas/pacote.ts";
 import type { CamposAtualizaveisVaga, IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
-import { umaAnalise, umCurriculoGerado, umMaster, umaAtualizacao } from "#testes/apoio/builders.ts";
+import {
+  umaAnalise,
+  umCurriculoGerado,
+  umMaster,
+  umaAtualizacao,
+  umPerfil,
+} from "#testes/apoio/builders.ts";
 import { criarAmbienteAplicacao, type AmbienteAplicacao } from "#testes/apoio/deps-aplicacao.ts";
 import { InteracaoRoteirizada } from "#testes/apoio/fakes/basicos.ts";
 import {
@@ -428,11 +434,37 @@ describe("responderCampos", () => {
     ]);
     amb.curriculo.perfil = {
       ...amb.curriculo.perfil,
-      salario: { ...amb.curriculo.perfil.salario, atual: "7000 CLT + VR" },
+      salario: { ...umPerfil().salario!, atual: "7000 CLT + VR" },
     };
     const comDado = await responderCampos(amb.deps(), { vaga, analise: null }, [atual], sinal());
     expect(comDado.respostas[0]?.valor).toBe("7000 CLT + VR");
     expect(amb.gerador.pedidosDe("responder-perguntas")).toHaveLength(0);
+  });
+
+  it("sem salário no perfil, a pretensão fica vazia por código e não vai ao LLM (AC12)", async () => {
+    const amb = criarAmbienteAplicacao();
+    const vaga = vagaPronta(amb, "https://jobs.lever.co/acme/1");
+    const { salario: _salario, ...semSalario } = amb.curriculo.perfil;
+    amb.curriculo.perfil = semSalario;
+    amb.gerador.sempre("responder-perguntas", {
+      respostas: [{ campoId: "q1", valor: "Admiro o produto." }],
+      salarios: [{ campoId: "sal", regime: "clt", periodo: "mensal", moeda: "BRL" }],
+    });
+    const saida = await responderCampos(
+      amb.deps(),
+      { vaga, analise: null },
+      [salario, faixa, pergunta],
+      sinal(),
+    );
+    expect(saida.respostas).toMatchObject([
+      { campoId: "sal", valor: null, fonte: "perfil", sensivel: true },
+      { campoId: "faixa", valor: null, fonte: "perfil", sensivel: true },
+      { campoId: "q1", valor: "Admiro o produto." },
+    ]);
+    const campos = JSON.parse(
+      String(amb.gerador.pedidosDe("responder-perguntas")[0]?.variaveis.campos),
+    ) as { campoId: string }[];
+    expect(campos.map((c) => c.campoId)).toEqual(["q1"]);
   });
 
   it("salvarRespostas mescla por campo e numera as chaves protegidas a partir da maior", () => {

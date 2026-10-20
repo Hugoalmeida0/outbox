@@ -1,3 +1,4 @@
+import { ErroUsuario } from "#dominio/compartilhado/erros.ts";
 import { TODOS_STATUS, type Etapa, type Motivo, type Status } from "#dominio/vagas/status.ts";
 import type { Motor } from "#dominio/vagas/motores.ts";
 import type { IdVaga, Vaga } from "#dominio/vagas/vaga.ts";
@@ -18,6 +19,8 @@ export interface LinhaStatus {
   readonly atsAntes: number | null;
   readonly atsDepois: number | null;
   readonly atualizadaEm: string;
+  /** PDF do currículo da vaga, quando já foi gerado. */
+  readonly pdf?: string;
 }
 
 export interface DadosStatus {
@@ -31,11 +34,28 @@ export interface DadosStatus {
 
 export interface DepsListarStatus {
   readonly vagas: Pick<RepositorioVagas, "listarPorStatus">;
-  readonly artefatos: Pick<ArmazemArtefatos, "lerJson">;
+  readonly artefatos: Pick<ArmazemArtefatos, "lerJson" | "existe" | "caminho">;
 }
 
-function paraLinha(v: Vaga): LinhaStatus {
+/**
+ * PDF do currículo da vaga, só para vagas com currículo gerado (ATS depois). O nome do arquivo vem do
+ * master: sem ele, a linha sai sem PDF em vez de derrubar o `status`.
+ */
+function pdfDaVaga(artefatos: DepsListarStatus["artefatos"], v: Vaga): string | null {
+  if (v.atsDepois === null) return null;
+  try {
+    return artefatos.existe(v.id, "pdf-curriculo")
+      ? artefatos.caminho(v.id, "pdf-curriculo")
+      : null;
+  } catch (erro) {
+    if (erro instanceof ErroUsuario) return null;
+    throw erro;
+  }
+}
+
+function paraLinha(v: Vaga, pdf: string | null = null): LinhaStatus {
   return {
+    ...(pdf !== null ? { pdf } : {}),
     id: v.id,
     status: v.status,
     motivo: v.motivo,
@@ -72,10 +92,10 @@ export function listarStatus(
     contagens,
     linhas: todas
       .filter((v) => entrada.status === undefined || v.status === entrada.status)
-      .map(paraLinha),
+      .map((v) => paraLinha(v, pdfDaVaga(deps.artefatos, v))),
     aguardandoVoce: {
       manuais,
-      pendentesTeste: todas.filter((v) => v.status === "PENDENTE_TESTE").map(paraLinha),
+      pendentesTeste: todas.filter((v) => v.status === "PENDENTE_TESTE").map((v) => paraLinha(v)),
     },
   };
 }

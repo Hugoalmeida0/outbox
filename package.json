@@ -29,11 +29,13 @@
     "capturar-fixture": "node scripts/capturar-fixture.ts"
   },
   "dependencies": {
+    "@hono/node-server": "2.1.3",
     "@inquirer/prompts": "8.7.3",
     "@modelcontextprotocol/sdk": "1.32.1",
     "@playwright/mcp": "0.0.83",
     "commander": "15.0.0",
     "cross-spawn": "7.0.6",
+    "hono": "4.13.13",
     "mammoth": "1.13.0",
     "node-notifier": "10.0.1",
     "open": "11.0.4",

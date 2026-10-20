@@ -5,6 +5,12 @@ import type { DatabaseSync } from "node:sqlite";
 import { abrirNavegador } from "#aplicacao/casos-de-uso/abrir-navegador.ts";
 import { adicionarVagas, type ItemAdicao } from "#aplicacao/casos-de-uso/adicionar-vagas.ts";
 import {
+  obterEstadoCurriculo,
+  type EstadoCurriculo,
+} from "#aplicacao/casos-de-uso/estado-curriculo.ts";
+import { obterPerfil, type SaidaObterPerfil } from "#aplicacao/casos-de-uso/obter-perfil.ts";
+import { salvarPerfil } from "#aplicacao/casos-de-uso/salvar-perfil.ts";
+import {
   aplicarVagas,
   type EntradaAplicarVagas,
   type ResumoAplicacao,
@@ -29,7 +35,9 @@ import { renderizarMaster } from "#aplicacao/casos-de-uso/renderizar-master.ts";
 import type { ConfigAplicacao } from "#aplicacao/compartilhado/config.ts";
 import type { Interacao } from "#aplicacao/portas/interacao.ts";
 import type { ProgressoPreparo } from "#aplicacao/portas/progresso-preparo.ts";
+import type { Registrador } from "#aplicacao/portas/registrador.ts";
 import { listaPii } from "#dominio/falhas/pii.ts";
+import type { Perfil } from "#dominio/respostas/perfil.ts";
 import type { Status } from "#dominio/vagas/status.ts";
 import type { IdVaga } from "#dominio/vagas/vaga.ts";
 import { ExecutorAgenteClaude } from "#infra/agente/executor-agente-claude.ts";
@@ -103,6 +111,10 @@ export interface CasosDeUso {
   listarFalhas(): DadosFalhas;
   renderizarMaster(sinal: AbortSignal): Promise<{ pdf: string; paginas: number }>;
   abrirNavegador(): Promise<void>;
+  obterEstadoCurriculo(): EstadoCurriculo;
+  obterPerfil(): SaidaObterPerfil;
+  /** Valida e grava o perfil; inválido, lança `ErroEntradaInvalida` com um problema por campo. */
+  salvarPerfil(entrada: unknown): Perfil;
 }
 
 export interface Container {
@@ -113,6 +125,10 @@ export interface Container {
   adquirirTrava(comando: "preparar" | "aplicar"): Trava;
   /** Registro de erros e avisos da interface (o stack vai só para o log). */
   registrarErro(mensagem: string, erro: unknown): void;
+  /** Log com redação de PII, para as interfaces registrarem o próprio andamento (ex.: rotas do agente). */
+  registrador(): Registrador;
+  /** Abre `url` numa janela nova do navegador do Camaleão (o site do agente local). */
+  abrirJanelaNavegador(url: string): Promise<void>;
   /** Serviço das ferramentas do MCP `camaleao-segredos`, ligado ao navegador do Camaleão por CDP. */
   criarServicoSegredos(opcoes: {
     readonly vagaId: IdVaga | null;
@@ -221,6 +237,8 @@ function criarWeb(caminhos: Caminhos, config: Config, locais: Locais, preguicoso
         portaCdp: config.navegador.portaCdp,
         executavel: config.navegador.executavel,
         pastaPerfil: caminhos.navegadorDir,
+        // A aba do site nunca é tomada como página da vaga (ADR-0025).
+        origensIgnoradas: config.agente.origensPermitidas,
       }),
   );
   const cofre = preguicoso(
@@ -380,6 +398,9 @@ function criarCasos(impl: Implementacoes, cfgAplicacao: ConfigAplicacao): CasosD
         sinal,
       ),
     abrirNavegador: () => abrirNavegador({ navegador: impl.navegador() }),
+    obterEstadoCurriculo: () => obterEstadoCurriculo({ curriculo: curriculo() }),
+    obterPerfil: () => obterPerfil({ curriculo: curriculo() }),
+    salvarPerfil: (entrada) => salvarPerfil({ curriculo: curriculo() }, entrada),
   };
 }
 
@@ -407,6 +428,8 @@ export function criarContainer(opcoes: OpcoesContainer = {}): Container {
     registrarErro: (mensagem, erro) => {
       registrador().erro(mensagem, { erro });
     },
+    registrador,
+    abrirJanelaNavegador: (url) => navegador().abrirJanela(url),
     criarServicoSegredos: ({ vagaId, hostsPermitidos }) =>
       new ServicoSegredos({
         obterPagina: () => navegador().paginaMaisRecente(hostsPermitidos),

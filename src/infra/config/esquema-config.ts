@@ -25,6 +25,20 @@ export const esquemaConfig = z.object({
     .object({
       maxTurnos: z.number().int().positive().default(40),
       timeoutMin: z.number().positive().default(10),
+      /** Porta do agente local (`camaleao agente`), sempre em 127.0.0.1. */
+      porta: z.number().int().min(1024).max(65535).default(4321),
+      /**
+       * Origens do site que podem chamar o agente (CORS). A última é a que `camaleao agente` abre; inclua
+       * a URL do seu site publicado na Vercel.
+       */
+      origensPermitidas: z
+        .array(
+          z
+            .url({ protocol: /^https?$/, error: "use uma origem http(s), como https://site.com" })
+            .transform((u) => new URL(u).origin),
+        )
+        .min(1)
+        .default(["http://localhost:5173"]),
     })
     .prefault({}),
   preparar: z

@@ -82,7 +82,8 @@ export type Preferencias = z.infer<typeof esquemaPreferencias>;
 export const esquemaPerfil = z.object({
   documentos: esquemaDocumentos.default({}),
   endereco: esquemaEndereco,
-  salario: esquemaSalario,
+  /** Opcional: sem a tabela, os campos de pretensão ficam vazios (nunca vão ao LLM) e a revisão os destaca. */
+  salario: esquemaSalario.optional(),
   disponibilidade: z.object({
     avisoPrevioDias: z.number().int().nonnegative(),
     inicioImediato: z.boolean(),

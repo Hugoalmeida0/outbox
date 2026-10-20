@@ -12,6 +12,7 @@ import { calcularSalario, escolherFaixa, resolverRegime, valorSalarioAtual } fro
 import { consultasLocalizacao, localizacaoCompleta } from "./localidade.ts";
 import { empresaAtual, formatarData, valorDocumento, valorPadrao } from "./valor-codigo.ts";
 import type { BancoRespostas } from "./banco.ts";
+import { esquemaPerfil } from "./perfil.ts";
 
 describe("classificarCampo", () => {
   it.each([
@@ -147,7 +148,12 @@ describe("valores por código", () => {
 });
 
 describe("salário", () => {
-  const tabela = umPerfil().salario;
+  const tabela = umPerfil().salario!;
+
+  it("o perfil aceita a tabela salarial ausente (AC12)", () => {
+    const { salario: _salario, ...semSalario } = umPerfil();
+    expect(esquemaPerfil.parse(semSalario).salario).toBeUndefined();
+  });
 
   it.each([
     [{ regime: "clt", periodo: "mensal", moeda: "BRL" }, 15000],

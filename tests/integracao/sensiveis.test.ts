@@ -13,6 +13,8 @@ import { join } from "node:path";
 import { stringify } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
 import { aplicarVagas } from "#aplicacao/casos-de-uso/aplicar-vagas.ts";
+import { criarContainer } from "#composicao";
+import { montarAgente } from "#testes/apoio/agente-http.ts";
 import { prepararVagas } from "#aplicacao/casos-de-uso/preparar-vagas.ts";
 import type { Campo } from "#dominio/respostas/campo.ts";
 import { listaPii } from "#dominio/falhas/pii.ts";
@@ -232,5 +234,43 @@ describe("dados sensíveis fora do LLM e dos logs (AC11, AC16, AC27)", () => {
     );
     expect(vazamentos).toEqual([]);
     expect(promptAgente).not.toContain("Mulher");
+  });
+
+  it("perfil gravado pelo site e o token de pareamento nunca aparecem nos logs (AC10, AC11)", async () => {
+    const raiz = mkdtempSync(join(tmpdir(), "camaleao-sensiveis-web-"));
+    const container = criarContainer({
+      raiz,
+      nivelLog: "depurar",
+      escreverTerminal: () => undefined,
+    });
+    mkdirSync(container.caminhos.curriculoDir, { recursive: true });
+    writeFileSync(container.caminhos.master, stringify(umMaster()));
+    const agente = montarAgente(container);
+    const token = await agente.parear();
+    const perfil = { ...umPerfil(), salario: { ...umPerfil().salario!, atual: "12000 CLT" } };
+    const salvo = await agente.requisitar("/perfil", {
+      method: "PUT",
+      body: JSON.stringify(perfil),
+    });
+    expect(salvo.status).toBe(200);
+    expect((await agente.requisitar("/perfil")).status).toBe(200);
+    const invalido = await agente.requisitar("/perfil", {
+      method: "PUT",
+      body: JSON.stringify({ ...perfil, endereco: { ...perfil.endereco, pais: "" } }),
+    });
+    expect(invalido.status).toBe(422);
+    await container.encerrar();
+
+    // Controle positivo: as rotas foram registradas no log, só com método, caminho e status.
+    const log = arquivosDeTexto(container.caminhos.logsDir)
+      .map((a) => readFileSync(a, "utf8"))
+      .join("");
+    expect(log).toContain("PUT /perfil 200");
+    expect(log).toContain("POST /pareamento 200");
+    expect(readFileSync(container.caminhos.perfil, "utf8")).toContain("123.456.789-09");
+    const vazamentos = [...SENSIVEIS, "12000 CLT", token, agente.codigos[0]!].filter((s) =>
+      log.includes(s),
+    );
+    expect(vazamentos).toEqual([]);
   });
 });

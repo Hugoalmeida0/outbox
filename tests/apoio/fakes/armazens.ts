@@ -62,6 +62,12 @@ export class ArmazemCurriculoMemoria implements ArmazemCurriculo {
   lerPerfil(): Perfil {
     return this.perfil;
   }
+  lerPerfilBruto(): { existe: boolean; dados: unknown } {
+    return { existe: true, dados: this.perfil };
+  }
+  gravarPerfil(perfil: Perfil): void {
+    this.perfil = perfil;
+  }
   lerBanco(): BancoRespostas {
     return this.banco;
   }

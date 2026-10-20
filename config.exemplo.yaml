@@ -16,6 +16,10 @@ llm:
 agente:
   maxTurnos: 40 # teto de turnos do agente por vaga em cada `aplicar`
   timeoutMin: 10 # teto de minutos de execução do agente por vaga (pausas não contam)
+  porta: 4321 # porta do agente local do site (`camaleao agente`), só em 127.0.0.1
+  # Origens do site que podem falar com o agente. A última é a que `camaleao agente` abre: acrescente a
+  # URL do seu site publicado (ex.: https://seu-projeto.vercel.app) depois da de desenvolvimento.
+  origensPermitidas: [http://localhost:5173]
 
 preparar:
   paralelo: 2 # vagas processadas ao mesmo tempo no `preparar`

@@ -67,6 +67,33 @@ describe("NavegadorCamaleao (Chromium real, headless)", () => {
     await portal.close();
   });
 
+  it("abre o site numa janela nova e nunca a escolhe como página da vaga (AC10)", async () => {
+    const site = urlPagina.replace("127.0.0.1", "localhost").replace("/vaga", "/site");
+    const isolado = new NavegadorCamaleao({
+      portaCdp: porta,
+      executavel: "chromium",
+      pastaPerfil: mkdtempSync(join(tmpdir(), "camaleao-perfil-nao-usado-")),
+      origensIgnoradas: [new URL(site).origin],
+    });
+    await isolado.abrirJanela(site);
+    const conexao = await navegador.garantir();
+    await expect
+      .poll(() =>
+        conexao
+          .contexts()[0]
+          ?.pages()
+          .some((p) => p.url() === site),
+      )
+      .toBe(true);
+    expect((await navegador.paginaMaisRecente())?.url()).toBe(site);
+    expect((await isolado.paginaMaisRecente())?.url()).toBe(urlPagina);
+    expect((await isolado.paginaMaisRecente(["localhost"]))?.url()).toBe(urlPagina);
+    await Promise.all(
+      (conexao.contexts()[0]?.pages() ?? []).filter((p) => p.url() === site).map((p) => p.close()),
+    );
+    await isolado.desconectar();
+  });
+
   it("desconectar mantém o navegador aberto e uma nova CLI reconecta", async () => {
     await navegador.desconectar();
     const resposta = await fetch(`${navegador.endpointCdp}/json/version`);

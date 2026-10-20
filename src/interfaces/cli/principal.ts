@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
 import { Command } from "commander";
 import { criarContainer, type Container, type NivelLog } from "#composicao";
+import { versaoDoPacote } from "#interfaces/compartilhado/versao.ts";
 import { cores } from "./apresentacao/cores.ts";
 import { codigoDoErro, ehErroPrevisto, mensagemDoErro } from "./codigos-saida.ts";
 import type { ContextoComando, Saida } from "./contexto.ts";
@@ -28,21 +28,12 @@ const TITULOS_AJUDA: Readonly<Record<string, string>> = {
   "Arguments:": "Argumentos:",
 };
 
-function versao(): string {
-  const pacote = JSON.parse(
-    readFileSync(new URL("../../../package.json", import.meta.url), "utf8"),
-  ) as {
-    version?: string;
-  };
-  return pacote.version ?? "0.0.0";
-}
-
 /** Define os comandos. Cada ação importa o seu módulo sob demanda (inicialização rápida, AC31). */
 function criarPrograma(ctx: ContextoComando, definirCodigo: (codigo: number) => void): Command {
   const programa = new Command()
     .name("camaleao")
     .description("Candidatura assistida com currículo camaleão. Nunca envia sem a sua confirmação.")
-    .version(versao(), "-v, --version", "mostra a versão")
+    .version(versaoDoPacote(), "-v, --version", "mostra a versão")
     .helpOption("-h, --help", "mostra a ajuda")
     .helpCommand("ajuda [comando]", "mostra a ajuda de um comando")
     .showHelpAfterError("(use --help para ver as opções)")
@@ -136,6 +127,15 @@ function criarPrograma(ctx: ContextoComando, definirCodigo: (codigo: number) => 
     .action(async () => {
       const { comandoNavegador } = await import("./comandos/navegador.ts");
       definirCodigo(await comandoNavegador(ctx));
+    });
+
+  programa
+    .command("agente")
+    .description("serve o site do Camaleão nesta máquina (127.0.0.1) e o abre no navegador")
+    .option("--sem-navegador", "não abre o site; só imprime o código de pareamento")
+    .action(async (opcoes: Record<string, unknown>) => {
+      const { comandoAgente } = await import("./comandos/agente.ts");
+      definirCodigo(await comandoAgente(ctx, opcoes));
     });
 
   programa

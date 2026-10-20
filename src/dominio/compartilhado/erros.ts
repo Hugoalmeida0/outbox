@@ -18,6 +18,20 @@ export class ErroUsuario extends ErroCamaleao {
   }
 }
 
+/** Entrada do usuário com problemas em vários campos (ex.: formulário de perfil). */
+export class ErroEntradaInvalida extends ErroUsuario {
+  readonly problemas: readonly { readonly caminho: string; readonly mensagem: string }[];
+
+  constructor(
+    mensagem: string,
+    problemas: readonly { readonly caminho: string; readonly mensagem: string }[],
+    opcoes?: ErrorOptions,
+  ) {
+    super(mensagem, opcoes);
+    this.problemas = problemas;
+  }
+}
+
 /** Violação de regra de negócio. */
 export class ErroDominio extends ErroCamaleao {}
 
