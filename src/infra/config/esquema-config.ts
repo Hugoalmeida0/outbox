@@ -38,7 +38,7 @@ export const esquemaConfig = z.object({
             .transform((u) => new URL(u).origin),
         )
         .min(1)
-        .default(["http://localhost:5173"]),
+        .default(["http://127.0.0.1:5173", "http://localhost:5173"]),
     })
     .prefault({}),
   preparar: z

@@ -11,8 +11,9 @@ const CONTRATO = fileURLToPath(new URL("../../src/interfaces/http/contrato.ts", 
 const PERMITIDOS_FORA_DO_SITE = [
   `src${sep}dominio${sep}`,
   `src${sep}interfaces${sep}http${sep}contrato.ts`,
-  `node_modules${sep}zod${sep}`,
 ];
+/** O zod vale pelo nome: no `vite dev` ele resolve para o pré-empacotado em `node_modules/.vite/`. */
+const ZOD = /^zod(\/|$)/;
 
 /** Só o contrato, o domínio e o zod podem vir de fora de `apps/web`. */
 function fronteiraDoContrato(): Plugin {
@@ -23,7 +24,7 @@ function fronteiraDoContrato(): Plugin {
       if (!importador || importador.startsWith("\0")) return null;
       const doRepo = relative(RAIZ_REPO, importador.split("?")[0] ?? "");
       const doSite = [`apps${sep}`, `node_modules${sep}`, ".."].some((p) => doRepo.startsWith(p));
-      if (doSite) return null;
+      if (doSite || ZOD.test(origem)) return null;
       const resolvido = await this.resolve(origem, importador, { ...opcoes, skipSelf: true });
       if (!resolvido) return null;
       const alvo = relative(RAIZ_REPO, resolvido.id.split("?")[0] ?? "");
@@ -38,8 +39,9 @@ function fronteiraDoContrato(): Plugin {
 export default defineConfig({
   plugins: [react(), fronteiraDoContrato()],
   resolve: { alias: { "@contrato": CONTRATO } },
-  server: { port: 5173, strictPort: true },
-  preview: { port: 4173, strictPort: true },
+  // IPv4 explícito: com "localhost", o Node liga só em ::1 e http://127.0.0.1:5173 não abre.
+  server: { host: "127.0.0.1", port: 5173, strictPort: true },
+  preview: { host: "127.0.0.1", port: 4173, strictPort: true },
   build: { sourcemap: false, assetsInlineLimit: 0, chunkSizeWarningLimit: 900 },
   test: {
     environment: "jsdom",
