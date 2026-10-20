@@ -1,65 +1,65 @@
 # Graph Report - outbox  (2026-10-20)
 
 ## Corpus Check
-- 267 files · ~139,309 words
+- 266 files · ~138,184 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 6 file(s) not represented in the graph (top: (none) 5, .ico 1)
 
 ## Summary
-- 1916 nodes · 5959 edges · 124 communities (100 shown, 24 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 583 edges (avg confidence: 0.94)
+- 1908 nodes · 5937 edges · 116 communities (94 shown, 22 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 568 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e39faee7`
+- Built from commit: `3f70aa16`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- valor-codigo.ts
-- resolucao.test.ts
 - api.ts
-- agente.test.ts
+- agregadores.ts
+- json-ld.ts
+- harness-conector.ts
 - 17. Registro de decisões arquiteturais (ADR)
 - zod
-- progresso.ts
-- RegistradorJsonl
-- ArmazemArtefatosFs
-- composicao.ts
-- documentos.test.ts
-- sensiveis.test.ts
-- rodada-gaps.ts
-- principal.ts
-- FormularioAberto
-- preencher-formulario.ts
-- repositorio-vagas.ts
-- basicos.ts
-- compartilhado/erros.ts
-- package.json
-- playwright
 - apresentacao.test.ts
+- registrador-jsonl.ts
+- rodada-gaps.ts
+- composicao.ts
+- pdf.ts
+- deps-aplicacao.ts
+- analise-vaga.ts
+- codigos-saida.test.ts
+- preparar-vagas.ts
+- pacote.ts
+- repositorio-vagas-sqlite.ts
+- 6. Catálogo de portas
+- LeitorHeadless
+- package.json
+- smartrecruiters/conector.ts
+- apresentacao/status.ts
 - gerar-curriculo.ts
-- RepositorioVagasSqlite
+- IdVaga
 - vagas/status.ts
 - curriculo-ats.test.ts
 - campos.ts
-- capturar-fixture.ts
-- InteracaoTerminal
-- lever/conector.ts
-- agregadores.ts
-- claude-falso.ts
-- aplicar-vagas.ts
+- ProgressoTerminal
+- aplicar.ts
+- normalizarTexto
+- 7. Tarefas
+- sensiveis.test.ts
+- ArmazemCurriculo
 - compilerOptions
-- 6. Catálogo de portas
-- Outbox: arquitetura e convenções
+- Motor
+- Relogio
 - spec-curriculo-ats-1-pagina/spec.md
 - outbox-segredos.ts
 - renderizador-pdf-playwright.ts
-- servico-segredos.ts
-- T21: Etapas de preparo e caso de uso `preparar`
-- GeradorEstruturadoClaude
-- aplicar-vagas.test.ts
-- Motor
+- builders.ts
+- DefinicaoConector
+- GeradorEstruturadoRoteirizado
+- InteracaoRoteirizada
+- Camaleão — Brand Guidelines
 - conectores.test.ts
 - motores.ts
 - Como adicionar um conector de ATS
@@ -67,49 +67,49 @@
 - preencher-formulario.ts
 - conector-formulario.ts
 - responder-campos.ts
-- ref_node_path
-- aplicar-vagas.ts
+- basicos.ts
+- respostas.test.ts
 - entrada-consultas.test.ts
-- RegistroFalhas
+- RegistroFalhasFs
 - devDependencies
 - Outbox
-- ArmazemArtefatosMemoria
-- revisar-e-enviar.ts
+- ArmazemArtefatosFs
+- respostas-bordas.test.ts
 - Progresso da implementação da V1
 - dependencies
-- portas/erros.ts
+- executor-agente-claude.ts
 - RenderizadorPdfPlaywright
-- GeradorEstruturado
-- FormularioAbertoFake
+- ServicoSegredos
+- FormularioAberto
 - progresso-terminal.test.ts
 - ArmazemCurriculoMemoria
 - portas/erros.ts
-- preparar
-- vitest
-- Relogio
-- agente.test.ts
+- 7. Tarefas
+- aplicar-vagas.test.ts
+- cache-respostas-json.ts
+- ExecutorAgenteClaude
 - Arquitetura do Outbox
 - eslint.config.js
-- pt
-- 11.1 Estratégia de testes
+- analisar-vaga.md
+- cores.ts
 - ErroUsuario
 - transicoes.ts
-- revisar-e-enviar.ts
+- aplicar-vagas.ts
 - imports
 - scripts
-- FormularioPlaywright
+- ResolvedorEncadeado
 - Convenções do Outbox
-- Relogio
+- logoloom
 - espiar-modulos.ts
 - Spike: Gupy
-- titulo
+- tailoring.md
 - armazens.ts
 - Spike: InHire
 - perfil.ts
-- 7. Tarefas
+- exemplos.test.ts
 - agente-candidatura.md
 - responder-perguntas.md
-- atualizacoes.ts
+- documentos.test.ts
 - setup.ts
 - SKILL.md
 - SPEC-TEMPLATE.md
@@ -124,319 +124,315 @@
 - 0017-sem-envio-implicito.md
 - 0018-agente-pasta-de-trabalho-e-origens.md
 - .prettierrc.json
-- Registrador
-- repositorio-vagas-sqlite.ts
+- extrair-vaga.md
+- importar-curriculo.md
 - CLAUDE.md
-- RenderizadorDocumentos
-- Vaga
+- 12. Segurança
 - vaga.ts
-- importar-curriculo.ts
-- salario.ts
-- respostas-bordas.test.ts
-- pacote.ts
-- diversidade.ts
-- Relatório de arquitetura — outbox
-- Outbox v1: candidatura assistida com currículo camaleão
-- NavegadorUsuario
-- ExecutorAgenteFake
-- ResultadoExtracao
+- outbox.js
+- claude.mjs
+- resolucao.test.ts
 
 ## God Nodes (most connected - your core abstractions)
-1. `IdVaga` - 85 edges
-2. `ErroUsuario` - 52 edges
-3. `Vaga` - 51 edges
+1. `IdVaga` - 84 edges
+2. `ErroUsuario` - 51 edges
+3. `Vaga` - 49 edges
 4. `vitest` - 47 edges
 5. `zod` - 46 edges
 6. `ArmazemCurriculo` - 44 edges
 7. `ArmazemArtefatos` - 43 edges
 8. `Motor` - 40 edges
 9. `6. Catálogo de portas` - 40 edges
-10. `RepositorioVagas` - 39 edges
+10. `normalizarTexto()` - 38 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Tarefas` --references--> `preparar()`  [INFERRED]
   docs/progresso.md → src/aplicacao/casos-de-uso/casos-bordas.test.ts
 - `O que foi implementado sem o spike` --references--> `preparar()`  [INFERRED]
   docs/spikes/gupy.md → src/aplicacao/casos-de-uso/casos-bordas.test.ts
+- `Comandos e códigos de saída` --references--> `preparar()`  [INFERRED]
+  README.md → src/aplicacao/casos-de-uso/casos-bordas.test.ts
 - `ADR-016: execução exclusiva por comando e cancelamento cooperativo` --references--> `preparar()`  [INFERRED]
   specs/v1/spec-outbox/arquitetura.md → src/aplicacao/casos-de-uso/casos-bordas.test.ts
-- `1. Contexto e Objetivo` --references--> `preparar()`  [INFERRED]
+- `T25: Documentação viva` --references--> `preparar()`  [INFERRED]
   specs/v1/spec-outbox/spec.md → src/aplicacao/casos-de-uso/casos-bordas.test.ts
-- `3.1 Produto` --references--> `preparar()`  [INFERRED]
-  specs/v2/spec-outbox/spec.md → src/aplicacao/casos-de-uso/casos-bordas.test.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (124 total, 24 thin omitted)
+## Communities (116 total, 22 thin omitted)
 
-### Community 0 - "valor-codigo.ts"
-Cohesion: 0.35
-Nodes (9): respostaPorCodigo(), ChaveDocumento, ChavePadrao, Contato, formatarData(), partesNome(), contato, valorDocumento() (+1 more)
+### Community 0 - "api.ts"
+Cohesion: 0.23
+Nodes (9): enderecoApi(), esquemaCampoApi, esquemaPergunta, esquemaVagaGreenhouse, obterVagaGreenhouse(), paraCampos(), paraVagaExtraida(), TIPOS (+1 more)
 
-### Community 1 - "resolucao.test.ts"
-Cohesion: 0.10
-Nodes (32): Resolucao, DadosResolucao, AGREGADORES, ehMotorConhecido(), Motor, MOTORES_COM_CONECTOR_V1, UrlCanonica, BOTAO_EXTERNO (+24 more)
+### Community 1 - "agregadores.ts"
+Cohesion: 0.31
+Nodes (8): BOTAO_EXTERNO, BOTAO_SIMPLIFICADO, DesfechoAgregador, destinoDeRedirecionamento(), EXIGE_LOGIN, PARAMETROS_REDIRECIONAMENTO, resolverNoAgregador(), saiuDoAgregador()
 
-### Community 2 - "api.ts"
-Cohesion: 0.11
-Nodes (25): Entrada, Regras, Tarefa, esquemaVagaExtraida, normalizarEmpresa(), VagaExtraida, enderecoApi(), esquemaCampoApi (+17 more)
+### Community 2 - "json-ld.ts"
+Cohesion: 0.33
+Nodes (11): esquemaVagaExtraida, vagaDoNextData(), decodificarEntidades(), ENTIDADES, htmlParaTexto(), acharVaga(), ehObjeto(), extrairJsonLd() (+3 more)
 
-### Community 3 - "agente.test.ts"
-Cohesion: 0.10
-Nodes (22): paraCampos(), LeitorHeadless, OpcoesLeitor, PaginaLida, ADR-0012, lerFixture(), MapaFixtures, PASTA_FIXTURES (+14 more)
+### Community 3 - "harness-conector.ts"
+Cohesion: 0.18
+Nodes (18): lerCamposDaPagina(), lerDescritores(), paraCampos(), lerFixture(), MapaFixtures, PASTA_FIXTURES, RespostaFixture, servirFixtures() (+10 more)
 
 ### Community 4 - "17. Registro de decisões arquiteturais (ADR)"
-Cohesion: 0.12
-Nodes (16): ADR-0003: Idioma único em português ASCII, 17. Registro de decisões arquiteturais (ADR), ADR-001: hexagonal enxuto em quatro camadas, ADR-002: camada no topo, contexto de negócio dentro, ADR-003: idioma único em português ASCII, ADR-004: TypeScript executado nativamente pelo Node 24, sem build, ADR-005: imports por subpath e fronteiras verificadas por lint, ADR-006: injeção manual com raiz de composição preguiçosa (+8 more)
+Cohesion: 0.11
+Nodes (17): ADR-0003: Idioma único em português ASCII, 17. Registro de decisões arquiteturais (ADR), ADR-001: hexagonal enxuto em quatro camadas, ADR-002: camada no topo, contexto de negócio dentro, ADR-003: idioma único em português ASCII, ADR-004: TypeScript executado nativamente pelo Node 24, sem build, ADR-005: imports por subpath e fronteiras verificadas por lint, ADR-006: injeção manual com raiz de composição preguiçosa (+9 more)
 
 ### Community 5 - "zod"
+Cohesion: 0.11
+Nodes (28): zod, STATUS_DE_RETORNO, Container, formatarAdicao(), comandoAdicionar(), esquema, urlsDoArquivo(), containerDuble() (+20 more)
+
+### Community 6 - "apresentacao.test.ts"
 Cohesion: 0.13
-Nodes (26): zod, STATUS_DE_RETORNO, formatarResumoPreparo(), formatarResumoAplicacao(), comandoAdicionar(), esquema, urlsDoArquivo(), comandoAplicar() (+18 more)
+Nodes (19): EtapaPreparo, EventoPreparo, ProgressoPreparo, colunasDe(), cortarNaLargura(), DadosRotulo, ETAPAS, formatarCabecalhoPreparo() (+11 more)
 
-### Community 6 - "progresso.ts"
-Cohesion: 0.10
-Nodes (23): ADR-0021: Progresso do `preparar` por porta de eventos, EntradaPrepararVagas, EtapaPreparo, EventoPreparo, ProgressoPreparo, colunasDe(), cortarNaLargura(), DadosRotulo (+15 more)
+### Community 7 - "registrador-jsonl.ts"
+Cohesion: 0.13
+Nodes (9): ContextoLog, NIVEIS_LOG, nivelDoAmbiente(), OpcoesRegistrador, RegistradorJsonl, serializar(), ADR-0014, EntradaLog (+1 more)
 
-### Community 7 - "RegistradorJsonl"
-Cohesion: 0.27
-Nodes (3): ContextoLog, RegistradorJsonl, RegistradorMemoria
-
-### Community 8 - "ArmazemArtefatosFs"
-Cohesion: 0.15
-Nodes (17): T22: Etapas de aplicação e caso de uso `aplicar`, executarComLimite(), analisarVaga(), idSkillLivre(), perguntarNivelIdioma(), rodadaGaps(), ROTULO_NIVEL, recalcularComGaps() (+9 more)
+### Community 8 - "rodada-gaps.ts"
+Cohesion: 0.17
+Nodes (26): 6. Fluxos, 3. Camadas e responsabilidades, 7.1 `outbox preparar`, 6. Contrato de Aceite, T21: Etapas de preparo e caso de uso `preparar`, T22: Etapas de aplicação e caso de uso `aplicar`, executarComLimite(), atualizarAnalise() (+18 more)
 
 ### Community 9 - "composicao.ts"
-Cohesion: 0.11
-Nodes (25): ADR-0006, ADR-0015, yaml, aplicarVagas(), configAplicacao(), criarAssistentes(), criarContainer(), criarPreguicoso() (+17 more)
+Cohesion: 0.09
+Nodes (27): ADR-0006, ADR-0015, yaml, aplicarVagas(), importarCurriculo(), configAplicacao(), criarAssistentes(), criarContainer() (+19 more)
 
-### Community 10 - "documentos.test.ts"
-Cohesion: 0.12
-Nodes (14): @napi-rs/canvas, pdfjs-dist, 6. Contrato de Aceite, escaparHtml(), contarFontes(), inspecionarPdf(), lerPdf(), OPERADORES_DE_IMAGEM (+6 more)
+### Community 10 - "pdf.ts"
+Cohesion: 0.22
+Nodes (8): @napi-rs/canvas, pdfjs-dist, contarFontes(), inspecionarPdf(), OPERADORES_DE_IMAGEM, PdfInspecionado, PdfLido, pngDaPagina()
 
-### Community 11 - "sensiveis.test.ts"
-Cohesion: 0.18
-Nodes (9): DepsAplicarVagas, DepsPrepararVagas, ConfigAplicacao, AmbienteAplicacao, CONFIG_TESTE, RegistroFalhasMemoria, RenderizadorFake, ResolvedorFake (+1 more)
-
-### Community 12 - "rodada-gaps.ts"
-Cohesion: 0.10
-Nodes (28): 2. Nomenclatura, 16.2 Nomenclatura, ALERTA_AFIRMATIVA, calcularAderencia(), DetalhesAderencia, pontosCobertura(), pontosModelo(), pontosRegime() (+20 more)
-
-### Community 13 - "principal.ts"
-Cohesion: 0.12
-Nodes (18): emitirAvisoOriginal, ADR-0004, ADR-0007: Casos de uso como funções com dependências estreitas, commander, Container, codigoDoErro(), CODIGOS_SAIDA, ehErroPrevisto() (+10 more)
-
-### Community 14 - "FormularioAberto"
-Cohesion: 0.21
-Nodes (22): aplicarAderencia(), avisarEtapa(), deduplicarPorChave(), definirDestino(), descartarEncerrada(), descartarPorAderencia(), Destino, ErroPreparo (+14 more)
-
-### Community 15 - "preencher-formulario.ts"
-Cohesion: 0.10
-Nodes (20): ADR-0010: Conectores ATS com Strategy, catálogo e handle comum, 15.1 Receitas de extensão, 15.2 Não construir agora (YAGNI), 15. Evolução, 9. Princípios aplicados, ADR-010: conectores ATS com Strategy, catálogo e handle comum, 4. Glossário, 8. Registro da revisão de 2026-10-09 (revisão 2) (+12 more)
-
-### Community 16 - "repositorio-vagas.ts"
+### Community 11 - "deps-aplicacao.ts"
 Cohesion: 0.16
-Nodes (7): EscritaVagas, RespostasEnviadasVagas, TransacaoVagas, ADR-0008, TransicaoVaga, Evento, RespostaEnviada
+Nodes (9): DepsAplicarVagas, DepsPrepararVagas, ConfigAplicacao, AmbienteAplicacao, CONFIG_TESTE, ExtratorFake, RenderizadorFake, ResolvedorFake (+1 more)
 
-### Community 17 - "basicos.ts"
-Cohesion: 0.18
-Nodes (6): 14. Política de dependências, Notificador, ADR-0014, MotorToast, EntradaLog, RespostaRoteiro
+### Community 12 - "analise-vaga.ts"
+Cohesion: 0.08
+Nodes (32): perguntarNivelIdioma(), ALERTA_AFIRMATIVA, DetalhesAderencia, pontosCobertura(), pontosModelo(), pontosRegime(), pontosSenioridade(), ResultadoAderencia (+24 more)
 
-### Community 18 - "compartilhado/erros.ts"
-Cohesion: 0.27
-Nodes (7): ADR-0009: Erros como exceções tipadas, 8. Erros, validação, logging, config e concorrência, T2: Schemas do domínio e exemplos, ErroDominio, ErroOutbox, ErroTransicaoInvalida, ErroValidacao
+### Community 13 - "codigos-saida.test.ts"
+Cohesion: 0.19
+Nodes (11): ADR-0007: Casos de uso como funções com dependências estreitas, commander, codigoDoErro(), CODIGOS_SAIDA, ehErroPrevisto(), ehInterrupcao(), mensagemDoErro(), executar() (+3 more)
+
+### Community 14 - "preparar-vagas.ts"
+Cohesion: 0.12
+Nodes (37): adicionarVagas(), aplicarAderencia(), avisarEtapa(), deduplicarPorChave(), definirDestino(), descartarEncerrada(), descartarPorAderencia(), Destino (+29 more)
+
+### Community 15 - "pacote.ts"
+Cohesion: 0.13
+Nodes (13): T2: Schemas do domínio e exemplos, CtxPreenchimento, ADR-0010, Campo, CATEGORIAS_CAMPO, TIPOS_CAMPO, esquemaContato, esquemaRespostaSugerida (+5 more)
+
+### Community 16 - "repositorio-vagas-sqlite.ts"
+Cohesion: 0.11
+Nodes (15): EscritaVagas, RespostasEnviadasVagas, TransacaoVagas, ADR-0008, TransicaoVaga, Evento, NovaVaga, RespostaEnviada (+7 more)
+
+### Community 17 - "6. Catálogo de portas"
+Cohesion: 0.10
+Nodes (17): ADR-0014: Logging mínimo com redação, 5. Portas, 6. Catálogo de portas, T7: Toast que abre o painel, ExtratorVagas, Notificador, Registrador, ADR-0014 (+9 more)
+
+### Community 18 - "LeitorHeadless"
+Cohesion: 0.31
+Nodes (3): T11: Navegador, leitor headless e documentos, LeitorHeadless, servico()
 
 ### Community 19 - "package.json"
 Cohesion: 0.09
 Nodes (20): bin, outbox, description, engines, node, name, private, type (+12 more)
 
-### Community 20 - "playwright"
-Cohesion: 0.15
-Nodes (16): playwright, ADR-0010, ValorLido, lerDescritores(), lerValoresGenerico(), valorExibido(), OpcoesFormularioPlaywright, RegrasConfirmacao (+8 more)
+### Community 20 - "smartrecruiters/conector.ts"
+Cohesion: 0.31
+Nodes (7): comParametro(), comSufixo(), dataCurta(), nomeDoSlug(), esquemaQuadroAshby, esquemaPostagemSr, secao
 
-### Community 21 - "apresentacao.test.ts"
-Cohesion: 0.15
-Nodes (17): ResultadoAdicao, ResumoPreparo, formatarAdicao(), ROTULOS, cores, Formato, formatarFalhas(), formatarResumoRevisao() (+9 more)
+### Community 21 - "apresentacao/status.ts"
+Cohesion: 0.26
+Nodes (12): ResultadoAdicao, DadosStatus, ROTULOS, formatarFalhas(), ats(), formatarStatus(), titulo(), dataHora() (+4 more)
 
 ### Community 22 - "gerar-curriculo.ts"
-Cohesion: 0.08
-Nodes (17): ALERTA_ATS_CAIU, ALERTA_CAMALEAO_FALHOU, ALERTA_PDF_LONGO, esquemaArquivoAnalise, esquemaArquivoCampos, vagaPronta(), criarPedido(), descreverViolacoes() (+9 more)
+Cohesion: 0.09
+Nodes (15): ALERTA_ATS_CAIU, ALERTA_CAMALEAO_FALHOU, ALERTA_PDF_LONGO, esquemaArquivoAnalise, esquemaArquivoCampos, vagaPronta(), descreverViolacoes(), gerarComLastro() (+7 more)
 
-### Community 23 - "RepositorioVagasSqlite"
-Cohesion: 0.13
-Nodes (9): GapAgrupado, GapsVagas, AcaoDescartarDuplicada, GapAberto, IdVaga, marcadores(), paraVaga(), RepositorioVagasSqlite (+1 more)
+### Community 23 - "IdVaga"
+Cohesion: 0.15
+Nodes (7): GapsVagas, GapAberto, IdVaga, marcadores(), paraVaga(), RepositorioVagasSqlite, valorSql()
 
 ### Community 24 - "vagas/status.ts"
-Cohesion: 0.17
-Nodes (16): DepsAdicionarVagas, ItemAdicao, DadosStatus, LinhaStatus, AcaoDeduplicacaoUrl, dataReferencia(), ehMaisRecente(), ETAPAS_ENTREVISTA (+8 more)
+Cohesion: 0.15
+Nodes (16): ItemAdicao, RepositorioTransicao, AcaoDeduplicacaoUrl, AcaoDescartarDuplicada, dataReferencia(), ehMaisRecente(), ETAPAS, ETAPAS_ENTREVISTA (+8 more)
 
 ### Community 25 - "curriculo-ats.test.ts"
-Cohesion: 0.13
-Nodes (7): leitor, masterDenso(), masterExemplo, pasta, PdfGerado, renderizador, TITULOS
+Cohesion: 0.11
+Nodes (9): garantirMasterGenerico(), renderizarMaster(), leitor, masterDenso(), masterExemplo, pasta, PdfGerado, renderizador (+1 more)
 
 ### Community 26 - "campos.ts"
-Cohesion: 0.15
-Nodes (22): contemTermo(), escaparRegex(), normalizarTexto(), casarTexto(), IDIOMAS, indice(), melhorOpcao(), nomesDoPais() (+14 more)
-
-### Community 27 - "capturar-fixture.ts"
-Cohesion: 0.12
-Nodes (8): ArgumentosCaptura, lerArgumentos(), montarFixture(), OpcoesNavegadorOutbox, doisDigitos(), isoLocal(), RelogioSistema, SCRIPT
-
-### Community 28 - "InteracaoTerminal"
-Cohesion: 0.10
-Nodes (6): Interacao, OpcaoEscolha, ResumoRevisao, Saida, InteracaoTerminal, OpcoesInteracaoTerminal
-
-### Community 29 - "lever/conector.ts"
-Cohesion: 0.35
-Nodes (9): consultasLocalizacao(), localizacaoCompleta(), Uf, ufDe(), UFS, esperarSugestoes(), esquemaPostagemLever, preencherLocalizacaoLever() (+1 more)
-
-### Community 30 - "agregadores.ts"
 Cohesion: 0.18
-Nodes (10): 1. Contexto e Objetivo, 2. Premissas, 3.1 Produto, 3.2 Arquitetura (ADRs da v2, complementando os ADR-001 a ADR-016), 3. Decisões, 4. Glossário, 5. Fora do Escopo, 6. Contrato de Aceite (+2 more)
+Nodes (20): playwright, TipoCampo, casarTexto(), IDIOMAS, indice(), melhorOpcao(), nomesDoPais(), definirMarcado() (+12 more)
 
-### Community 31 - "claude-falso.ts"
+### Community 28 - "aplicar.ts"
+Cohesion: 0.17
+Nodes (8): OpcaoEscolha, ResumoRevisao, formatarResumoAplicacao(), formatarResumoRevisao(), ROTULOS_DESFECHO, comandoAplicar(), esquema, InteracaoTerminal
+
+### Community 29 - "normalizarTexto"
+Cohesion: 0.18
+Nodes (15): ErroValidacao, contemTermo(), escaparRegex(), normalizarTexto(), paraKebab(), validar(), consultasLocalizacao(), Uf (+7 more)
+
+### Community 30 - "7. Tarefas"
 Cohesion: 0.10
-Nodes (21): vitest, criarCaminhos(), RAIZ, BINARIO_FALSO, ChamadaRegistrada, ClaudeFalso, RegraClaude, respostaJson() (+13 more)
+Nodes (18): 1. Contexto e Objetivo, 2. Premissas, 3.1 Produto, 3.2 Arquitetura (ADRs da v2, complementando os ADR-001 a ADR-016), 3. Decisões, 4. Glossário, 5. Fora do Escopo, 6. Contrato de Aceite (+10 more)
 
-### Community 32 - "aplicar-vagas.ts"
+### Community 31 - "sensiveis.test.ts"
+Cohesion: 0.09
+Nodes (21): vitest, OpcoesNavegadorOutbox, RAIZ, BINARIO_FALSO, ChamadaRegistrada, ClaudeFalso, RegraClaude, respostaJson() (+13 more)
+
+### Community 32 - "ArmazemCurriculo"
 Cohesion: 0.06
-Nodes (29): ADR-0008: Persistência com `node:sqlite`, repositório síncrono do agregado, tabelas STRICT e migrações, 6. Fluxos, 3. Números medidos, 3. Camadas e responsabilidades, aplicarUma(), ResumoAplicacao, DepsListarStatus, preResponderCampos() (+21 more)
+Nodes (23): ADR-0008: Persistência com `node:sqlite`, repositório síncrono do agregado, tabelas STRICT e migrações, 5. Fora do Escopo, 16.1 Idioma (ADR-003), 16.2 Nomenclatura, 16.3 Código, 16.4 Prompts, 16.5 Documentação, 16.6 Definição de pronto (por tarefa) (+15 more)
 
 ### Community 33 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, exactOptionalPropertyTypes, isolatedModules, lib, module, moduleResolution (+11 more)
 
-### Community 34 - "6. Catálogo de portas"
-Cohesion: 0.12
-Nodes (14): 5. Portas, 6. Catálogo de portas, 8.1 Adotados, T12: Resolução e extração, T13: Base de conectores, contratos e captura de fixtures, CatalogoConectores, ResolvedorVagas, criarWeb() (+6 more)
+### Community 34 - "Motor"
+Cohesion: 0.17
+Nodes (11): ADR-0010: Conectores ATS com Strategy, catálogo e handle comum, 8.1 Adotados, ADR-010: conectores ATS com Strategy, catálogo e handle comum, 4. Glossário, CatalogoConectores, ADR-0010, ConectorAts, Motor (+3 more)
 
-### Community 35 - "Outbox: arquitetura e convenções"
-Cohesion: 0.12
-Nodes (16): 11.2 Verificação local e CI, 11.3 Regras de lint obrigatórias, 11. Qualidade e testabilidade, 12.1 Modelo de ameaças, 12.2 Classificação de dados, 12.3 Fronteira de confiança e injeção de prompt (ADR-012), 12.4 Segredos e credenciais, 12. Segurança (+8 more)
+### Community 35 - "Relogio"
+Cohesion: 0.04
+Nodes (38): ADR-0011: LLM com portas separadas, schema único e prompts versionados, ADR-0016: Execução exclusiva por comando e cancelamento cooperativo, ADR-0020: Bloqueio anti-bot tratado como CAPTCHA, ADR-0021: Progresso do `preparar` por porta de eventos, 10.2 Validação, 10.3 Logging (ADR-014), 10.4 Configuração (ADR-015), 10.5 Concorrência, transações e cancelamento (ADR-008, ADR-016) (+30 more)
 
 ### Community 36 - "spec-curriculo-ats-1-pagina/spec.md"
-Cohesion: 0.12
-Nodes (17): 1. Contexto e Objetivo, 2. Premissas, 3. Decisões, 4. Glossário, 7. Tarefas, 8. Questões em aberto, Anexo A — Valores visuais (B = tamanho base em pt), Anexo B — Correções de revisão (+9 more)
+Cohesion: 0.11
+Nodes (19): 1. Contexto e Objetivo, 2. Premissas, 3. Decisões, 4. Glossário, 6. Contrato de Aceite, 7. Tarefas, 8. Questões em aberto, Anexo A — Valores visuais (B = tamanho base em pt) (+11 more)
 
 ### Community 37 - "outbox-segredos.ts"
 Cohesion: 0.18
 Nodes (14): @modelcontextprotocol/sdk, T5: Domínio de respostas e falhas, criarServidorSegredos(), hostsDoAmbiente(), principal(), resposta(), Resultado, seletor (+6 more)
 
 ### Community 38 - "renderizador-pdf-playwright.ts"
-Cohesion: 0.31
-Nodes (7): cabecalho(), css(), documento(), htmlCarta(), htmlCurriculo(), lista(), secao()
+Cohesion: 0.18
+Nodes (11): 12.2 Classificação de dados, ADR-0012, cabecalho(), css(), documento(), escaparHtml(), htmlCarta(), htmlCurriculo() (+3 more)
 
-### Community 39 - "servico-segredos.ts"
-Cohesion: 0.10
-Nodes (16): T16: Conectores Gupy e InHire, com spikes, T17: Cofre de credenciais e MCP `outbox-segredos`, preencherElemento(), tipoDoElemento(), CofreCredenciais, Aleatorio, CofreCredenciaisJson, esquemaCofre (+8 more)
+### Community 39 - "builders.ts"
+Cohesion: 0.13
+Nodes (16): 11.1 Estratégia de testes, 11.2 Verificação local e CI, 11.3 Regras de lint obrigatórias, 11. Qualidade e testabilidade, T17: Cofre de credenciais e MCP `outbox-segredos`, Aleatorio, CofreCredenciaisJson, esquemaCofre (+8 more)
 
-### Community 40 - "T21: Etapas de preparo e caso de uso `preparar`"
+### Community 40 - "DefinicaoConector"
 Cohesion: 0.33
-Nodes (9): 7.1 `outbox preparar`, 6. Contrato de Aceite, T21: Etapas de preparo e caso de uso `preparar`, adicionarVagas(), DepsResolverVaga, DesfechoResolucao, resolverVaga(), decidirDeduplicacaoChave() (+1 more)
+Nodes (3): 7. Conectores, 3. Escreva a definição, DefinicaoConector
 
-### Community 41 - "GeradorEstruturadoClaude"
-Cohesion: 0.29
-Nodes (6): PedidoGeracao, TarefaLlm, TAREFAS_LLM, ADR-0012, GeradorEstruturadoRoteirizado, Resposta
+### Community 41 - "GeradorEstruturadoRoteirizado"
+Cohesion: 0.33
+Nodes (5): PedidoGeracao, TarefaLlm, OpcoesGerador, GeradorEstruturadoRoteirizado, Resposta
 
-### Community 43 - "Motor"
+### Community 43 - "Camaleão — Brand Guidelines"
 Cohesion: 0.22
 Nodes (8): 1. Full Logo (icon + wordmark), 2. Icon Only (avatar, favicon, app icon), 4. Social Media, Camaleão — Brand Guidelines, Colors, Logo Files, Typography, Usage Rules
 
 ### Community 44 - "conectores.test.ts"
-Cohesion: 0.17
-Nodes (17): comParametro(), comSufixo(), dataCurta(), nomeDoSlug(), DEFINICOES_V1, definicaoAshby, esquemaQuadroAshby, definicaoGreenhouse (+9 more)
+Cohesion: 0.28
+Nodes (10): DEFINICOES_V1, definicaoAshby, definicaoGreenhouse, definicaoGupy, definicaoInhire, definicaoLever, definicaoSmartRecruiters, definicaoTeamtailor (+2 more)
 
 ### Community 45 - "motores.ts"
-Cohesion: 0.13
-Nodes (13): 1. Garanta o motor no domínio, Critérios de aceite, canonicaGenerica(), canonizar(), detectarMotor(), ehRastreamento(), hostCasaPadrao(), MotorConhecido (+5 more)
+Cohesion: 0.10
+Nodes (27): 1. Garanta o motor no domínio, montarTentativa(), criarWeb(), AGREGADORES, canonicaGenerica(), canonizar(), detectarMotor(), ehMotorConhecido() (+19 more)
 
 ### Community 46 - "Como adicionar um conector de ATS"
 Cohesion: 0.33
 Nodes (5): 2. Capture fixtures sanitizadas, 4. Registre no catálogo, 5. Passe na suíte de contrato, 6. Valide com uma vaga real, Como adicionar um conector de ATS
 
-### Community 47 - "NavegadorOutbox"
-Cohesion: 0.22
-Nodes (4): T11: Navegador, leitor headless e documentos, ErroNavegador, caminhosChrome(), NavegadorOutbox
-
 ### Community 48 - "preencher-formulario.ts"
-Cohesion: 0.15
-Nodes (14): ADR-0022: Pastas nomeadas pelo design pattern, em inglês, agenteFalhou(), assumirAposConector(), EntradaAgente, ExecucaoAgente, executarAgente(), htmlSanitizado(), montarTentativa() (+6 more)
+Cohesion: 0.28
+Nodes (10): agenteFalhou(), assumirAposConector(), EntradaAgente, ExecucaoAgente, executarAgente(), htmlSanitizado(), paraResultado(), preencherComAgente() (+2 more)
 
 ### Community 49 - "conector-formulario.ts"
-Cohesion: 0.17
-Nodes (17): 7. Conectores, 3. Escreva a definição, acharResposta(), chaveRotulo(), criarConector(), DefinicaoConector, indexar(), IndiceRespostas (+9 more)
+Cohesion: 0.15
+Nodes (20): acharResposta(), chaveRotulo(), criarConector(), indexar(), IndiceRespostas, preencherEtapa(), ADR-0010, RegrasConfirmacao (+12 more)
 
 ### Community 50 - "responder-campos.ts"
-Cohesion: 0.16
-Nodes (17): base(), chaveCache(), consultarLlm(), corrigirNoCache(), esquemaRespostasLlm, foraDasOpcoes(), Idioma, responderDoCache() (+9 more)
+Cohesion: 0.11
+Nodes (29): ArquivoAnalise, base(), CampoPendente, chaveCache(), consultarLlm(), contatoDo(), ContextoResposta, corrigirNoCache() (+21 more)
 
-### Community 51 - "ref_node_path"
-Cohesion: 0.33
-Nodes (7): criarLocais(), abrirConexao(), migrar(), ADR-0008, versaoAtual(), criarRepositorioMemoria(), PASTA_MIGRACOES
+### Community 51 - "basicos.ts"
+Cohesion: 0.17
+Nodes (9): criarLocais(), abrirConexao(), migrar(), ADR-0008, versaoAtual(), RelogioFixo, RespostaRoteiro, criarRepositorioMemoria() (+1 more)
 
-### Community 52 - "aplicar-vagas.ts"
-Cohesion: 0.21
-Nodes (13): TipoCampo, AUTOCOMPLETE, Classificacao, classificarCampo(), classificarCampoDetalhado(), classificarFormulario(), DescricaoCampo, normalizarRotulo() (+5 more)
+### Community 52 - "respostas.test.ts"
+Cohesion: 0.15
+Nodes (23): respostaPorCodigo(), CategoriaCampo, AUTOCOMPLETE, ChaveDocumento, ChavePadrao, Classificacao, classificarCampo(), classificarCampoDetalhado() (+15 more)
 
 ### Community 53 - "entrada-consultas.test.ts"
-Cohesion: 0.16
-Nodes (10): EntradaAplicarVagas, DadosFalhas, GrupoFalha, listarFalhas(), listarStatus(), paraLinha(), registrarRetorno(), renderizarMaster() (+2 more)
+Cohesion: 0.11
+Nodes (13): abrirNavegador(), EntradaAplicarVagas, EntradaImportarCurriculo, SaidaImportarCurriculo, DadosFalhas, GrupoFalha, listarFalhas(), listarStatus() (+5 more)
 
 ### Community 55 - "devDependencies"
 Cohesion: 0.14
 Nodes (14): devDependencies, eslint, eslint-config-prettier, @eslint/js, @napi-rs/canvas, pdfjs-dist, prettier, @types/cross-spawn (+6 more)
 
 ### Community 56 - "Outbox"
-Cohesion: 0.13
-Nodes (14): Checklist de smoke manual, Configuração, Currículo em 1 página, Desenvolvimento, Documentação, Fluxo diário, Grafo de conhecimento (Graphify), Instalação (+6 more)
+Cohesion: 0.12
+Nodes (15): Checklist de smoke manual, Comandos e códigos de saída, Configuração, Currículo em 1 página, Desenvolvimento, Documentação, Fluxo diário, Grafo de conhecimento (Graphify) (+7 more)
 
-### Community 57 - "ArmazemArtefatosMemoria"
+### Community 57 - "ArmazemArtefatosFs"
 Cohesion: 0.14
 Nodes (3): NomeArtefato, ArmazemArtefatosFs, ArmazemArtefatosMemoria
 
-### Community 58 - "revisar-e-enviar.ts"
-Cohesion: 0.22
-Nodes (11): SaidaResponderCampos, aplicarAprendizado(), proximoId(), RespostaFinal, tipoResposta(), EntradaBanco, esquemaBancoRespostas, esquemaEntradaBanco (+3 more)
+### Community 58 - "respostas-bordas.test.ts"
+Cohesion: 0.15
+Nodes (17): aplicarAprendizado(), proximoId(), RespostaFinal, tipoResposta(), EntradaBanco, esquemaBancoRespostas, esquemaEntradaBanco, TipoResposta (+9 more)
 
 ### Community 59 - "Progresso da implementação da V1"
-Cohesion: 0.22
-Nodes (7): Bloqueios e pendências, Decisões tomadas durante a implementação, Progresso da implementação da V1, Tarefas, Validação real do agente (2026-10-10), Verificação final, Verificações de ambiente
+Cohesion: 0.18
+Nodes (8): Bloqueios e pendências, Critérios de aceite, Decisões tomadas durante a implementação, Progresso da implementação da V1, Tarefas, Validação real do agente (2026-10-10), Verificação final, Verificações de ambiente
 
 ### Community 60 - "dependencies"
 Cohesion: 0.17
 Nodes (12): dependencies, commander, cross-spawn, @inquirer/prompts, mammoth, @modelcontextprotocol/sdk, node-notifier, open (+4 more)
 
-### Community 61 - "portas/erros.ts"
-Cohesion: 0.12
-Nodes (21): cross-spawn, esquemaSaidaAgente, FERRAMENTAS_AGENTE, OpcoesExecutorAgente, SaidaAgente, extrairJson(), GeradorEstruturadoClaude, OpcoesGerador (+13 more)
+### Community 61 - "executor-agente-claude.ts"
+Cohesion: 0.13
+Nodes (19): cross-spawn, ErroLlm, esquemaSaidaAgente, FERRAMENTAS_AGENTE, OpcoesExecutorAgente, SaidaAgente, extrairJson(), GeradorEstruturadoClaude (+11 more)
 
-### Community 63 - "GeradorEstruturado"
-Cohesion: 0.19
-Nodes (11): ADR-0011: LLM com portas separadas, schema único e prompts versionados, 5. Prompts, 16.1 Idioma (ADR-003), 16.3 Código, 16.4 Prompts, 16.5 Documentação, 16.6 Definição de pronto (por tarefa), 16. Convenções (+3 more)
+### Community 62 - "RenderizadorPdfPlaywright"
+Cohesion: 0.32
+Nodes (4): RenderizadorPdfPlaywright, gerar(), sinal(), resolver()
+
+### Community 63 - "ServicoSegredos"
+Cohesion: 0.33
+Nodes (3): preencherElemento(), tipoDoElemento(), ServicoSegredos
+
+### Community 64 - "FormularioAberto"
+Cohesion: 0.09
+Nodes (12): 9. Princípios aplicados, T13: Base de conectores, contratos e captura de fixtures, ADR-0012, DesfechoEnvio, FormularioAberto, ADR-0010, ValorLido, lerValoresGenerico() (+4 more)
 
 ### Community 65 - "progresso-terminal.test.ts"
-Cohesion: 0.24
-Nodes (6): RegiaoViva, montar(), puro(), relogio(), criarSaidaTerminal(), FluxoTerminal
+Cohesion: 0.15
+Nodes (9): RegiaoViva, Saida, OpcoesInteracaoTerminal, OpcoesProgressoTerminal, montar(), puro(), relogio(), criarSaidaTerminal() (+1 more)
 
 ### Community 66 - "ArmazemCurriculoMemoria"
 Cohesion: 0.13
 Nodes (4): DadosConsulta, BancoRespostas, Perfil, ArmazemCurriculoMemoria
 
 ### Community 67 - "portas/erros.ts"
+Cohesion: 0.13
+Nodes (16): ADR-0009: Erros como exceções tipadas, 8. Erros, validação, logging, config e concorrência, 10.1 Modelo de erros (ADR-009), T10: LLM: processo claude, gerador estruturado e prompts, T18: Agente, T6: Portas, erros de porta, concorrência e apoio de testes, ErroAgregadorExigeLogin, ErroFalhaConector (+8 more)
+
+### Community 68 - "7. Tarefas"
 Cohesion: 0.12
-Nodes (20): 10.1 Modelo de erros (ADR-009), T10: LLM: processo claude, gerador estruturado e prompts, T18: Agente, T6: Portas, erros de porta, concorrência e apoio de testes, ErroAgregadorExigeLogin, ErroExtracao, ErroHttp, ErroInfra (+12 more)
+Nodes (16): 7. Tarefas, T14: Conectores Greenhouse, Lever e Ashby, T15: Conectores SmartRecruiters, Workable e Teamtailor, T16: Conectores Gupy e InHire, com spikes, T19: Notificação, T1: Fundação do repositório, qualidade e CI, T23: Casos de uso de consulta, T25: Documentação viva (+8 more)
 
-### Community 68 - "preparar"
-Cohesion: 0.14
-Nodes (14): ADR-0016: Execução exclusiva por comando e cancelamento cooperativo, ADR-0020: Bloqueio anti-bot tratado como CAPTCHA, Comandos e códigos de saída, 7. Tarefas, T14: Conectores Greenhouse, Lever e Ashby, T15: Conectores SmartRecruiters, Workable e Teamtailor, T1: Fundação do repositório, qualidade e CI, T23: Casos de uso de consulta (+6 more)
+### Community 69 - "aplicar-vagas.test.ts"
+Cohesion: 0.22
+Nodes (13): CAMPOS, criar(), prontas(), sinal(), ambiente(), sinal(), ambienteComConector(), CAMPOS (+5 more)
 
-### Community 69 - "vitest"
-Cohesion: 0.21
-Nodes (14): CAMPOS, criar(), prontas(), roteiro(), sinal(), ambiente(), ambienteComConector(), CAMPOS (+6 more)
+### Community 70 - "cache-respostas-json.ts"
+Cohesion: 0.22
+Nodes (4): CacheRespostas, CacheRespostasJson, Entradas, esquemaCache
 
-### Community 70 - "Relogio"
-Cohesion: 0.12
-Nodes (10): Relogio, CacheRespostasJson, Entradas, esquemaCache, OpcoesCacheRespostas, NIVEIS_LOG, nivelDoAmbiente(), OpcoesRegistrador (+2 more)
+### Community 71 - "ExecutorAgenteClaude"
+Cohesion: 0.38
+Nodes (4): EntradaAgente, ResultadoAgente, ExecutorAgenteClaude, ExecutorAgenteFake
 
 ### Community 72 - "Arquitetura do Outbox"
 Cohesion: 0.20
@@ -446,21 +442,25 @@ Nodes (9): 10. Desempenho, 11. Qualidade, 12. Diferenças em relação à spec, 
 Cohesion: 0.20
 Nodes (7): FRONTEIRAS, SUBIDA_PROIBIDA, eslint, eslint-config-prettier, @eslint/js, typescript-eslint, eslint
 
-### Community 74 - "pt"
-Cohesion: 0.22
-Nodes (7): Entrada, Regras, Tarefa, Entrada, Regras, Tarefa, pt()
+### Community 74 - "analisar-vaga.md"
+Cohesion: 0.50
+Nodes (3): Entrada, Regras, Tarefa
+
+### Community 75 - "cores.ts"
+Cohesion: 0.29
+Nodes (4): ResumoPreparo, cores, Formato, formatarResumoPreparo()
 
 ### Community 76 - "ErroUsuario"
-Cohesion: 0.13
-Nodes (14): principal(), T9: Armazenamento em arquivos, esquemaGapsNegados, GapsNegados, ErroUsuario, esquemaPerfil, ArmazemCurriculoYaml, AUXILIARES (+6 more)
+Cohesion: 0.11
+Nodes (19): ArgumentosCaptura, lerArgumentos(), montarFixture(), principal(), T9: Armazenamento em arquivos, ErroUsuario, ArmazemCurriculoYaml, AUXILIARES (+11 more)
 
 ### Community 77 - "transicoes.ts"
-Cohesion: 0.25
-Nodes (12): T8: Persistência SQLite, EntradaRegistrarRetorno, StatusRetorno, RepositorioTransicao, OpcoesTransicao, OpcoesTransicaoVaga, transicionar(), TRANSICOES_VALIDAS (+4 more)
+Cohesion: 0.21
+Nodes (15): T8: Persistência SQLite, LinhaStatus, EntradaRegistrarRetorno, registrarRetorno(), StatusRetorno, ErroTransicaoInvalida, OpcoesTransicao, OpcoesTransicaoVaga (+7 more)
 
-### Community 78 - "revisar-e-enviar.ts"
-Cohesion: 0.26
-Nodes (8): 7.2 `outbox aplicar`, 7. Fluxos principais por camada, acharValor(), enviar(), esperaValor(), montarResumo(), OPCOES, revisarEEnviar()
+### Community 78 - "aplicar-vagas.ts"
+Cohesion: 0.18
+Nodes (15): 7.2 `outbox aplicar`, aplicarUma(), ResumoAplicacao, lerAnalise(), DepsMontarPacote, montarPacote(), salvarRespostas(), acharValor() (+7 more)
 
 ### Community 79 - "imports"
 Cohesion: 0.25
@@ -470,15 +470,15 @@ Nodes (8): imports, #aplicacao/*, #composicao, #dominio/*, #infra/*, #interfaces
 Cohesion: 0.25
 Nodes (8): scripts, capturar-fixture, formatar, lint, outbox, test, tipos, verificar
 
-### Community 81 - "FormularioPlaywright"
-Cohesion: 0.40
-Nodes (5): 10.2 Validação, 10.3 Logging (ADR-014), 10.4 Configuração (ADR-015), 10.5 Concorrência, transações e cancelamento (ADR-008, ADR-016), 10. Erros, validação, logging, config e concorrência
+### Community 81 - "ResolvedorEncadeado"
+Cohesion: 0.29
+Nodes (3): T12: Resolução e extração, EloResolucao, ResolvedorEncadeado
 
 ### Community 82 - "Convenções do Outbox"
-Cohesion: 0.25
-Nodes (7): 1. Idioma (ADR-0003), 3. Código, 4. Conectores e automação de navegador, 6. Testes, 7. Documentação, 8. Definição de pronto, Convenções do Outbox
+Cohesion: 0.20
+Nodes (9): 1. Idioma (ADR-0003), 2. Nomenclatura, 3. Código, 4. Conectores e automação de navegador, 5. Prompts, 6. Testes, 7. Documentação, 8. Definição de pronto (+1 more)
 
-### Community 83 - "Relogio"
+### Community 83 - "logoloom"
 Cohesion: 0.50
 Nodes (3): npx, logoloom, @mcpware/logoloom
 
@@ -486,25 +486,25 @@ Nodes (3): npx, logoloom, @mcpware/logoloom
 Cohesion: 0.29
 Nodes (6): Como concluir o spike, Decisão provisória: `gupy.anexoPorCandidatura: true`, O que foi implementado sem o spike, Objetivo, Por que está bloqueado, Spike: Gupy
 
-### Community 86 - "titulo"
+### Community 86 - "tailoring.md"
 Cohesion: 0.40
 Nodes (4): Como escrever cada bullet, Entrada, Regras de lastro (obrigatórias), Tarefa
 
 ### Community 87 - "armazens.ts"
-Cohesion: 0.26
-Nodes (7): 11.1 Estratégia de testes, umaAtualizacao(), umaVaga(), umMaster(), umPacote(), umPerfil(), entrada()
+Cohesion: 0.17
+Nodes (3): ADR-0022: Pastas nomeadas pelo design pattern, em inglês, RegistroFalhas, RegistroFalhasMemoria
 
 ### Community 88 - "Spike: InHire"
 Cohesion: 0.33
 Nodes (5): Como concluir o spike, O que foi implementado sem o spike, Objetivo, Por que está bloqueado, Spike: InHire
 
 ### Community 89 - "perfil.ts"
-Cohesion: 0.15
-Nodes (12): dataIso, Diversidade, Documentos, Endereco, esquemaConsentimentos, esquemaDiversidade, esquemaDocumentos, esquemaEndereco (+4 more)
+Cohesion: 0.12
+Nodes (16): ADR-0019: Consentimento como categoria de campo, aceitaConsentimento(), respostaConsentimento(), Consentimentos, dataIso, Documentos, Endereco, esquemaConsentimentos (+8 more)
 
-### Community 90 - "7. Tarefas"
-Cohesion: 0.22
-Nodes (8): 7. Tarefas, T1: Domínio de acompanhamento e porta de consulta com implementação SQLite, T2: Casos de uso do painel, T3: Servidor web, segurança, layout e comando `painel`, T4: Rotas de fila e detalhe, T5: Rotas de ações, T6: Rotas de métricas e falhas, T8: Documentação
+### Community 90 - "exemplos.test.ts"
+Cohesion: 0.33
+Nodes (3): esquemaGapsNegados, GapsNegados, esquemaPerfil
 
 ### Community 91 - "agente-candidatura.md"
 Cohesion: 0.40
@@ -514,81 +514,49 @@ Nodes (4): Dados do candidato, Regras (obrigatórias), Resposta final, Tarefa
 Cohesion: 0.50
 Nodes (3): Entrada, Regras, Tarefa
 
-### Community 93 - "atualizacoes.ts"
-Cohesion: 0.38
-Nodes (11): atualizacao(), contarTentativaPreparo(), DadosExtracao, marcarAnexoManual(), percentual(), registrarAderencia(), registrarAnalise(), registrarCurriculo() (+3 more)
-
-### Community 108 - "Registrador"
-Cohesion: 0.21
-Nodes (6): ADR-0014: Logging mínimo com redação, ADR-014: logging mínimo com redação, T19: Notificação, T7: Toast que abre o painel, Registrador, NotificadorWindows
-
-### Community 109 - "repositorio-vagas-sqlite.ts"
-Cohesion: 0.18
-Nodes (10): ETAPAS, MOTIVOS, ROTAS, COLUNAS, esquemaLinhaEvento, esquemaLinhaVaga, esquemaMotor, esquemaStatus (+2 more)
-
-### Community 111 - "RenderizadorDocumentos"
-Cohesion: 0.29
-Nodes (3): 5. Fora do Escopo, RenderizadorDocumentos, ADR-0012
-
-### Community 112 - "Vaga"
-Cohesion: 0.31
-Nodes (5): T3: Domínio de vagas, ConsultaVagas, ChaveDedup, NovaVaga, Vaga
-
-### Community 113 - "vaga.ts"
-Cohesion: 0.36
-Nodes (5): ADR-0023: Invariantes da vaga no domínio, com valores marcados, Marca, Rota, AtualizacaoVaga, CamposAtualizaveisVaga
-
-### Community 114 - "importar-curriculo.ts"
-Cohesion: 0.28
-Nodes (5): DepsImportarCurriculo, EntradaImportarCurriculo, importarCurriculo(), SaidaImportarCurriculo, validar()
-
-### Community 115 - "salario.ts"
-Cohesion: 0.31
-Nodes (8): Regime, TabelaSalario, escolherFaixa(), Faixa, interpretarFaixa(), numerosDe(), PedidoSalario, valorSalarioAtual()
-
-### Community 116 - "respostas-bordas.test.ts"
-Cohesion: 0.32
-Nodes (5): ADR-0019: Consentimento como categoria de campo, aceitaConsentimento(), respostaConsentimento(), Consentimentos, umaResposta()
-
-### Community 117 - "pacote.ts"
-Cohesion: 0.32
-Nodes (6): CategoriaCampo, CATEGORIAS_CAMPO, CATEGORIAS_SENSIVEIS, TIPOS_CAMPO, esquemaContato, esquemaRespostaSugerida
-
-### Community 118 - "diversidade.ts"
-Cohesion: 0.43
-Nodes (7): ChaveDiversidade, contemPalavras(), normalizar(), respostaDiversidade(), Sinonimos, valorDaOpcao(), valorDoPerfil()
-
-### Community 119 - "Relatório de arquitetura — outbox"
-Cohesion: 0.29
-Nodes (6): 1. Veredito geral, 2. Tabela de critérios, 4. Top 5 prioridades, 5. Proposta: patterns em pastas nomeadas, 6. Limitações, Relatório de arquitetura — outbox
-
-### Community 120 - "Outbox v1: candidatura assistida com currículo camaleão"
+### Community 93 - "documentos.test.ts"
 Cohesion: 0.33
-Nodes (5): 1. Contexto e Objetivo, 2. Premissas, 3. Decisões, 5. Fora do Escopo, Outbox v1: candidatura assistida com currículo camaleão
+Nodes (3): leitor, pasta, renderizador
 
-### Community 121 - "NavegadorUsuario"
-Cohesion: 0.40
-Nodes (3): T20: Casos de uso de entrada, abrirNavegador(), NavegadorUsuario
+### Community 108 - "extrair-vaga.md"
+Cohesion: 0.50
+Nodes (3): Entrada, Regras, Tarefa
+
+### Community 109 - "importar-curriculo.md"
+Cohesion: 0.50
+Nodes (3): Entrada, Regras, Tarefa
+
+### Community 111 - "12. Segurança"
+Cohesion: 0.50
+Nodes (4): 12.1 Modelo de ameaças, 12.3 Fronteira de confiança e injeção de prompt (ADR-012), 12.4 Segredos e credenciais, 12. Segurança
+
+### Community 112 - "vaga.ts"
+Cohesion: 0.17
+Nodes (13): ADR-0023: Invariantes da vaga no domínio, com valores marcados, T3: Domínio de vagas, ConsultaVagas, Marca, DadosResolucao, chaveDedup(), normalizarCargo(), Rota (+5 more)
+
+### Community 123 - "resolucao.test.ts"
+Cohesion: 0.14
+Nodes (13): ErroExtracao, ErroVagaIndisponivel, ResultadoExtracao, esquemaIssueGithub, OpcoesLeitor, PaginaLida, ADR-0012, eloDireto (+5 more)
 
 ## Knowledge Gaps
 - **35 isolated node(s):** `npx`, `@mcpware/logoloom`, `ADR-0004`, `@playwright/mcp`, `node-notifier` (+30 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 621 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 617 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `vitest` connect `claude-falso.ts` to `valor-codigo.ts`, `resolucao.test.ts`, `api.ts`, `agente.test.ts`, `zod`, `ArmazemArtefatosFs`, `composicao.ts`, `documentos.test.ts`, `rodada-gaps.ts`, `principal.ts`, `basicos.ts`, `compartilhado/erros.ts`, `package.json`, `apresentacao.test.ts`, `gerar-curriculo.ts`, `curriculo-ats.test.ts`, `campos.ts`, `capturar-fixture.ts`, `outbox-segredos.ts`, `servico-segredos.ts`, `conectores.test.ts`, `motores.ts`, `ref_node_path`, `aplicar-vagas.ts`, `entrada-consultas.test.ts`, `portas/erros.ts`, `progresso-terminal.test.ts`, `vitest`, `eslint.config.js`, `ErroUsuario`, `transicoes.ts`, `atualizacoes.ts`, `respostas-bordas.test.ts`?**
-  _High betweenness centrality (0.079) - this node is a cross-community bridge._
-- **Are the 3 inferred relationships involving `IdVaga` (e.g. with `3. Números medidos` and `8.1 Adotados`) actually correct?**
-  _`IdVaga` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `vitest` connect `sensiveis.test.ts` to `harness-conector.ts`, `zod`, `apresentacao.test.ts`, `composicao.ts`, `analise-vaga.ts`, `codigos-saida.test.ts`, `preparar-vagas.ts`, `pacote.ts`, `6. Catálogo de portas`, `package.json`, `gerar-curriculo.ts`, `curriculo-ats.test.ts`, `campos.ts`, `normalizarTexto`, `outbox-segredos.ts`, `builders.ts`, `conectores.test.ts`, `motores.ts`, `basicos.ts`, `respostas.test.ts`, `entrada-consultas.test.ts`, `respostas-bordas.test.ts`, `progresso-terminal.test.ts`, `portas/erros.ts`, `aplicar-vagas.test.ts`, `eslint.config.js`, `ErroUsuario`, `transicoes.ts`, `exemplos.test.ts`, `documentos.test.ts`, `vaga.ts`, `resolucao.test.ts`?**
+  _High betweenness centrality (0.080) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `IdVaga` (e.g. with `8.1 Adotados` and `T3: Domínio de vagas`) actually correct?**
+  _`IdVaga` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `npx`, `@mcpware/logoloom`, `ADR-0004` to the rest of the system?**
   _35 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `resolucao.test.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.09745293466223699 - nodes in this community are weakly interconnected._
-- **Why does `zod` connect `zod` to `resolucao.test.ts`, `api.ts`, `agente.test.ts`, `composicao.ts`, `rodada-gaps.ts`, `compartilhado/erros.ts`, `package.json`, `gerar-curriculo.ts`, `capturar-fixture.ts`, `lever/conector.ts`, `claude-falso.ts`, `aplicar-vagas.ts`, `outbox-segredos.ts`, `servico-segredos.ts`, `GeradorEstruturadoClaude`, `conectores.test.ts`, `responder-campos.ts`, `revisar-e-enviar.ts`, `portas/erros.ts`, `portas/erros.ts`, `Relogio`, `ErroUsuario`, `armazens.ts`, `perfil.ts`, `repositorio-vagas-sqlite.ts`, `pacote.ts`?**
-  _High betweenness centrality (0.061) - this node is a cross-community bridge._
-- **Are the 10 inferred relationships involving `ErroUsuario` (e.g. with `8. Erros, validação, logging, config e concorrência` and `3. Números medidos`) actually correct?**
-  _`ErroUsuario` has 10 INFERRED edges - model-reasoned connections that need verification._
-- **Should `api.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.10588235294117647 - nodes in this community are weakly interconnected._
+- **Should `17. Registro de decisões arquiteturais (ADR)` be split into smaller, more focused modules?**
+  _Cohesion score 0.1111111111111111 - nodes in this community are weakly interconnected._
+- **Why does `zod` connect `zod` to `api.ts`, `harness-conector.ts`, `composicao.ts`, `analise-vaga.ts`, `preparar-vagas.ts`, `pacote.ts`, `repositorio-vagas-sqlite.ts`, `package.json`, `smartrecruiters/conector.ts`, `gerar-curriculo.ts`, `aplicar.ts`, `normalizarTexto`, `sensiveis.test.ts`, `outbox-segredos.ts`, `builders.ts`, `responder-campos.ts`, `respostas-bordas.test.ts`, `executor-agente-claude.ts`, `7. Tarefas`, `cache-respostas-json.ts`, `ErroUsuario`, `aplicar-vagas.ts`, `armazens.ts`, `perfil.ts`, `exemplos.test.ts`, `resolucao.test.ts`?**
+  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+- **Are the 9 inferred relationships involving `ErroUsuario` (e.g. with `8. Erros, validação, logging, config e concorrência` and `10.1 Modelo de erros (ADR-009)`) actually correct?**
+  _`ErroUsuario` has 9 INFERRED edges - model-reasoned connections that need verification._
+- **Should `zod` be split into smaller, more focused modules?**
+  _Cohesion score 0.11033681765389082 - nodes in this community are weakly interconnected._
