@@ -1,7 +1,7 @@
-# Graph Report - Outbox  (2026-10-20)
+# Graph Report - outbox  (2026-10-21)
 
 ## Corpus Check
-- 339 files · ~176,570 words
+- 339 files · ~176,613 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: (none) 5, .ico 2, .css 1)
 
@@ -11,24 +11,24 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `440261bb`
+- Built from commit: `9725440e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - api.ts
 - motores.ts
-- extrair-vaga.ts
+- json-ld.ts
 - harness-conector.ts
-- 17. Registro de decisões arquiteturais (ADR)
+- Outbox: arquitetura e convenções
 - ref_zod
-- progresso.ts
+- ProgressoTerminal
 - basicos.ts
 - aplicar-vagas.ts
 - composicao.ts
 - contrato.ts
-- sensiveis.test.ts
-- normalizarTexto
+- armazens.ts
+- analise-vaga.ts
 - codigos-saida.test.ts
 - preparar-vagas.ts
 - FormularioAberto
@@ -42,7 +42,7 @@
 - IdVaga
 - repositorio-vagas-sqlite.ts
 - curriculo-ats.test.ts
-- campos.ts
+- normalizarTexto
 - Vaga
 - InteracaoTerminal
 - Vagas.tsx
@@ -62,7 +62,7 @@
 - Camaleão — Brand Guidelines
 - conectores.test.ts
 - conexao.tsx
-- versao
+- 16.2 Nomenclatura
 - 7. Tarefas
 - preencher-formulario.ts
 - conector-formulario.ts
@@ -79,25 +79,25 @@
 - dependencies
 - 6. Contrato de Aceite
 - 7. Tarefas
-- servico-segredos.ts
+- ServicoSegredos
 - FormularioPlaywright
 - progresso-terminal.test.ts
 - criarCasos
 - NavegadorCamaleao
 - cliente-http.ts
-- aplicar-vagas.test.ts
+- vitest
 - servico-segredos.ts
 - agente-falso.tsx
 - Arquitetura do Camaleão
 - eslint.config.js
 - analisar-vaga.md
 - InteracaoWeb
-- ArmazemCurriculoYaml
+- ErroUsuario
 - variaveis.ts
 - 0009-erros-como-excecoes-tipadas.md
 - imports
 - scripts
-- UrlCanonica
+- Motor
 - Convenções do Camaleão
 - logoloom
 - espiar-modulos.ts
@@ -105,12 +105,12 @@
 - tailoring.md
 - Interacao
 - Spike: InHire
-- pareamento.ts
+- agente-http.test.ts
 - http/execucoes.ts
 - agente-candidatura.md
 - responder-perguntas.md
-- agente-http.ts
-- setup.ts
+- arquivos.ts
+- apoio/setup.ts
 - SKILL.md
 - SPEC-TEMPLATE.md
 - 0001-hexagonal-enxuto.md
@@ -128,12 +128,12 @@
 - importar-curriculo.md
 - CLAUDE.md
 - respostas/perfil.ts
-- atualizacoes.ts
+- compartilhado/erros.ts
 - agente.ts
 - compilerOptions
 - portas/erros.ts
-- FormularioPlaywright
-- pacote.ts
+- Progresso da implementação da V1
+- respostas-bordas.test.ts
 - builders.ts
 - execucao.ts
 - rodada-gaps.ts
@@ -146,7 +146,7 @@
 - rotas/execucoes.ts
 - 5. Portas
 - pdf.ts
-- respostas-bordas.test.ts
+- salario.ts
 - tokens.test.ts
 - adicionar.ts
 - registrador-jsonl.ts
@@ -198,7 +198,7 @@ Nodes (11): CampoPendente, Campo, classificarFormulario(), enderecoApi(), esquem
 Cohesion: 0.08
 Nodes (39): 1. Garanta o motor no domínio, AGREGADORES, canonicaGenerica(), canonizar(), detectarMotor(), ehMotorConhecido(), ehRastreamento(), hostCasaPadrao() (+31 more)
 
-### Community 2 - "extrair-vaga.ts"
+### Community 2 - "json-ld.ts"
 Cohesion: 0.21
 Nodes (15): Entrada, Regras, Tarefa, esquemaVagaExtraida, paraVagaExtraida(), vagaDoNextData(), decodificarEntidades(), ENTIDADES (+7 more)
 
@@ -206,7 +206,7 @@ Nodes (15): Entrada, Regras, Tarefa, esquemaVagaExtraida, paraVagaExtraida(), va
 Cohesion: 0.09
 Nodes (24): DepsConector, lerDescritores(), lerValoresGenerico(), paraCampos(), valorExibido(), LeitorHeadless, OpcoesLeitor, PaginaLida (+16 more)
 
-### Community 4 - "17. Registro de decisões arquiteturais (ADR)"
+### Community 4 - "Outbox: arquitetura e convenções"
 Cohesion: 0.07
 Nodes (26): 10.2 Validação, 10.3 Logging (ADR-014), 10.4 Configuração (ADR-015), 10. Erros, validação, logging, config e concorrência, 11.2 Verificação local e CI, 11.3 Regras de lint obrigatórias, 11. Qualidade e testabilidade, 17. Registro de decisões arquiteturais (ADR) (+18 more)
 
@@ -214,7 +214,7 @@ Nodes (26): 10.2 Validação, 10.3 Logging (ADR-014), 10.4 Configuração (ADR-0
 Cohesion: 0.18
 Nodes (19): cores, formatarResumoAplicacao(), comandoAplicar(), esquema, containerDuble(), rodar(), esquema, comandoNavegador() (+11 more)
 
-### Community 6 - "progresso.ts"
+### Community 6 - "ProgressoTerminal"
 Cohesion: 0.24
 Nodes (9): colunasDe(), cortarNaLargura(), formatarConclusao(), formatarDuracao(), formatarEmAndamento(), formatarRodape(), rotuloVaga(), comandoPreparar() (+1 more)
 
@@ -234,11 +234,11 @@ Nodes (33): ADR-0006, ADR-0015, ADR-0007: Casos de uso como funções com depend
 Cohesion: 0.07
 Nodes (29): Controles(), PerguntaCartao(), PropsPergunta, rotuloLimpo(), Valor, CODIGOS_ERRO_EXECUCAO, COMANDOS_EXECUCAO, contagens (+21 more)
 
-### Community 11 - "sensiveis.test.ts"
+### Community 11 - "armazens.ts"
 Cohesion: 0.15
 Nodes (13): DepsAplicarVagas, DepsPrepararVagas, umPerfil(), AmbienteAplicacao, CONFIG_TESTE, criarAmbienteAplicacao(), ExtratorFake, RegistroFalhasMemoria (+5 more)
 
-### Community 12 - "normalizarTexto"
+### Community 12 - "analise-vaga.ts"
 Cohesion: 0.11
 Nodes (27): ALERTA_AFIRMATIVA, calcularAderencia(), DetalhesAderencia, pontosCobertura(), pontosModelo(), pontosRegime(), pontosSenioridade(), ResultadoAderencia (+19 more)
 
@@ -294,7 +294,7 @@ Nodes (14): RespostasEnviadasVagas, ETAPAS, MOTIVOS, ROTAS, GapAberto, RespostaE
 Cohesion: 0.13
 Nodes (7): leitor, masterDenso(), masterExemplo, pasta, PdfGerado, renderizador, TITULOS
 
-### Community 26 - "campos.ts"
+### Community 26 - "normalizarTexto"
 Cohesion: 0.17
 Nodes (22): contemTermo(), escaparRegex(), normalizarTexto(), paraKebab(), casarTexto(), IDIOMAS, indice(), melhorOpcao() (+14 more)
 
@@ -370,7 +370,7 @@ Nodes (21): comParametro(), comSufixo(), dataCurta(), nomeDoSlug(), DEFINICOES_V
 Cohesion: 0.11
 Nodes (22): AGENTE_PADRAO, CHAVE_AGENTE, ClienteAgente, codigoDoFragmento(), ErroAgente, ErroSemAgente, gravar(), lembrarEnderecoAgente() (+14 more)
 
-### Community 46 - "versao"
+### Community 46 - "16.2 Nomenclatura"
 Cohesion: 0.29
 Nodes (7): 16.1 Idioma (ADR-003), 16.2 Nomenclatura, 16.3 Código, 16.4 Prompts, 16.5 Documentação, 16.6 Definição de pronto (por tarefa), 16. Convenções
 
@@ -438,7 +438,7 @@ Nodes (12): 2. Nomenclatura, Critérios de aceite, 7.1 `outbox preparar`, 6. Con
 Cohesion: 0.22
 Nodes (9): 7. Tarefas, T1 — Renomear Outbox → Camaleão, com migração, T3 — Comando `agente`, abertura do site e isolamento da aba, T5 — Rotas síncronas dos comandos, T6 — Perfil: casos de uso, porta e salário opcional, T7 — Fundação do site, T8 — Telas dos comandos e do perfil, T9 — Testes e2e, CI, deploy e documentação (+1 more)
 
-### Community 63 - "servico-segredos.ts"
+### Community 63 - "ServicoSegredos"
 Cohesion: 0.25
 Nodes (4): preencherElemento(), tipoDoElemento(), ServicoSegredos, servico()
 
@@ -462,7 +462,7 @@ Nodes (3): ADR-0026: Renomeação de Outbox para Camaleão, com migração autom
 Cohesion: 0.24
 Nodes (7): 13. Desempenho, T7: Infra base, ErroHttp, ClienteHttpFetch, esperar(), esperaRetryAfter(), OpcoesClienteHttp
 
-### Community 69 - "aplicar-vagas.test.ts"
+### Community 69 - "vitest"
 Cohesion: 0.14
 Nodes (20): vitest, aplicarVagas(), criar(), ambiente(), sinal(), ambienteComConector(), CAMPOS, roteiroPadrao() (+12 more)
 
@@ -490,7 +490,7 @@ Nodes (3): Entrada, Regras, Tarefa
 Cohesion: 0.14
 Nodes (9): OpcaoEscolha, ErroPerguntaCancelada, ErroPerguntaNaoPendente, InteracaoWeb, invalida(), OpcoesInteracaoWeb, criar(), ADR-0024 (+1 more)
 
-### Community 76 - "ArmazemCurriculoYaml"
+### Community 76 - "ErroUsuario"
 Cohesion: 0.09
 Nodes (20): 8. Erros, validação, logging, config e concorrência, 10.1 Modelo de erros (ADR-009), T9: Armazenamento em arquivos, importarCurriculo(), registrarRetorno(), ErroCamaleao, ErroUsuario, ArmazemCurriculoYaml (+12 more)
 
@@ -506,7 +506,7 @@ Nodes (8): imports, #aplicacao/*, #composicao, #dominio/*, #infra/*, #interfaces
 Cohesion: 0.22
 Nodes (9): scripts, camaleao, capturar-fixture, formatar, lint, test, tipos, verificar (+1 more)
 
-### Community 81 - "UrlCanonica"
+### Community 81 - "Motor"
 Cohesion: 0.24
 Nodes (10): Destino, ErroPreparo, Resolucao, DadosResolucao, Motor, MotivoDe, Rota, UrlCanonica (+2 more)
 
@@ -534,7 +534,7 @@ Nodes (10): ADR-0024: Site estático hospedado e agente HTTP local, 2. Premissas
 Cohesion: 0.33
 Nodes (5): Como concluir o spike, O que foi implementado sem o spike, Objetivo, Por que está bloqueado, Spike: InHire
 
-### Community 89 - "pareamento.ts"
+### Community 89 - "agente-http.test.ts"
 Cohesion: 0.10
 Nodes (21): 12. Diferenças em relação à spec, T25: Documentação viva, STATUS_DE_RETORNO, esquemaSaidaAdicionar, esquemaSaidaFalhas, STATUS_RETORNO, ArmazemTokens, esquemaTokens (+13 more)
 
@@ -550,7 +550,7 @@ Nodes (4): Dados do candidato, Regras (obrigatórias), Resposta final, Tarefa
 Cohesion: 0.50
 Nodes (3): Entrada, Regras, Tarefa
 
-### Community 93 - "agente-http.ts"
+### Community 93 - "arquivos.ts"
 Cohesion: 0.17
 Nodes (8): T3: Servidor web, segurança, layout e comando `painel`, AssinadorArquivos, Assinatura, OpcoesAssinador, real(), TIPOS, VALIDADE_ARQUIVO_MS, iniciarServidor()
 
@@ -566,7 +566,7 @@ Nodes (3): Entrada, Regras, Tarefa
 Cohesion: 0.12
 Nodes (16): ADR-0019: Consentimento como categoria de campo, aceitaConsentimento(), respostaConsentimento(), Consentimentos, dataIso, Documentos, Endereco, esquemaConsentimentos (+8 more)
 
-### Community 112 - "atualizacoes.ts"
+### Community 112 - "compartilhado/erros.ts"
 Cohesion: 0.17
 Nodes (19): ADR-0023: Invariantes da vaga no domínio, com valores marcados, T2: Schemas do domínio e exemplos, DepsAdicionarVagas, ItemAdicao, ErroDominio, ErroTransicaoInvalida, ErroValidacao, atualizacao() (+11 more)
 
@@ -582,11 +582,11 @@ Nodes (21): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, exa
 Cohesion: 0.12
 Nodes (27): T10: LLM: processo claude, gerador estruturado e prompts, T18: Agente, T6: Portas, erros de porta, concorrência e apoio de testes, ErroAgregadorExigeLogin, ErroInfra, ErroLlm, ErroMaxTurnos, ErroTimeoutLlm (+19 more)
 
-### Community 116 - "FormularioPlaywright"
+### Community 116 - "Progresso da implementação da V1"
 Cohesion: 0.22
 Nodes (7): Bloqueios e pendências, Decisões tomadas durante a implementação, Progresso da implementação da V1, Tarefas, Validação real do agente (2026-10-10), Verificação final, Verificações de ambiente
 
-### Community 117 - "pacote.ts"
+### Community 117 - "respostas-bordas.test.ts"
 Cohesion: 0.21
 Nodes (10): SaidaResponderCampos, proximoId(), RespostaFinal, tipoResposta(), EntradaBanco, esquemaBancoRespostas, esquemaEntradaBanco, TipoResposta (+2 more)
 
@@ -638,7 +638,7 @@ Nodes (24): ADR-0014: Logging mínimo com redação, 5. Portas, 14. Política de
 Cohesion: 0.22
 Nodes (8): @napi-rs/canvas, pdfjs-dist, contarFontes(), inspecionarPdf(), OPERADORES_DE_IMAGEM, PdfInspecionado, PdfLido, pngDaPagina()
 
-### Community 130 - "respostas-bordas.test.ts"
+### Community 130 - "salario.ts"
 Cohesion: 0.27
 Nodes (10): respostaSalario(), Regime, TabelaSalario, calcularSalario(), escolherFaixa(), Faixa, interpretarFaixa(), numerosDe() (+2 more)
 
@@ -690,15 +690,15 @@ Nodes (4): arquivos(), DIST, SO_TEXTO, TEXTO
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `vitest` connect `aplicar-vagas.test.ts` to `motores.ts`, `tokens.test.ts`, `harness-conector.ts`, `ref_zod`, `deduplicacao.test.ts`, `basicos.ts`, `composicao.ts`, `normalizarTexto`, `dist.test.ts`, `codigos-saida.test.ts`, `vaga.ts`, `extrator-estrutural.ts`, `package.json`, `infra-base.test.ts`, `apresentacao.test.ts`, `curriculo-ats.test.ts`, `campos.ts`, `sensiveis.test.ts`, `documentos.test.ts`, `camaleao-segredos.ts`, `nome.test.ts`, `entrada-consultas.test.ts`, `etapas.test.ts`, `conectores.test.ts`, `banco.test.ts`, `web/package.json`, `progresso-terminal.test.ts`, `agente-falso.tsx`, `eslint.config.js`, `InteracaoWeb`, `variaveis.ts`, `pareamento.ts`, `http/execucoes.ts`, `atualizacoes.ts`, `portas/erros.ts`, `pacote.ts`, `builders.ts`, `rodada-gaps.ts`, `respostas.test.ts`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
+- **Why does `vitest` connect `vitest` to `motores.ts`, `tokens.test.ts`, `harness-conector.ts`, `ref_zod`, `deduplicacao.test.ts`, `basicos.ts`, `composicao.ts`, `analise-vaga.ts`, `dist.test.ts`, `codigos-saida.test.ts`, `vaga.ts`, `extrator-estrutural.ts`, `package.json`, `infra-base.test.ts`, `apresentacao.test.ts`, `curriculo-ats.test.ts`, `normalizarTexto`, `sensiveis.test.ts`, `documentos.test.ts`, `camaleao-segredos.ts`, `nome.test.ts`, `entrada-consultas.test.ts`, `etapas.test.ts`, `conectores.test.ts`, `banco.test.ts`, `web/package.json`, `progresso-terminal.test.ts`, `agente-falso.tsx`, `eslint.config.js`, `InteracaoWeb`, `variaveis.ts`, `agente-http.test.ts`, `http/execucoes.ts`, `compartilhado/erros.ts`, `portas/erros.ts`, `respostas-bordas.test.ts`, `builders.ts`, `rodada-gaps.ts`, `respostas.test.ts`?**
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `IdVaga` (e.g. with `8.1 Adotados` and `T3: Domínio de vagas`) actually correct?**
   _`IdVaga` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `npx`, `@mcpware/logoloom`, `zod` to the rest of the system?**
   _52 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `api.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.14166666666666666 - nodes in this community are weakly interconnected._
-- **Why does `DefinicaoConector` connect `DefinicaoConector` to `5. Portas`, `extrair-vaga.ts`, `harness-conector.ts`, `conectores.test.ts`, `FormularioAberto`, `UrlCanonica`, `conector-formulario.ts`?**
+- **Why does `DefinicaoConector` connect `DefinicaoConector` to `5. Portas`, `json-ld.ts`, `harness-conector.ts`, `conectores.test.ts`, `FormularioAberto`, `Motor`, `conector-formulario.ts`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Are the 11 inferred relationships involving `ErroUsuario` (e.g. with `8. Erros, validação, logging, config e concorrência` and `T2 — Contrato da API e núcleo do servidor do agente`) actually correct?**
   _`ErroUsuario` has 11 INFERRED edges - model-reasoned connections that need verification._
