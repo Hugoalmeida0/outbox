@@ -35,7 +35,6 @@ Sem `npm link`, use `npm run camaleao -- <comando>` no lugar de `camaleao <coman
    ```
 
    Revise o `curriculo/master.yaml` gerado. Cada bullet ajustado precisa ter lastro aqui.
-
 2. **Preencha o `curriculo/perfil.yaml`**, criado a partir de `curriculo.exemplo/`: preferências
    (modelos, cidades, senioridades, regimes), tabela salarial, documentos, disponibilidade e,
    se quiser, dados de diversidade. Esses dados são preenchidos **por código** e nunca vão ao LLM.
@@ -125,17 +124,17 @@ enquanto, com um aviso de depreciação, e o banco antigo em `dados/` é renomea
 
 ## Comandos e códigos de saída
 
-| Comando                                              | O que faz                                                                         |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Comando                                                | O que faz                                                                           |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `importar <arquivo> [--sobrescrever]`                | Gera`curriculo/master.yaml` (com backup ao sobrescrever) e os arquivos auxiliares |
 | `adicionar [urls...] [-a <arquivo>]`                 | Canoniza e enfileira URLs, com deduplicação                                       |
-| `preparar [--forcar] [--paralelo <n>] [--reavaliar]` | Prepara as vagas NOVA                                                             |
-| `aplicar [--simular] [--id <id>]`                    | Preenche e revisa as vagas PRONTA                                                 |
-| `status [--status <STATUS>]`                         | Contagens, tabela e o que aguarda você                                            |
-| `retorno <id> <status> [--etapa] [--nota]`           | Registra o retorno de uma candidatura                                             |
-| `falhas`                                             | Falhas de conector e motores sem conector                                         |
-| `navegador`                                          | Abre o navegador do Camaleão para logins                                          |
-| `renderizar-master`                                  | Gera o PDF genérico do master                                                     |
+| `preparar [--forcar] [--paralelo <n>] [--reavaliar]` | Prepara as vagas NOVA                                                               |
+| `aplicar [--simular] [--id <id>]`                    | Preenche e revisa as vagas PRONTA                                                   |
+| `status [--status <STATUS>]`                         | Contagens, tabela e o que aguarda você                                             |
+| `retorno <id> <status> [--etapa] [--nota]`           | Registra o retorno de uma candidatura                                               |
+| `falhas`                                             | Falhas de conector e motores sem conector                                           |
+| `navegador`                                          | Abre o navegador do Camaleão para logins                                           |
+| `renderizar-master`                                  | Gera o PDF genérico do master                                                      |
 | `agente [--sem-navegador]`                           | Serve o site nesta máquina (127.0.0.1) e o abre já pareado                        |
 
 Códigos de saída: `0` sucesso, `1` erro de execução, `2` uso inválido, `130` interrompido (Ctrl+C).
@@ -153,12 +152,12 @@ Você controla o que sai primeiro com `prioridadeCorte` (inteiro de 1 a 10) no `
 em experiência, bullet, projeto ou certificação. **O menor valor corta primeiro**; valores de 9 a 10
 são protegidos e só saem se nada abaixo resolver. Sem o campo, o valor implícito é:
 
-| Valor | Item                                                                              |
-| ----- | --------------------------------------------------------------------------------- |
-| 1     | Experiência não atual sem nenhuma skill ligada às keywords da vaga                |
+| Valor | Item                                                                                |
+| ----- | ----------------------------------------------------------------------------------- |
+| 1     | Experiência não atual sem nenhuma skill ligada às keywords da vaga               |
 | 3     | Bullet de projeto além do 2º                                                      |
 | 4     | Bullet de menor aderência (a experiência atual nunca fica com menos de 4 bullets) |
-| 10    | Experiência não atual com aderência à vaga (protegida)                            |
+| 10    | Experiência não atual com aderência à vaga (protegida)                          |
 
 Empates saem pela menor aderência e, depois, pelo item mais antigo. A experiência atual (`fim: null`)
 nunca é removida. Uma experiência cortada perde primeiro os bullets (fica só a linha do cargo) e depois

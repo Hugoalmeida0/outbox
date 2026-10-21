@@ -23,6 +23,9 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "caveman@caveman": true
+  },
   "extraKnownMarketplaces": {
     "caveman": {
       "source": {
@@ -30,8 +33,5 @@
         "repo": "JuliusBrussee/caveman"
       }
     }
-  },
-  "enabledPlugins": {
-    "caveman@caveman": true
   }
 }
